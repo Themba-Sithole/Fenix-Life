@@ -2,6 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, type AuthenticatedRequest } from '../lib/auth.js';
+import {
+  checksumBuffer,
+  compressSavePayload,
+  decompressSavePayload,
+} from '../lib/save-blob.js';
 
 export const savesRouter = Router();
 
@@ -104,4 +109,98 @@ savesRouter.post('/:id/play', async (req: AuthenticatedRequest, res) => {
   });
 
   res.json({ save });
+});
+
+const uploadBlobSchema = z.object({
+  blob: z.string().min(2),
+  checksum: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+});
+
+async function assertSaveOwner(saveId: string, userId: string) {
+  return prisma.save.findFirst({
+    where: { id: saveId, userId },
+  });
+}
+
+savesRouter.put('/:id/blob', async (req: AuthenticatedRequest, res) => {
+  const saveId = String(req.params.id);
+  const parsed = uploadBlobSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten() });
+    return;
+  }
+
+  const owned = await assertSaveOwner(saveId, req.user!.userId);
+  if (!owned) {
+    res.status(404).json({ error: 'Save not found' });
+    return;
+  }
+
+  let payload: string;
+  try {
+    payload = parsed.data.blob;
+    JSON.parse(payload);
+  } catch {
+    res.status(400).json({ error: 'Invalid save blob payload' });
+    return;
+  }
+
+  const compressed = compressSavePayload(payload);
+  const checksum = checksumBuffer(compressed);
+  const blobData = new Uint8Array(compressed);
+
+  if (parsed.data.checksum && parsed.data.checksum.toLowerCase() !== checksum) {
+    res.status(400).json({ error: 'Save blob checksum mismatch' });
+    return;
+  }
+
+  const schemaVersion =
+    (JSON.parse(payload) as { schemaVersion?: number }).schemaVersion ?? owned.schemaVersion;
+
+  await prisma.$transaction([
+    prisma.saveBlob.upsert({
+      where: { saveId },
+      create: { saveId, data: blobData, checksum },
+      update: { data: blobData, checksum },
+    }),
+    prisma.save.update({
+      where: { id: saveId },
+      data: {
+        blobSizeBytes: compressed.byteLength,
+        blobChecksum: checksum,
+        schemaVersion,
+        lastPlayedAt: new Date(),
+      },
+    }),
+  ]);
+
+  res.json({
+    saveId,
+    blobSizeBytes: compressed.byteLength,
+    checksum,
+  });
+});
+
+savesRouter.get('/:id/blob', async (req: AuthenticatedRequest, res) => {
+  const saveId = String(req.params.id);
+  const owned = await assertSaveOwner(saveId, req.user!.userId);
+  if (!owned) {
+    res.status(404).json({ error: 'Save not found' });
+    return;
+  }
+
+  const record = await prisma.saveBlob.findUnique({ where: { saveId } });
+  if (!record) {
+    res.status(404).json({ error: 'Save blob not found' });
+    return;
+  }
+
+  const payload = decompressSavePayload(Buffer.from(record.data));
+  res.json({
+    saveId,
+    schemaVersion: owned.schemaVersion,
+    blobSizeBytes: owned.blobSizeBytes,
+    checksum: record.checksum,
+    blob: payload,
+  });
 });

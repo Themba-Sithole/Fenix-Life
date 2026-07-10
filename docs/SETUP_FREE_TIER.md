@@ -65,10 +65,23 @@ npm run dev:client
 
 # API (terminal 2)
 npm run dev:api
+
+# Admin portal (terminal 3, optional)
+npm run dev:admin
 ```
 
 - Frontend: [http://localhost:5173](http://localhost:5173)
+- Admin: [http://localhost:5174](http://localhost:5174)
 - API health: [http://localhost:3001/health](http://localhost:3001/health)
+
+### Admin staff login (local)
+
+Add to `.env`, then run `npm run admin:seed`:
+
+```env
+ADMIN_SEED_EMAIL="admin@fenix.local"
+ADMIN_SEED_PASSWORD="your-secure-password"
+```
 
 Test register:
 
@@ -126,7 +139,7 @@ npm run db:push
 6. Go back to **Render** → your API service → **Environment** → update:
 
 ```env
-CORS_ORIGINS=https://fenix-life.vercel.app,http://localhost:5173
+CORS_ORIGINS=https://fenix-life.vercel.app,http://localhost:5173,http://localhost:5174
 ```
 
 Redeploy API (or it may auto-redeploy).

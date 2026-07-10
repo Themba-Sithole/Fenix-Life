@@ -34,7 +34,7 @@ authRouter.post('/register', async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
     data: { email, passwordHash, displayName: displayName ?? email.split('@')[0] },
-    select: { id: true, email: true, displayName: true, createdAt: true },
+    select: { id: true, email: true, displayName: true, role: true, createdAt: true },
   });
 
   const token = signToken({ userId: user.id, email: user.email });
@@ -72,6 +72,7 @@ authRouter.post('/login', async (req, res) => {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
+      role: user.role,
       createdAt: user.createdAt,
     },
     token,

@@ -48,9 +48,22 @@ model Save {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blob SaveBlob?
 
   @@index([userId])
   @@map("saves")
+}
+
+model SaveBlob {
+  saveId    String   @id @map("save_id")
+  data      Bytes
+  checksum  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  save Save @relation(fields: [saveId], references: [id], onDelete: Cascade)
+
+  @@map("save_blobs")
 }
 
 model AdminAuditLog {

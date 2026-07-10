@@ -11,6 +11,7 @@
     "db:push": "prisma db push --schema ../../prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema ../../prisma/schema.prisma",
     "db:studio": "prisma studio --schema ../../prisma/schema.prisma",
+    "admin:seed": "tsx src/scripts/seed-admin.ts",
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },

@@ -163,6 +163,18 @@ export async function touchSave(saveId: string): Promise<SaveSummary> {
   return data.save;
 }
 
+export async function uploadSaveBlob(saveId: string, blob: string): Promise<void> {
+  await apiFetch(`/saves/${saveId}/blob`, {
+    method: 'PUT',
+    body: JSON.stringify({ blob }),
+  });
+}
+
+export async function downloadSaveBlob(saveId: string): Promise<string> {
+  const data = await apiFetch<{ blob: string }>(`/saves/${saveId}/blob`);
+  return data.blob;
+}
+
 export function clearSession(): void {
   setAuthToken(null);
   setStoredUser(null);

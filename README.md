@@ -14,12 +14,14 @@ npm install
 # 3. Push database schema
 npm run db:push
 
-# 4. Run game client + API (separate terminals)
+# 4. Run game client + API + admin (separate terminals)
 npm run dev:client
 npm run dev:api
+npm run dev:admin
 ```
 
 - **Game:** http://localhost:5173  
+- **Admin:** http://localhost:5174  
 - **API:** http://localhost:3001/health  
 
 ## Host online (free)
@@ -39,7 +41,8 @@ See **[docs/SETUP_FREE_TIER.md](docs/SETUP_FREE_TIER.md)** for step-by-step setu
 fenix-life/
 ├── apps/
 │   ├── client/    # React + Vite game UI
-│   └── api/       # Express API (auth, saves)
+│   ├── admin/     # Staff operations portal
+│   └── api/       # Express API (auth, saves, admin)
 ├── packages/
 │   └── domain/    # Shared domain types (Money, WorldInstance, …)
 ├── prisma/        # Database schema

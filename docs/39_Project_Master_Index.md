@@ -419,13 +419,14 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | shadcn/ui components | ✅ Complete | `apps/client/src/app/components/ui/` |
 | Domain package | 🔄 In Progress | `packages/domain` — Money, SaveId, WorldInstance v0 |
 | Player auth + saves | ✅ Complete | Login/register, JWT, create/load saves — Phase B (Doc 25, 26) |
-| Simulation engines | 📋 Planned | `packages/simulation-engine` not yet created |
+| Simulation kernel v0 | ✅ Complete | Time engine, worker bridge, blob persist — Phase C |
+| Admin portal | ✅ Complete | `apps/admin` — login, dashboard, accounts, audit — Phase D |
+| Simulation engines | 📋 Planned | Full FSF engine constellation (Doc 14) |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | 📋 Planned | `/content/` not yet created |
 | Phaser city map | 📋 Planned | Route exists, engine TBD |
-| Save system | 🔄 In Progress | Metadata + create/load; blob upload Phase C |
-| Backend API | 🔄 In Progress | Express in `apps/api` — auth + saves (NestJS migration deferred) |
-| Admin portal | 📋 Planned | `apps/admin` Phase D |
+| Save system | 🔄 In Progress | Blob upload/download + autosave; full FLSS binary format later |
+| Backend API | 🔄 In Progress | Express in `apps/api` — auth, saves, admin routes |
 
 ## 6.3 Milestone Tracker
 
@@ -478,7 +479,8 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | `apps/client/src/styles/theme.css` | 32 §3 |
 | `apps/client/src/app/components/ui/` | 32 §8, 34 §4 |
 | `apps/client/src/imports/pasted_text/fenix-life-ui-ux.md` | 34 (prototype origin) |
-| `apps/api/src/` | 25, 26 |
+| `apps/api/src/routes/admin/` | 42, 25 §17 |
+| `apps/admin/src/` | 42 |
 | `packages/domain/src/` | 04, 14, 26 |
 | `prisma/schema.prisma` | 04, 42 |
 | `guidelines/Guidelines.md` | 32, 34 (supplementary) |
@@ -526,6 +528,9 @@ Any new doc or status change **must** update this file (39) within 48 hours.
 
 | Date | Version | Changes |
 |---|---|---|
+| 2026-07-10 | 1.4 | Phase D admin portal: staff login, accounts, saves inspect, audit log |
+| 2026-07-10 | 1.3 | Phase C simulation kernel v0: time engine, worker bridge, save blobs |
+| 2026-07-10 | 1.2 | Phase B auth + save loop: login, register, JWT, create/continue saves |
 | 2026-07-10 | 1.1 | Phase A monorepo migration: `apps/client`, `apps/api`, `packages/domain`; Prisma admin models |
 | 2026-07-10 | 1.0 | Initial master index; registered docs 00–41; Phase 4 complete |
 | 2026-07-10 | 1.0 | Completed domain specs 08 Education, 09 Family & Relationships, 10 Real Estate & Housing |

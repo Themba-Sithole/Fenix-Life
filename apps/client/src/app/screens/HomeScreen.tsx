@@ -10,11 +10,23 @@ import {
   Bell, Cloud, Sun, Menu, GraduationCap, ShoppingBag
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
+import { useSimulation } from "@/context/SimulationContext";
+import { Pause, Play, SkipForward } from "lucide-react";
 
 export default function HomeScreen() {
   const navigate = useNavigate();
   const { activeSave, isLoading } = useSave();
+  const {
+    formattedDate,
+    isPaused,
+    isSaving,
+    isLoading: simLoading,
+    advanceDay,
+    setPaused,
+    tickCount,
+  } = useSimulation();
   const [notifications] = useState(3);
+  const [advancing, setAdvancing] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !activeSave) {
@@ -22,7 +34,7 @@ export default function HomeScreen() {
     }
   }, [activeSave, isLoading, navigate]);
 
-  if (isLoading || !activeSave) {
+  if (isLoading || !activeSave || simLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
         Loading your life…
@@ -30,7 +42,16 @@ export default function HomeScreen() {
     );
   }
 
-  const displayDate = formatSaveDate(activeSave.lastPlayedAt);
+  const displayDate = formattedDate ?? formatSaveDate(activeSave.lastPlayedAt);
+
+  async function handleAdvanceDay() {
+    setAdvancing(true);
+    try {
+      await advanceDay();
+    } finally {
+      setAdvancing(false);
+    }
+  }
 
   const stats = [
     { label: "Happiness", value: 78, icon: Heart, color: "text-[#2EC4B6]", bgColor: "bg-[#2EC4B6]" },
@@ -68,7 +89,10 @@ export default function HomeScreen() {
             </Button>
             <div>
               <h1 className="text-xl">{activeSave.name}</h1>
-              <p className="text-sm text-gray-300">New Life — simulation starting soon</p>
+              <p className="text-sm text-gray-300">
+                Day {tickCount + 1} · {isPaused ? 'Paused' : 'Running'}
+                {isSaving ? ' · Saving…' : ''}
+              </p>
             </div>
           </div>
           
@@ -91,6 +115,43 @@ export default function HomeScreen() {
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 pt-4">
+        <Card className="border-[#2EC4B6]/20 shadow-sm">
+          <CardContent className="p-4 flex flex-wrap items-center gap-3">
+            <span className="text-sm text-[#1C2541] font-medium">Time Controls</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPaused(!isPaused)}
+            >
+              {isPaused ? (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Resume
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4 mr-2" />
+                  Pause
+                </>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+              onClick={handleAdvanceDay}
+              disabled={isPaused || advancing || isSaving}
+            >
+              <SkipForward className="w-4 h-4 mr-2" />
+              {advancing ? 'Advancing…' : 'Advance 1 Day'}
+            </Button>
+            <span className="text-sm text-gray-500 ml-auto">
+              In-game: {displayDate}
+            </span>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
