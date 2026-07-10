@@ -1,5 +1,9 @@
 import { createBrowserRouter } from "react-router";
+import type { ComponentType } from "react";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import MainMenu from "./screens/MainMenu";
+import AuthScreen from "./screens/AuthScreen";
+import ContinueScreen from "./screens/ContinueScreen";
 import CharacterCreation from "./screens/CharacterCreation";
 import HomeScreen from "./screens/HomeScreen";
 import CityMap from "./screens/CityMap";
@@ -16,66 +20,84 @@ import Timeline from "./screens/Timeline";
 import NewsFeed from "./screens/NewsFeed";
 import Settings from "./screens/Settings";
 
+function protect(Component: ComponentType) {
+  return function ProtectedScreen() {
+    return (
+      <ProtectedRoute>
+        <Component />
+      </ProtectedRoute>
+    );
+  };
+}
+
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: MainMenu,
   },
   {
+    path: "/login",
+    Component: AuthScreen,
+  },
+  {
+    path: "/continue",
+    Component: protect(ContinueScreen),
+  },
+  {
     path: "/character-creation",
-    Component: CharacterCreation,
+    Component: protect(CharacterCreation),
   },
   {
     path: "/home",
-    Component: HomeScreen,
+    Component: protect(HomeScreen),
   },
   {
     path: "/city",
-    Component: CityMap,
+    Component: protect(CityMap),
   },
   {
     path: "/phone",
-    Component: Smartphone,
+    Component: protect(Smartphone),
   },
   {
     path: "/banking",
-    Component: BankingDashboard,
+    Component: protect(BankingDashboard),
   },
   {
     path: "/company",
-    Component: CompanyDashboard,
+    Component: protect(CompanyDashboard),
   },
   {
     path: "/employees",
-    Component: EmployeeManagement,
+    Component: protect(EmployeeManagement),
   },
   {
     path: "/stocks",
-    Component: StockMarket,
+    Component: protect(StockMarket),
   },
   {
     path: "/real-estate",
-    Component: RealEstate,
+    Component: protect(RealEstate),
   },
   {
     path: "/vehicles",
-    Component: VehicleDealership,
+    Component: protect(VehicleDealership),
   },
   {
     path: "/education",
-    Component: Education,
+    Component: protect(Education),
   },
   {
     path: "/family",
-    Component: Family,
+    Component: protect(Family),
   },
   {
     path: "/timeline",
-    Component: Timeline,
+    Component: protect(Timeline),
   },
   {
     path: "/news",
-    Component: NewsFeed,
+    Component: protect(NewsFeed),
   },
   {
     path: "/settings",

@@ -1,17 +1,83 @@
 /**
- * API base URL — set VITE_API_URL in .env (local) or Vercel env vars (production).
+ * API client — Doc 25. View models only; no simulation logic in UI.
  */
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/v1';
 
+const AUTH_TOKEN_KEY = 'fenix_auth_token';
+const USER_KEY = 'fenix_user';
+const ACTIVE_SAVE_KEY = 'fenix_active_save_id';
+
+export interface User {
+  id: string;
+  email: string;
+  displayName: string | null;
+  createdAt: string;
+}
+
+export interface SaveSummary {
+  id: string;
+  name: string;
+  schemaVersion: number;
+  worldSeed: string | null;
+  lastPlayedAt: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
 export function getAuthToken(): string | null {
-  return localStorage.getItem('fenix_auth_token');
+  return localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
 export function setAuthToken(token: string | null): void {
   if (token) {
-    localStorage.setItem('fenix_auth_token', token);
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
   } else {
-    localStorage.removeItem('fenix_auth_token');
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+}
+
+export function getStoredUser(): User | null {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: User | null): void {
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(USER_KEY);
+  }
+}
+
+export function getActiveSaveId(): string | null {
+  return localStorage.getItem(ACTIVE_SAVE_KEY);
+}
+
+export function setActiveSaveId(saveId: string | null): void {
+  if (saveId) {
+    localStorage.setItem(ACTIVE_SAVE_KEY, saveId);
+  } else {
+    localStorage.removeItem(ACTIVE_SAVE_KEY);
+  }
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
   }
 }
 
@@ -33,7 +99,7 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(body.error ?? `Request failed: ${response.status}`);
+    throw new ApiError(body.error ?? `Request failed: ${response.status}`, response.status);
   }
 
   return response.json() as Promise<T>;
@@ -46,4 +112,59 @@ export async function checkApiHealth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function registerUser(input: {
+  email: string;
+  password: string;
+  displayName?: string;
+}): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function loginUser(input: {
+  email: string;
+  password: string;
+}): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listSaves(): Promise<SaveSummary[]> {
+  const data = await apiFetch<{ saves: SaveSummary[] }>('/saves');
+  return data.saves;
+}
+
+export async function createSave(input: {
+  name?: string;
+  worldSeed?: string;
+}): Promise<SaveSummary> {
+  const data = await apiFetch<{ save: SaveSummary }>('/saves', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return data.save;
+}
+
+export async function getSave(saveId: string): Promise<SaveSummary> {
+  const data = await apiFetch<{ save: SaveSummary }>(`/saves/${saveId}`);
+  return data.save;
+}
+
+export async function touchSave(saveId: string): Promise<SaveSummary> {
+  const data = await apiFetch<{ save: SaveSummary }>(`/saves/${saveId}/play`, {
+    method: 'POST',
+  });
+  return data.save;
+}
+
+export function clearSession(): void {
+  setAuthToken(null);
+  setStoredUser(null);
+  setActiveSaveId(null);
 }

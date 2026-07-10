@@ -77,3 +77,31 @@ savesRouter.get('/:id', async (req: AuthenticatedRequest, res) => {
 
   res.json({ save });
 });
+
+savesRouter.post('/:id/play', async (req: AuthenticatedRequest, res) => {
+  const saveId = String(req.params.id);
+  const existing = await prisma.save.findFirst({
+    where: { id: saveId, userId: req.user!.userId },
+  });
+
+  if (!existing) {
+    res.status(404).json({ error: 'Save not found' });
+    return;
+  }
+
+  const save = await prisma.save.update({
+    where: { id: saveId },
+    data: { lastPlayedAt: new Date() },
+    select: {
+      id: true,
+      name: true,
+      schemaVersion: true,
+      worldSeed: true,
+      lastPlayedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  res.json({ save });
+});

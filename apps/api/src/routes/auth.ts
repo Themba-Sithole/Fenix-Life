@@ -55,6 +55,11 @@ authRouter.post('/login', async (req, res) => {
     return;
   }
 
+  if (user.suspended) {
+    res.status(403).json({ error: 'Account suspended' });
+    return;
+  }
+
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: 'Invalid email or password' });

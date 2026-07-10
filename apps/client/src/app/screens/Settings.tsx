@@ -5,16 +5,26 @@ import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Slider } from "../components/ui/slider";
-import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, Sun } from "lucide-react";
+import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, Sun, LogOut } from "lucide-react";
 import { API_URL, checkApiHealth } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useSave } from "@/context/SaveContext";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { clearActiveSave } = useSave();
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
 
   useEffect(() => {
     checkApiHealth().then(setApiOnline);
   }, []);
+
+  function handleLogout() {
+    clearActiveSave();
+    logout();
+    navigate('/');
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
@@ -222,16 +232,41 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full justify-start">
+              {isAuthenticated ? (
+                <>
+                  <div className="rounded-lg border border-[#2EC4B6]/20 bg-[#F5F7FA] p-4">
+                    <div className="text-sm text-gray-600">Signed in as</div>
+                    <div className="text-[#1C2541] font-medium">{user?.displayName ?? user?.email}</div>
+                    <div className="text-sm text-gray-500">{user?.email}</div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Log Out
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => navigate('/login')}
+                >
+                  Sign In to Your Account
+                </Button>
+              )}
+              <Button variant="outline" className="w-full justify-start" disabled>
                 Change Password
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" disabled>
                 Manage Account
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" disabled>
                 Privacy Settings
               </Button>
-              <Button variant="outline" className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50">
+              <Button variant="outline" className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50" disabled>
                 Delete Account
               </Button>
             </CardContent>

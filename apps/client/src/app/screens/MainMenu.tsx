@@ -2,11 +2,23 @@ import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { TrendingUp, TrendingDown, Building2, User, Play, Settings, Trophy, Users, Award } from "lucide-react";
+import { TrendingUp, Building2, User, Play, Settings, Trophy, Users, Award, LogIn } from "lucide-react";
 import React from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useSave } from "@/context/SaveContext";
 
 export default function MainMenu() {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const { saves } = useSave();
+
+  function requireAuth(path: string) {
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: path } });
+      return;
+    }
+    navigate(path);
+  }
 
   const newsItems = [
     { text: "Tech Startup Raises $50M in Series B Funding", change: "+15%" },
@@ -139,18 +151,18 @@ export default function MainMenu() {
             <CardContent className="p-6 grid grid-cols-3 gap-6 text-white">
               <div className="text-center">
                 <User className="w-6 h-6 mx-auto mb-2 text-[#2EC4B6]" />
-                <div className="text-sm text-gray-400">Player</div>
-                <div>Alex Chen</div>
+                <div className="text-sm text-gray-400">Account</div>
+                <div>{isAuthenticated ? (user?.displayName ?? user?.email) : "Guest"}</div>
               </div>
               <div className="text-center">
                 <Building2 className="w-6 h-6 mx-auto mb-2 text-[#F4B400]" />
-                <div className="text-sm text-gray-400">Net Worth</div>
-                <div className="text-[#2EC4B6]">$2.4M</div>
+                <div className="text-sm text-gray-400">Saved Lives</div>
+                <div className="text-[#2EC4B6]">{isAuthenticated ? saves.length : "—"}</div>
               </div>
               <div className="text-center">
                 <TrendingUp className="w-6 h-6 mx-auto mb-2 text-[#2EC4B6]" />
-                <div className="text-sm text-gray-400">Age</div>
-                <div>32</div>
+                <div className="text-sm text-gray-400">Status</div>
+                <div>{isAuthenticated ? "Signed In" : "Offline"}</div>
               </div>
             </CardContent>
           </Card>
@@ -164,14 +176,14 @@ export default function MainMenu() {
           className="grid grid-cols-2 gap-4 mb-8 w-full max-w-md"
         >
           <Button
-            onClick={() => navigate("/character-creation")}
+            onClick={() => requireAuth("/character-creation")}
             className="h-14 bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] hover:from-[#1C9B8F] hover:to-[#2EC4B6] text-white shadow-lg shadow-[#2EC4B6]/20"
           >
             <Play className="w-5 h-5 mr-2" />
             New Life
           </Button>
           <Button
-            onClick={() => navigate("/home")}
+            onClick={() => requireAuth("/continue")}
             className="h-14 bg-gradient-to-r from-[#1C2541] to-[#0B132B] hover:from-[#0B132B] hover:to-[#1C2541] text-white border border-[#2EC4B6]/30"
             variant="outline"
           >
@@ -185,12 +197,16 @@ export default function MainMenu() {
             Multiplayer
           </Button>
           <Button
-            onClick={() => navigate("/settings")}
+            onClick={() => navigate(isAuthenticated ? "/settings" : "/login")}
             className="h-14 bg-[#1C2541]/80 hover:bg-[#1C2541] text-white border border-[#2EC4B6]/20"
             variant="outline"
           >
-            <Settings className="w-5 h-5 mr-2" />
-            Settings
+            {isAuthenticated ? (
+              <Settings className="w-5 h-5 mr-2" />
+            ) : (
+              <LogIn className="w-5 h-5 mr-2" />
+            )}
+            {isAuthenticated ? "Settings" : "Sign In"}
           </Button>
           <Button
             className="h-14 bg-[#1C2541]/80 hover:bg-[#1C2541] text-white border border-[#2EC4B6]/20"

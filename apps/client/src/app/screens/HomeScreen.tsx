@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -9,10 +9,28 @@ import {
   Smartphone, Map, Users, Briefcase, Car, Home, Calendar,
   Bell, Cloud, Sun, Menu, GraduationCap, ShoppingBag
 } from "lucide-react";
+import { formatSaveDate, useSave } from "@/context/SaveContext";
 
 export default function HomeScreen() {
   const navigate = useNavigate();
+  const { activeSave, isLoading } = useSave();
   const [notifications] = useState(3);
+
+  useEffect(() => {
+    if (!isLoading && !activeSave) {
+      navigate('/continue', { replace: true });
+    }
+  }, [activeSave, isLoading, navigate]);
+
+  if (isLoading || !activeSave) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
+        Loading your life…
+      </div>
+    );
+  }
+
+  const displayDate = formatSaveDate(activeSave.lastPlayedAt);
 
   const stats = [
     { label: "Happiness", value: 78, icon: Heart, color: "text-[#2EC4B6]", bgColor: "bg-[#2EC4B6]" },
@@ -49,15 +67,15 @@ export default function HomeScreen() {
               <Menu className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-xl">Alex Chen</h1>
-              <p className="text-sm text-gray-300">CEO, TechVentures Inc.</p>
+              <h1 className="text-xl">{activeSave.name}</h1>
+              <p className="text-sm text-gray-300">New Life — simulation starting soon</p>
             </div>
           </div>
           
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#2EC4B6]" />
-              <span className="text-sm">Monday, July 10, 2026</span>
+              <span className="text-sm">{displayDate}</span>
             </div>
             <div className="flex items-center gap-2">
               <Sun className="w-4 h-4 text-[#F4B400]" />
@@ -87,7 +105,7 @@ export default function HomeScreen() {
                   <div className="w-24 h-24 mb-4 rounded-full bg-gradient-to-br from-[#2EC4B6] to-[#1C9B8F] flex items-center justify-center border-4 border-[#2EC4B6] shadow-lg">
                     <Briefcase className="w-12 h-12 text-white" />
                   </div>
-                  <h2 className="text-2xl text-[#1C2541] mb-1">Alex Chen</h2>
+                  <h2 className="text-2xl text-[#1C2541] mb-1">{activeSave.name}</h2>
                   <Badge className="mb-4 bg-[#F4B400] text-white">Age 32</Badge>
                   
                   <div className="w-full space-y-3 mb-4">

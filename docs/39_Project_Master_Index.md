@@ -413,16 +413,17 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 
 | Area | Status | Evidence |
 |---|---|---|
-| Monorepo structure | 🔄 In Progress | `apps/client`, `apps/api`, `packages/domain` — Phase A (Doc 28) |
+| Monorepo structure | ✅ Complete | `apps/client`, `apps/api`, `packages/domain` — Phase A (Doc 28) |
 | UI prototype screens | 🔄 In Progress | 16 routes in `apps/client/src/app/routes.tsx` |
 | Design tokens | ✅ Complete | `apps/client/src/styles/theme.css` |
 | shadcn/ui components | ✅ Complete | `apps/client/src/app/components/ui/` |
 | Domain package | 🔄 In Progress | `packages/domain` — Money, SaveId, WorldInstance v0 |
+| Player auth + saves | ✅ Complete | Login/register, JWT, create/load saves — Phase B (Doc 25, 26) |
 | Simulation engines | 📋 Planned | `packages/simulation-engine` not yet created |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | 📋 Planned | `/content/` not yet created |
 | Phaser city map | 📋 Planned | Route exists, engine TBD |
-| Save system | 📋 Planned | Blob upload Phase C |
+| Save system | 🔄 In Progress | Metadata + create/load; blob upload Phase C |
 | Backend API | 🔄 In Progress | Express in `apps/api` — auth + saves (NestJS migration deferred) |
 | Admin portal | 📋 Planned | `apps/admin` Phase D |
 

@@ -6,13 +6,19 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, GraduationCap, Users, Briefcase } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 import AvatarSelector from "../components/AvatarSelector";
+import { useSave } from "@/context/SaveContext";
 
 export default function CharacterCreation() {
   const navigate = useNavigate();
+  const { createNewSave } = useSave();
   const [selectedBackground, setSelectedBackground] = useState("middle-class");
   const [selectedAvatar, setSelectedAvatar] = useState("professional");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const backgrounds = [
     {
@@ -91,6 +97,23 @@ export default function CharacterCreation() {
 
   const selectedBg = backgrounds.find(bg => bg.id === selectedBackground);
 
+  async function handleStartJourney() {
+    const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ') || 'My Life';
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await createNewSave({
+        name,
+        worldSeed: `${selectedBackground}:${selectedAvatar}`,
+      });
+      navigate('/home');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not create save');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-8">
       <div className="max-w-6xl mx-auto">
@@ -116,12 +139,24 @@ export default function CharacterCreation() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Enter first name" className="border-[#2EC4B6]/30" />
+                  <Input
+                    id="firstName"
+                    placeholder="Enter first name"
+                    className="border-[#2EC4B6]/30"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Enter last name" className="border-[#2EC4B6]/30" />
+                  <Input
+                    id="lastName"
+                    placeholder="Enter last name"
+                    className="border-[#2EC4B6]/30"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -293,14 +328,18 @@ export default function CharacterCreation() {
 
             {/* Action Buttons */}
             <div className="flex justify-between mt-8 pt-6 border-t border-[#2EC4B6]/20">
-              <Button variant="outline" onClick={() => navigate("/")}>
+              {error && (
+                <p className="text-sm text-red-600 self-center mr-4">{error}</p>
+              )}
+              <Button variant="outline" onClick={() => navigate("/")} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button
-                onClick={() => navigate("/home")}
+                onClick={handleStartJourney}
+                disabled={isSubmitting}
                 className="bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] hover:from-[#1C9B8F] hover:to-[#2EC4B6] text-white px-8"
               >
-                Start Your Journey
+                {isSubmitting ? 'Creating save…' : 'Start Your Journey'}
               </Button>
             </div>
           </CardContent>
