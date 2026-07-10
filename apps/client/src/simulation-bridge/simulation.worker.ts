@@ -32,6 +32,16 @@ self.onmessage = (event: MessageEvent<SimulationWorkerRequest>) => {
         };
         reply({ type: 'STATE', world });
         break;
+      case 'SET_TIME_SCALE':
+        if (!world) {
+          throw new Error('Simulation not initialized');
+        }
+        world = {
+          ...world,
+          clock: { ...world.clock, timeScale: event.data.timeScale },
+        };
+        reply({ type: 'STATE', world });
+        break;
       case 'GET_STATE':
         if (!world) {
           throw new Error('Simulation not initialized');

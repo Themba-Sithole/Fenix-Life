@@ -8,7 +8,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { createSaveId, createWorldInstance, type WorldInstance } from '@fenix/domain';
+import {
+  createSaveId,
+  createWorldInstance,
+  ensureWorldV2,
+  type TimeScale,
+  type WorldInstance,
+} from '@fenix/domain';
 import {
   createSaveBlobV1,
   formatGameDate,
@@ -20,17 +26,20 @@ import { useSave } from '@/context/SaveContext';
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from '@/simulation-bridge/types';
 
 const AUTOSAVE_EVERY_TICKS = 1;
+const BASE_TICK_MS = 4000;
 
 interface SimulationContextValue {
   world: WorldInstance | null;
   currentDate: string | null;
   formattedDate: string | null;
   isPaused: boolean;
+  timeScale: TimeScale;
   tickCount: number;
   isLoading: boolean;
   isSaving: boolean;
   advanceDay: () => Promise<void>;
   setPaused: (paused: boolean) => Promise<void>;
+  setTimeScale: (timeScale: TimeScale) => Promise<void>;
   persistNow: () => Promise<void>;
 }
 
@@ -54,11 +63,29 @@ function postAndWait(
   });
 }
 
+function tickIntervalMs(timeScale: TimeScale): number | null {
+  switch (timeScale) {
+    case 0:
+      return null;
+    case 1:
+      return BASE_TICK_MS;
+    case 2:
+      return BASE_TICK_MS / 2;
+    case 5:
+      return BASE_TICK_MS / 5;
+    default: {
+      const _exhaustive: never = timeScale;
+      return _exhaustive;
+    }
+  }
+}
+
 export function SimulationProvider({ children }: { children: ReactNode }) {
   const { activeSave } = useSave();
   const workerRef = useRef<Worker | null>(null);
   const worldRef = useRef<WorldInstance | null>(null);
   const lastSavedTickRef = useRef(-1);
+  const advancingRef = useRef(false);
 
   const [world, setWorld] = useState<WorldInstance | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,6 +128,50 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     lastSavedTickRef.current = response.world.clock.tickCount;
   }, []);
 
+  const applyWorkerState = useCallback(async (response: SimulationWorkerResponse) => {
+    if (response.type !== 'STATE') return;
+    worldRef.current = response.world;
+    setWorld(response.world);
+    await maybeAutosave(response.world);
+  }, [maybeAutosave]);
+
+  const advanceDay = useCallback(async () => {
+    const worker = workerRef.current;
+    if (!worker || advancingRef.current) return;
+
+    advancingRef.current = true;
+    try {
+      const response = await postAndWait(worker, { type: 'ADVANCE_DAY' });
+      await applyWorkerState(response);
+    } finally {
+      advancingRef.current = false;
+    }
+  }, [applyWorkerState]);
+
+  const setPaused = useCallback(async (paused: boolean) => {
+    const worker = workerRef.current;
+    if (!worker) return;
+
+    const response = await postAndWait(worker, { type: 'SET_PAUSED', paused });
+    if (response.type !== 'STATE') return;
+
+    worldRef.current = response.world;
+    setWorld(response.world);
+    await persistWorld(response.world);
+  }, [persistWorld]);
+
+  const setTimeScale = useCallback(async (timeScale: TimeScale) => {
+    const worker = workerRef.current;
+    if (!worker) return;
+
+    const response = await postAndWait(worker, { type: 'SET_TIME_SCALE', timeScale });
+    if (response.type !== 'STATE') return;
+
+    worldRef.current = response.world;
+    setWorld(response.world);
+    await persistWorld(response.world);
+  }, [persistWorld]);
+
   const loadSimulation = useCallback(async () => {
     if (!activeSave) {
       workerRef.current?.terminate();
@@ -117,12 +188,13 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       try {
         const rawBlob = await downloadSaveBlob(activeSave.id);
         const parsed = parseSaveBlobV1(rawBlob);
-        initialWorld = parsed.world;
+        initialWorld = ensureWorldV2(parsed.world, activeSave.name);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
           initialWorld = createWorldInstance({
             saveId: createSaveId(activeSave.id),
             currentDate: '2000-01-01',
+            playerName: activeSave.name,
           });
           await uploadSaveBlob(
             activeSave.id,
@@ -159,29 +231,24 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     };
   }, [persistWorld]);
 
-  const advanceDay = useCallback(async () => {
-    const worker = workerRef.current;
-    if (!worker) return;
+  useEffect(() => {
+    if (!world || world.clock.paused || world.clock.timeScale === 0) {
+      return;
+    }
 
-    const response = await postAndWait(worker, { type: 'ADVANCE_DAY' });
-    if (response.type !== 'STATE') return;
+    const intervalMs = tickIntervalMs(world.clock.timeScale);
+    if (intervalMs === null) {
+      return;
+    }
 
-    worldRef.current = response.world;
-    setWorld(response.world);
-    await maybeAutosave(response.world);
-  }, [maybeAutosave]);
+    const timer = window.setInterval(() => {
+      advanceDay().catch(console.error);
+    }, intervalMs);
 
-  const setPaused = useCallback(async (paused: boolean) => {
-    const worker = workerRef.current;
-    if (!worker) return;
-
-    const response = await postAndWait(worker, { type: 'SET_PAUSED', paused });
-    if (response.type !== 'STATE') return;
-
-    worldRef.current = response.world;
-    setWorld(response.world);
-    await persistWorld(response.world);
-  }, [persistWorld]);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [world?.clock.paused, world?.clock.timeScale, advanceDay, world]);
 
   const value = useMemo<SimulationContextValue>(
     () => ({
@@ -189,18 +256,20 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       currentDate: world?.currentDate ?? null,
       formattedDate: world ? formatGameDate(world.currentDate) : null,
       isPaused: world?.clock.paused ?? true,
+      timeScale: world?.clock.timeScale ?? 0,
       tickCount: world?.clock.tickCount ?? 0,
       isLoading,
       isSaving,
       advanceDay,
       setPaused,
+      setTimeScale,
       persistNow: async () => {
         if (worldRef.current) {
           await persistWorld(worldRef.current);
         }
       },
     }),
-    [world, isLoading, isSaving, advanceDay, setPaused, persistWorld],
+    [world, isLoading, isSaving, advanceDay, setPaused, setTimeScale, persistWorld],
   );
 
   return (

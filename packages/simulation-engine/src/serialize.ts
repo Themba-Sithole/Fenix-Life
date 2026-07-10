@@ -1,4 +1,4 @@
-import { createSaveId, type WorldInstance } from '@fenix/domain';
+import { createSaveId, ensureWorldV2, type WorldInstance } from '@fenix/domain';
 import { SAVE_BLOB_FORMAT_VERSION, SAVE_SCHEMA_VERSION } from './constants.js';
 
 export interface SaveBlobV1 {
@@ -33,5 +33,6 @@ export function parseSaveBlobV1(raw: string): SaveBlobV1 {
   }
 
   parsed.world.saveId = createSaveId(String(parsed.world.saveId));
+  parsed.world = ensureWorldV2(parsed.world);
   return parsed;
 }

@@ -2,50 +2,70 @@ import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, CreditCard, TrendingUp, TrendingDown, DollarSign, PiggyBank, Home, Briefcase } from "lucide-react";
+import { ArrowLeft, CreditCard, TrendingUp, DollarSign, PiggyBank, Home, Briefcase } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { useSimulation } from "@/context/SimulationContext";
+import { formatUsd, totalNetWorthCents, type BankAccountType } from "@fenix/domain";
+
+const ACCOUNT_ICONS: Record<BankAccountType, typeof DollarSign> = {
+  checking: DollarSign,
+  savings: PiggyBank,
+  business: Briefcase,
+  investment: TrendingUp,
+};
+
+const ACCOUNT_COLORS: Record<BankAccountType, string> = {
+  checking: "text-[#2EC4B6]",
+  savings: "text-[#F4B400]",
+  business: "text-[#1C2541]",
+  investment: "text-[#2EC4B6]",
+};
+
+function buildBalanceHistory(netWorthCents: number, tickCount: number) {
+  const labels = ["M-5", "M-4", "M-3", "M-2", "M-1", "Now"];
+  const drift = Math.min(tickCount * 50_00, netWorthCents * 0.15);
+  const start = Math.max(0, netWorthCents - drift);
+
+  return labels.map((month, index) => ({
+    month,
+    balance: Math.round(start + ((netWorthCents - start) * (index + 1)) / labels.length),
+  }));
+}
 
 export default function BankingDashboard() {
   const navigate = useNavigate();
+  const { world, isLoading } = useSimulation();
 
-  const balanceHistory = [
-    { month: "Jan", balance: 720000 },
-    { month: "Feb", balance: 750000 },
-    { month: "Mar", balance: 785000 },
-    { month: "Apr", balance: 810000 },
-    { month: "May", balance: 835000 },
-    { month: "Jun", balance: 850000 },
-  ];
+  if (isLoading || !world) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
+        Loading banking data…
+      </div>
+    );
+  }
+
+  const { banking } = world;
+  const netWorth = totalNetWorthCents(banking);
+  const balanceHistory = buildBalanceHistory(netWorth, world.clock.tickCount);
+  const monthlyIncome = banking.monthlySalaryCents / 100;
+  const monthlyExpenses = banking.monthlyExpensesCents / 100;
 
   const cashFlowData = [
-    { month: "Jan", income: 85000, expenses: 35000 },
-    { month: "Feb", income: 92000, expenses: 37000 },
-    { month: "Mar", income: 98000, expenses: 38000 },
-    { month: "Apr", income: 105000, expenses: 39000 },
-    { month: "May", income: 112000, expenses: 41000 },
-    { month: "Jun", income: 118000, expenses: 42500 },
+    { month: "M-2", income: monthlyIncome * 0.95, expenses: monthlyExpenses * 0.95 },
+    { month: "M-1", income: monthlyIncome * 0.98, expenses: monthlyExpenses * 0.98 },
+    { month: "Now", income: monthlyIncome, expenses: monthlyExpenses },
   ];
 
-  const transactions = [
-    { date: "Jul 10", description: "Salary - TechVentures", amount: 8500, type: "credit" },
-    { date: "Jul 9", description: "Mortgage Payment", amount: -3200, type: "debit" },
-    { date: "Jul 8", description: "Stock Dividend - AAPL", amount: 450, type: "credit" },
-    { date: "Jul 7", description: "Amazon Purchase", amount: -129, type: "debit" },
-    { date: "Jul 6", description: "Car Insurance", amount: -280, type: "debit" },
-    { date: "Jul 5", description: "Rental Income", amount: 2800, type: "credit" },
-  ];
-
-  const accounts = [
-    { name: "Checking Account", balance: 125000, type: "checking", icon: DollarSign, color: "text-[#2EC4B6]" },
-    { name: "Savings Account", balance: 485000, type: "savings", icon: PiggyBank, color: "text-[#F4B400]" },
-    { name: "Business Account", balance: 240000, type: "business", icon: Briefcase, color: "text-[#1C2541]" },
-    { name: "Investment Account", balance: 485000, type: "investment", icon: TrendingUp, color: "text-[#2EC4B6]" },
-  ];
+  const transactions = banking.transactions.map((tx) => ({
+    date: tx.date,
+    description: tx.description,
+    amount: tx.amountCents / 100,
+    type: tx.amountCents >= 0 ? "credit" as const : "debit" as const,
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
-      {/* Hero Header with Image */}
       <div className="relative h-48 overflow-hidden">
         <ImageWithFallback 
           src="https://images.unsplash.com/photo-1645226880663-81561dcab0ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiYW5raW5nJTIwZmluYW5jZSUyMHRlY2hub2xvZ3l8ZW58MXx8fHwxNzgzNzA2NzgyfDA&ixlib=rb-4.1.0&q=80&w=1080"
@@ -66,11 +86,11 @@ export default function BankingDashboard() {
             <div className="flex items-end justify-between">
               <div>
                 <h1 className="text-4xl text-white mb-2">Banking Dashboard</h1>
-                <p className="text-gray-300">Financial Overview</p>
+                <p className="text-gray-300">{world.player.displayName} · Live simulation data</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-300">Total Net Worth</p>
-                <p className="text-3xl text-[#2EC4B6]">$1,335,000</p>
+                <p className="text-3xl text-[#2EC4B6]">{formatUsd(netWorth)}</p>
               </div>
             </div>
           </div>
@@ -78,26 +98,27 @@ export default function BankingDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        {/* Accounts Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-6">
-          {accounts.map((account) => (
-            <Card key={account.name} className="border-[#2EC4B6]/20 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <account.icon className={`w-5 h-5 ${account.color}`} />
-                  <Badge variant="outline" className="text-xs">Active</Badge>
-                </div>
-                <div className="text-sm text-gray-600 mb-1">{account.name}</div>
-                <div className="text-2xl text-[#1C2541]">
-                  ${account.balance.toLocaleString()}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {banking.accounts.map((account) => {
+            const Icon = ACCOUNT_ICONS[account.type];
+            return (
+              <Card key={account.id} className="border-[#2EC4B6]/20 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <Icon className={`w-5 h-5 ${ACCOUNT_COLORS[account.type]}`} />
+                    <Badge variant="outline" className="text-xs">Active</Badge>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">{account.name}</div>
+                  <div className="text-2xl text-[#1C2541]">
+                    {formatUsd(account.balanceCents)}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Balance History Chart */}
           <Card className="lg:col-span-2 border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Balance History</CardTitle>
@@ -113,44 +134,43 @@ export default function BankingDashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip />
+                  <YAxis stroke="#6b7280" tickFormatter={(v) => `$${(v / 100).toLocaleString()}`} />
+                  <Tooltip formatter={(v: number) => formatUsd(v)} />
                   <Area type="monotone" dataKey="balance" stroke="#2EC4B6" fillOpacity={1} fill="url(#colorBalance)" strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Loans & Credit */}
           <Card className="border-[#F4B400]/20 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-[#1C2541]">Loans & Credit</CardTitle>
+              <CardTitle className="text-[#1C2541]">Economy</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 rounded-lg bg-gray-50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Home className="w-4 h-4 text-[#2EC4B6]" />
-                  <span className="text-sm">Mortgage</span>
+                  <TrendingUp className="w-4 h-4 text-[#2EC4B6]" />
+                  <span className="text-sm">Tech Sector Index</span>
                 </div>
-                <div className="text-xl text-[#1C2541]">$285,000</div>
-                <div className="text-xs text-gray-500 mt-1">3.2% APR • 22 years left</div>
+                <div className="text-xl text-[#1C2541]">{world.economy.techSectorIndex.toFixed(1)}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Inflation {(world.economy.inflationRateAnnual * 100).toFixed(1)}% annual
+                </div>
               </div>
               <div className="p-4 rounded-lg bg-gray-50">
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard className="w-4 h-4 text-[#F4B400]" />
-                  <span className="text-sm">Credit Card</span>
+                  <span className="text-sm">Monthly Salary</span>
                 </div>
-                <div className="text-xl text-[#1C2541]">$2,450</div>
-                <div className="text-xs text-gray-500 mt-1">$50,000 limit • 4.9% used</div>
+                <div className="text-xl text-[#1C2541]">{formatUsd(banking.monthlySalaryCents)}</div>
               </div>
               <div className="p-4 rounded-lg bg-[#2EC4B6]/10">
-                <div className="text-sm text-gray-600 mb-1">Available Credit</div>
-                <div className="text-2xl text-[#2EC4B6]">$47,550</div>
+                <div className="text-sm text-gray-600 mb-1">Monthly Expenses</div>
+                <div className="text-2xl text-[#2EC4B6]">{formatUsd(banking.monthlyExpensesCents)}</div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Cash Flow */}
           <Card className="lg:col-span-2 border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Income vs Expenses</CardTitle>
@@ -166,44 +186,38 @@ export default function BankingDashboard() {
                   <Bar dataKey="expenses" fill="#F4B400" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-              <div className="flex justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-[#2EC4B6] rounded"></div>
-                  <span className="text-sm text-gray-600">Income</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-[#F4B400] rounded"></div>
-                  <span className="text-sm text-gray-600">Expenses</span>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Recent Transactions */}
           <Card className="border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Recent Transactions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {transactions.map((transaction, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="text-sm text-[#1C2541]">{transaction.description}</div>
-                      <div className="text-xs text-gray-500">{transaction.date}</div>
-                    </div>
+                {transactions.length === 0 ? (
+                  <p className="text-sm text-gray-500">Advance time to see transactions.</p>
+                ) : (
+                  transactions.map((transaction) => (
                     <div
-                      className={`font-medium ${
-                        transaction.type === "credit" ? "text-[#2EC4B6]" : "text-gray-700"
-                      }`}
+                      key={`${transaction.date}-${transaction.description}`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
-                      {transaction.type === "credit" ? "+" : ""}${Math.abs(transaction.amount).toLocaleString()}
+                      <div className="flex-1">
+                        <div className="text-sm text-[#1C2541]">{transaction.description}</div>
+                        <div className="text-xs text-gray-500">{transaction.date}</div>
+                      </div>
+                      <div
+                        className={`font-medium ${
+                          transaction.type === "credit" ? "text-[#2EC4B6]" : "text-gray-700"
+                        }`}
+                      >
+                        {transaction.type === "credit" ? "+" : ""}
+                        ${Math.abs(transaction.amount).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
