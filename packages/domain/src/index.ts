@@ -36,6 +36,13 @@ export {
   companyStageLabel,
   createDefaultCompany,
 } from './company.js';
+export type { CareerState, EmploymentStatus } from './career.js';
+export {
+  createDefaultCareer,
+  employmentStatusLabel,
+} from './career.js';
+export type { FiveCapitalsSnapshot } from './five-capitals.js';
+export { computeFiveCapitals, FIVE_CAPITALS } from './five-capitals.js';
 export {
   formatOriginLocation,
   getCityById,

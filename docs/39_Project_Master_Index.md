@@ -417,10 +417,13 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | UI prototype screens | 🔄 In Progress | 16 routes in `apps/client/src/app/routes.tsx` |
 | Design tokens | ✅ Complete | `apps/client/src/styles/theme.css` |
 | shadcn/ui components | ✅ Complete | `apps/client/src/app/components/ui/` |
-| Domain package | 🔄 In Progress | `packages/domain` — Money, SaveId, WorldInstance v0 |
+| Domain package | 🔄 In Progress | Money, SaveId, WorldInstance, Five Capitals, Career v0 |
 | Player auth + saves | ✅ Complete | Login/register, JWT, create/load saves — Phase B (Doc 25, 26) |
 | Simulation kernel v0 | ✅ Complete | Time engine, worker bridge, blob persist — Phase C |
 | Admin portal | ✅ Complete | `apps/admin` — login, dashboard, accounts, audit — Phase D |
+| Playable meso loop | ✅ Complete | Banking, company, news, time controls — Phase E–F |
+| Five Capitals dashboard | ✅ Complete | Home strip from live simulation — Phase G |
+| Career / employment v0 | ✅ Complete | Career state, salary sync, education wire — Phase G |
 | Simulation engines | 📋 Planned | Full FSF engine constellation (Doc 14) |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | 📋 Planned | `/content/` not yet created |
@@ -433,7 +436,7 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Milestone | Target | Doc Status | Code Status |
 |---|---|---|---|
 | M0.1 Documentation Foundation | Q3 2026 | ✅ 100% (42/42) | UI prototype |
-| M1.0 Alpha Internal | Q4 2026 | All docs complete | Simulation spike needed |
+| M1.0 Alpha Internal | Q4 2026 | All docs complete | Core loop wired (Phases A–G) |
 | EA 0.5 | Q2 2027 | Docs complete | Full loop |
 | 1.0 Launch | Q4 2027 | Docs complete | Generational play |
 
@@ -442,18 +445,18 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Screen | Route | UI Shell | Sim Wired | Doc |
 |---|---|---|---|---|
 | MainMenu | `/` | ✅ | ❌ | 34 §5.1 |
-| CharacterCreation | `/character-creation` | ✅ | ❌ | 34 §5.2 |
-| HomeScreen | `/home` | ✅ | ❌ | 34 §5.3 |
-| BankingDashboard | `/banking` | ✅ | ❌ | 34 §5.4 |
-| CompanyDashboard | `/company` | ✅ | ❌ | 34 §5.5 |
+| CharacterCreation | `/character-creation` | ✅ | ✅ | 34 §5.2 |
+| HomeScreen | `/home` | ✅ | ✅ | 34 §5.3 |
+| BankingDashboard | `/banking` | ✅ | ✅ | 34 §5.4 |
+| CompanyDashboard | `/company` | ✅ | ✅ | 34 §5.5 |
+| NewsFeed | `/news` | ✅ | ✅ | 34 §5.13 |
+| Education | `/education` | ✅ | ✅ | 34 §5.10 |
 | EmployeeManagement | `/employees` | ✅ | ❌ | 34 §5.6 |
 | StockMarket | `/stocks` | ✅ | ❌ | 34 §5.7 |
 | RealEstate | `/real-estate` | ✅ | ❌ | 34 §5.8 |
 | VehicleDealership | `/vehicles` | ✅ | ❌ | 34 §5.9 |
-| Education | `/education` | ✅ | ❌ | 34 §5.10 |
 | Family | `/family` | ✅ | ❌ | 34 §5.11 |
 | Timeline | `/timeline` | ✅ | ❌ | 34 §5.12 |
-| NewsFeed | `/news` | ✅ | ❌ | 34 §5.13 |
 | CityMap | `/city` | 🔄 | ❌ | 34 §5.14 |
 | Smartphone | `/phone` | ✅ | ❌ | 34 §5.15 |
 | Settings | `/settings` | ✅ | ❌ | 34 §5.16 |

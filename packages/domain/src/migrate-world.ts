@@ -1,6 +1,7 @@
 import { createCitizenId } from './citizen-id.js';
 import { createDefaultBanking } from './banking.js';
 import { createDefaultCitizen } from './citizen.js';
+import { createDefaultCareer } from './career.js';
 import { createDefaultCompany } from './company.js';
 import { createDefaultEconomy } from './economy.js';
 import { createDefaultOrigin } from './locations.js';
@@ -14,7 +15,6 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
     world.player ??
     createDefaultCitizen(createCitizenId(String(world.saveId)), playerName);
 
-  const banking = world.banking ?? createDefaultBanking();
   const economy = world.economy ?? createDefaultEconomy();
   const events = world.events ?? [];
   const legacyOrigin = world.origin as Partial<{
@@ -32,14 +32,20 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
   });
 
   const company = world.company ?? createDefaultCompany(player.displayName);
+  const career = world.career ?? createDefaultCareer(player.displayName, undefined, company.name);
+  const banking = {
+    ...(world.banking ?? createDefaultBanking()),
+    monthlySalaryCents: (world.career ?? career).monthlySalaryCents,
+  };
 
   return {
     ...world,
-    schemaVersion: Math.max(world.schemaVersion ?? 1, 3),
+    schemaVersion: Math.max(world.schemaVersion ?? 1, 4),
     player,
     banking,
     economy,
     company,
+    career,
     events: events.slice(0, MAX_EVENTS),
     origin,
   };

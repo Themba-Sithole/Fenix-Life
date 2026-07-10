@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, type TimeScale } from "@fenix/domain";
+import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, type TimeScale } from "@fenix/domain";
+import { FiveCapitalsStrip } from "../components/FiveCapitalsStrip";
 import { Pause, Play, SkipForward } from "lucide-react";
 
 const TIME_SCALES: TimeScale[] = [1, 2, 5];
@@ -52,6 +53,7 @@ export default function HomeScreen() {
   const currency = world.origin.currency;
   const traits = world.player.traits;
   const company = world.company;
+  const career = world.career;
   const netWorth = totalNetWorthCents(world.banking);
   const checking = world.banking.accounts.find((a) => a.id === 'checking');
   const savings = world.banking.accounts.find((a) => a.id === 'savings');
@@ -175,6 +177,10 @@ export default function HomeScreen() {
             </span>
           </CardContent>
         </Card>
+
+        <div className="mt-4">
+          <FiveCapitalsStrip world={world} />
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
@@ -188,7 +194,9 @@ export default function HomeScreen() {
                   </div>
                   <h2 className="text-2xl text-[#1C2541] mb-1">{world.player.displayName}</h2>
                   <Badge className="mb-2 bg-[#F4B400] text-white">Age {world.player.ageYears}</Badge>
-                  <p className="text-xs text-gray-500 mb-4">Citizen of {nationalityLabel}</p>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Citizen of {nationalityLabel} · {employmentStatusLabel(career.status)}
+                  </p>
                   
                   <div className="w-full space-y-3 mb-4">
                     {stats.map((stat) => (

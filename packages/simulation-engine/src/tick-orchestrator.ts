@@ -3,6 +3,7 @@ import { companyMonthlyProfitCents, formatOriginLocation } from '@fenix/domain';
 import { addDays, parseGameDate } from './time-engine.js';
 import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
 import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
+import { applyDailyCareerTick, careerHeadline } from './career-engine.js';
 
 const MAX_EVENTS = 50;
 const MAX_TRANSACTIONS = 30;
@@ -172,6 +173,23 @@ function applyMonthlyCompanySettlement(world: WorldInstance): WorldInstance {
   return { ...world, banking };
 }
 
+function maybeCareerNews(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount % 21 !== 0) {
+    return world;
+  }
+
+  const events = appendEvent(world.events, {
+    id: `evt-career-${world.clock.tickCount}`,
+    tickCount: world.clock.tickCount,
+    date: world.currentDate,
+    category: 'career',
+    headline: careerHeadline(world.career),
+    tone: world.career.performanceScore >= 70 ? 'success' : 'info',
+  });
+
+  return { ...world, events };
+}
+
 function maybeEconomyNews(world: WorldInstance): WorldInstance {
   if (world.clock.tickCount % 7 !== 0) {
     return world;
@@ -207,6 +225,7 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
   };
 
   nextWorld = applyDailyCompanyTick(nextWorld);
+  nextWorld = applyDailyCareerTick(nextWorld);
   nextWorld = applyDailyLivingCosts(nextWorld);
   nextWorld = applyMonthlySalary(nextWorld);
   nextWorld = applyMonthlyCompanySettlement(nextWorld);
@@ -214,6 +233,7 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
   nextWorld = maybeBirthday(nextWorld);
   nextWorld = maybeEconomyNews(nextWorld);
   nextWorld = maybeCompanyNews(nextWorld);
+  nextWorld = maybeCareerNews(nextWorld);
 
   if (nextWorld.events.length === 0) {
     nextWorld = {

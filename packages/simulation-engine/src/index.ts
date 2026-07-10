@@ -4,6 +4,7 @@ export { addDays, formatGameDate, parseGameDate } from './time-engine.js';
 export { runDailyTick } from './tick-orchestrator.js';
 export { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
 export { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
+export { applyDailyCareerTick, careerHeadline } from './career-engine.js';
 export {
   createSaveBlobV1,
   parseSaveBlobV1,
