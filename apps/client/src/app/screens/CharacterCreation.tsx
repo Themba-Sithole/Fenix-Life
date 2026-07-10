@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -9,6 +9,12 @@ import { Badge } from "../components/ui/badge";
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, GraduationCap, Users, Briefcase } from "lucide-react";
 import AvatarSelector from "../components/AvatarSelector";
 import { useSave } from "@/context/SaveContext";
+import {
+  COUNTRIES,
+  CURRENCIES,
+  getCitiesForCountry,
+  getDefaultCurrencyForCountry,
+} from "@fenix/domain";
 
 export default function CharacterCreation() {
   const navigate = useNavigate();
@@ -17,8 +23,20 @@ export default function CharacterCreation() {
   const [selectedAvatar, setSelectedAvatar] = useState("professional");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [nationality, setNationality] = useState("US");
+  const [cityId, setCityId] = useState("us-washington-d-c");
+  const [currency, setCurrency] = useState("USD");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const cities = useMemo(() => getCitiesForCountry(nationality), [nationality]);
+
+  useEffect(() => {
+    const nextCities = getCitiesForCountry(nationality);
+    const nextCurrency = getDefaultCurrencyForCountry(nationality);
+    setCurrency(nextCurrency);
+    setCityId(nextCities[0]?.id ?? "");
+  }, [nationality]);
 
   const backgrounds = [
     {
@@ -95,16 +113,19 @@ export default function CharacterCreation() {
     },
   ];
 
-  const selectedBg = backgrounds.find(bg => bg.id === selectedBackground);
-
   async function handleStartJourney() {
     const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ') || 'My Life';
+    if (!cityId) {
+      setError('Please select a starting city');
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
     try {
       await createNewSave({
         name,
-        worldSeed: `${selectedBackground}:${selectedAvatar}`,
+        worldSeed: `${selectedBackground}:${selectedAvatar}:${nationality}:${cityId}:${currency}`,
       });
       navigate('/home');
     } catch (err) {
@@ -133,7 +154,6 @@ export default function CharacterCreation() {
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid md:grid-cols-2 gap-8">
-              {/* Left Column - Personal Details */}
               <div className="space-y-6">
                 <h3 className="text-xl text-[#1C2541] mb-4">Personal Information</h3>
                 
@@ -182,42 +202,59 @@ export default function CharacterCreation() {
 
                 <div className="space-y-2">
                   <Label htmlFor="nationality">Nationality</Label>
-                  <Select>
+                  <Select value={nationality} onValueChange={setNationality}>
                     <SelectTrigger className="border-[#2EC4B6]/30">
                       <SelectValue placeholder="Select nationality" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usa">United States</SelectItem>
-                      <SelectItem value="uk">United Kingdom</SelectItem>
-                      <SelectItem value="canada">Canada</SelectItem>
-                      <SelectItem value="australia">Australia</SelectItem>
-                      <SelectItem value="germany">Germany</SelectItem>
-                      <SelectItem value="japan">Japan</SelectItem>
+                    <SelectContent className="max-h-[280px]">
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="city">Starting City</Label>
-                  <Select>
+                  <Select value={cityId} onValueChange={setCityId} disabled={cities.length === 0}>
                     <SelectTrigger className="border-[#2EC4B6]/30">
                       <SelectValue placeholder="Select city" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nyc">New York City</SelectItem>
-                      <SelectItem value="sf">San Francisco</SelectItem>
-                      <SelectItem value="london">London</SelectItem>
-                      <SelectItem value="tokyo">Tokyo</SelectItem>
-                      <SelectItem value="singapore">Singapore</SelectItem>
+                    <SelectContent className="max-h-[280px]">
+                      {cities.map((city) => (
+                        <SelectItem key={city.id} value={city.id}>
+                          {city.name}
+                          {city.isCapital ? " (Capital)" : ""}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Appearance Options */}
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger className="border-[#2EC4B6]/30">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[280px]">
+                      {CURRENCIES.map((item) => (
+                        <SelectItem key={item.code} value={item.code}>
+                          {item.code} — {item.name} ({item.symbol})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Defaults to {getDefaultCurrencyForCountry(nationality)} for your nationality. You can change it.
+                  </p>
+                </div>
+
                 <div className="pt-4 border-t border-[#2EC4B6]/20">
                   <h4 className="mb-3 text-[#1C2541]">Appearance</h4>
                   
-                  {/* Avatar Selection */}
                   <div className="mb-4">
                     <AvatarSelector 
                       selectedAvatar={selectedAvatar}
@@ -250,7 +287,6 @@ export default function CharacterCreation() {
                 </div>
               </div>
 
-              {/* Right Column - Background Selection */}
               <div>
                 <h3 className="text-xl text-[#1C2541] mb-4">Choose Your Background</h3>
                 
@@ -326,7 +362,6 @@ export default function CharacterCreation() {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex justify-between mt-8 pt-6 border-t border-[#2EC4B6]/20">
               {error && (
                 <p className="text-sm text-red-600 self-center mr-4">{error}</p>
@@ -336,7 +371,7 @@ export default function CharacterCreation() {
               </Button>
               <Button
                 onClick={handleStartJourney}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !cityId}
                 className="bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] hover:from-[#1C9B8F] hover:to-[#2EC4B6] text-white px-8"
               >
                 {isSubmitting ? 'Creating save…' : 'Start Your Journey'}

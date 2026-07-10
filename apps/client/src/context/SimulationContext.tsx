@@ -12,6 +12,7 @@ import {
   createSaveId,
   createWorldInstance,
   ensureWorldV2,
+  parseWorldSeed,
   type TimeScale,
   type WorldInstance,
 } from '@fenix/domain';
@@ -191,10 +192,12 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         initialWorld = ensureWorldV2(parsed.world, activeSave.name);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
+          const { origin } = parseWorldSeed(activeSave.worldSeed);
           initialWorld = createWorldInstance({
             saveId: createSaveId(activeSave.id),
             currentDate: '2000-01-01',
             playerName: activeSave.name,
+            origin,
           });
           await uploadSaveBlob(
             activeSave.id,

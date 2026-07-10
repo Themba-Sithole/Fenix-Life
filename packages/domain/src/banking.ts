@@ -41,8 +41,13 @@ export function totalNetWorthCents(banking: BankingState): number {
 }
 
 export function formatUsd(cents: number): string {
-  return `$${(cents / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
+  return formatMoney(cents, 'USD');
+}
+
+export function formatMoney(cents: number, currency = 'USD'): string {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
     maximumFractionDigits: 0,
-  })}`;
+  }).format(cents / 100);
 }

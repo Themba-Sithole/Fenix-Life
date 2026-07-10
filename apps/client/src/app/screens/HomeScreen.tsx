@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatUsd, totalNetWorthCents, type TimeScale } from "@fenix/domain";
+import { formatMoney, totalNetWorthCents, type TimeScale } from "@fenix/domain";
 import { Pause, Play, SkipForward } from "lucide-react";
 
 const TIME_SCALES: TimeScale[] = [1, 2, 5];
@@ -49,6 +49,7 @@ export default function HomeScreen() {
   }
 
   const displayDate = formattedDate ?? formatSaveDate(activeSave.lastPlayedAt);
+  const currency = world.origin.currency;
   const traits = world.player.traits;
   const netWorth = totalNetWorthCents(world.banking);
   const checking = world.banking.accounts.find((a) => a.id === 'checking');
@@ -222,21 +223,21 @@ export default function HomeScreen() {
                 <div className="space-y-4">
                   <div>
                     <div className="text-sm text-gray-300 mb-1">Net Worth</div>
-                    <div className="text-3xl text-[#2EC4B6]">{formatUsd(netWorth)}</div>
+                    <div className="text-3xl text-[#2EC4B6]">{formatMoney(netWorth, currency)}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                     <div>
                       <div className="text-xs text-gray-400 mb-1">Checking</div>
-                      <div className="text-lg">{formatUsd(checking?.balanceCents ?? 0)}</div>
+                      <div className="text-lg">{formatMoney(checking?.balanceCents ?? 0, currency)}</div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-400 mb-1">Savings</div>
-                      <div className="text-lg">{formatUsd(savings?.balanceCents ?? 0)}</div>
+                      <div className="text-lg">{formatMoney(savings?.balanceCents ?? 0, currency)}</div>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-white/10">
                     <div className="text-xs text-gray-400 mb-1">Monthly Expenses</div>
-                    <div className="text-lg text-orange-300">-{formatUsd(world.banking.monthlyExpensesCents)}</div>
+                    <div className="text-lg text-orange-300">-{formatMoney(world.banking.monthlyExpensesCents, currency)}</div>
                   </div>
                   <Button 
                     onClick={() => navigate("/banking")}
@@ -261,7 +262,7 @@ export default function HomeScreen() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Monthly Salary</span>
-                    <span className="text-[#2EC4B6]">{formatUsd(world.banking.monthlySalaryCents)}</span>
+                    <span className="text-[#2EC4B6]">{formatMoney(world.banking.monthlySalaryCents, currency)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Days Simulated</span>

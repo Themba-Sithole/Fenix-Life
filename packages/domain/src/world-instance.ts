@@ -2,6 +2,7 @@ import { createDefaultBanking } from './banking.js';
 import { createDefaultCitizen } from './citizen.js';
 import { createCitizenId } from './citizen-id.js';
 import { createDefaultEconomy } from './economy.js';
+import type { CharacterOrigin } from './locations.js';
 import type { BankingState } from './banking.js';
 import type { Citizen } from './citizen.js';
 import type { EconomyState } from './economy.js';
@@ -25,6 +26,7 @@ export interface WorldInstance {
   banking: BankingState;
   economy: EconomyState;
   events: SimEvent[];
+  origin: CharacterOrigin;
 }
 
 export function createWorldInstance(params: {
@@ -32,8 +34,14 @@ export function createWorldInstance(params: {
   schemaVersion?: number;
   currentDate?: string;
   playerName?: string;
+  origin?: Partial<CharacterOrigin>;
 }): WorldInstance {
   const citizenId = createCitizenId(String(params.saveId));
+  const origin: CharacterOrigin = {
+    countryCode: params.origin?.countryCode ?? 'US',
+    cityId: params.origin?.cityId ?? 'us-washington-d-c',
+    currency: params.origin?.currency ?? 'USD',
+  };
 
   return {
     saveId: params.saveId,
@@ -48,5 +56,6 @@ export function createWorldInstance(params: {
     banking: createDefaultBanking(),
     economy: createDefaultEconomy(),
     events: [],
+    origin,
   };
 }

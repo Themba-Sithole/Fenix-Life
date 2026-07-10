@@ -15,6 +15,11 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
   const banking = world.banking ?? createDefaultBanking();
   const economy = world.economy ?? createDefaultEconomy();
   const events = world.events ?? [];
+  const origin = world.origin ?? {
+    countryCode: 'US',
+    cityId: 'us-washington-d-c',
+    currency: 'USD',
+  };
 
   return {
     ...world,
@@ -23,5 +28,6 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
     banking,
     economy,
     events: events.slice(0, MAX_EVENTS),
+    origin,
   };
 }

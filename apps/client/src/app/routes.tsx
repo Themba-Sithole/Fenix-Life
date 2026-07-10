@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import type { ComponentType } from "react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RootLayout } from "./layouts/RootLayout";
 import MainMenu from "./screens/MainMenu";
 import AuthScreen from "./screens/AuthScreen";
 import ContinueScreen from "./screens/ContinueScreen";
@@ -31,6 +32,9 @@ function protect(Component: ComponentType) {
 }
 
 export const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
   {
     path: "/",
     Component: MainMenu,
@@ -102,5 +106,7 @@ export const router = createBrowserRouter([
   {
     path: "/settings",
     Component: Settings,
+  },
+    ],
   },
 ]);

@@ -6,7 +6,7 @@ import { ArrowLeft, CreditCard, TrendingUp, DollarSign, PiggyBank, Home, Briefca
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatUsd, totalNetWorthCents, type BankAccountType } from "@fenix/domain";
+import { formatMoney, totalNetWorthCents, type BankAccountType } from "@fenix/domain";
 
 const ACCOUNT_ICONS: Record<BankAccountType, typeof DollarSign> = {
   checking: DollarSign,
@@ -46,6 +46,7 @@ export default function BankingDashboard() {
   }
 
   const { banking } = world;
+  const currency = world.origin.currency;
   const netWorth = totalNetWorthCents(banking);
   const balanceHistory = buildBalanceHistory(netWorth, world.clock.tickCount);
   const monthlyIncome = banking.monthlySalaryCents / 100;
@@ -90,7 +91,7 @@ export default function BankingDashboard() {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-300">Total Net Worth</p>
-                <p className="text-3xl text-[#2EC4B6]">{formatUsd(netWorth)}</p>
+                <p className="text-3xl text-[#2EC4B6]">{formatMoney(netWorth, currency)}</p>
               </div>
             </div>
           </div>
@@ -110,7 +111,7 @@ export default function BankingDashboard() {
                   </div>
                   <div className="text-sm text-gray-600 mb-1">{account.name}</div>
                   <div className="text-2xl text-[#1C2541]">
-                    {formatUsd(account.balanceCents)}
+                    {formatMoney(account.balanceCents, currency)}
                   </div>
                 </CardContent>
               </Card>
@@ -135,7 +136,7 @@ export default function BankingDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis dataKey="month" stroke="#6b7280" />
                   <YAxis stroke="#6b7280" tickFormatter={(v) => `$${(v / 100).toLocaleString()}`} />
-                  <Tooltip formatter={(v: number) => formatUsd(v)} />
+                  <Tooltip formatter={(v: number) => formatMoney(v, currency)} />
                   <Area type="monotone" dataKey="balance" stroke="#2EC4B6" fillOpacity={1} fill="url(#colorBalance)" strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -162,11 +163,11 @@ export default function BankingDashboard() {
                   <CreditCard className="w-4 h-4 text-[#F4B400]" />
                   <span className="text-sm">Monthly Salary</span>
                 </div>
-                <div className="text-xl text-[#1C2541]">{formatUsd(banking.monthlySalaryCents)}</div>
+                <div className="text-xl text-[#1C2541]">{formatMoney(banking.monthlySalaryCents, currency)}</div>
               </div>
               <div className="p-4 rounded-lg bg-[#2EC4B6]/10">
                 <div className="text-sm text-gray-600 mb-1">Monthly Expenses</div>
-                <div className="text-2xl text-[#2EC4B6]">{formatUsd(banking.monthlyExpensesCents)}</div>
+                <div className="text-2xl text-[#2EC4B6]">{formatMoney(banking.monthlyExpensesCents, currency)}</div>
               </div>
             </CardContent>
           </Card>
