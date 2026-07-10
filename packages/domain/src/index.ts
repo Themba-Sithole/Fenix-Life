@@ -68,6 +68,30 @@ export {
 } from './portfolio.js';
 export type { MarketTickerItem } from './market-ticker.js';
 export { buildMarketTickerItems } from './market-ticker.js';
+export type { PropertyRecord, HousingState } from './housing.js';
+export {
+  createDefaultHousing,
+  housingMonthlyRentalIncomeCents,
+  housingTotalAppreciationCents,
+  housingTotalValueCents,
+  ownedProperties,
+} from './housing.js';
+export type { MaintenanceLevel, VehicleRecord, TransportationState } from './transportation.js';
+export {
+  createDefaultTransportation,
+  ownedVehicles,
+  transportationTotalValueCents,
+} from './transportation.js';
+export type { FamilyMemberRecord, FamilyState } from './family.js';
+export {
+  averageFamilyHappiness,
+  createDefaultFamily,
+  familyDisplayName,
+} from './family.js';
+export type { LegacySnapshot, TimelineCategory, TimelineEntry } from './life-timeline.js';
+export { buildLifeTimeline, computeLegacySnapshot } from './life-timeline.js';
+export type { CityDistrict } from './city-districts.js';
+export { buildCityDistricts } from './city-districts.js';
 export type { FiveCapitalsSnapshot } from './five-capitals.js';
 export { computeFiveCapitals, FIVE_CAPITALS } from './five-capitals.js';
 export {

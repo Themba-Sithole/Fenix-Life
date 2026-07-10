@@ -6,6 +6,10 @@ import { createDefaultCareer, type CareerState } from './career.js';
 import { createDefaultEconomy } from './economy.js';
 import { createDefaultOrigin, type CharacterOrigin } from './locations.js';
 import { createDefaultPortfolio, type PortfolioState } from './portfolio.js';
+import { createDefaultHousing, type HousingState } from './housing.js';
+import { createDefaultTransportation, type TransportationState } from './transportation.js';
+import { createDefaultFamily, type FamilyState } from './family.js';
+import { formatOriginLocation } from './location-helpers.js';
 import type { BankingState } from './banking.js';
 import type { Citizen } from './citizen.js';
 import type { EconomyState } from './economy.js';
@@ -31,6 +35,9 @@ export interface WorldInstance {
   company: CompanyState;
   career: CareerState;
   portfolio: PortfolioState;
+  housing: HousingState;
+  transportation: TransportationState;
+  family: FamilyState;
   events: SimEvent[];
   origin: CharacterOrigin;
 }
@@ -49,6 +56,10 @@ export function createWorldInstance(params: {
   const company = createDefaultCompany(playerName, params.background);
   const career = createDefaultCareer(playerName, params.background, company.name);
   const portfolio = createDefaultPortfolio({ companyStage: company.stage });
+  const cityLabel = formatOriginLocation(origin);
+  const housing = createDefaultHousing(cityLabel, params.background, company.stage);
+  const transportation = createDefaultTransportation(params.background);
+  const family = createDefaultFamily(playerName, params.background);
   const banking = {
     ...createDefaultBanking(),
     monthlySalaryCents: career.monthlySalaryCents,
@@ -56,7 +67,7 @@ export function createWorldInstance(params: {
 
   return {
     saveId: params.saveId,
-    schemaVersion: params.schemaVersion ?? 5,
+    schemaVersion: params.schemaVersion ?? 6,
     currentDate: params.currentDate ?? '2000-01-01',
     clock: {
       timeScale: 1,
@@ -69,6 +80,9 @@ export function createWorldInstance(params: {
     company,
     career,
     portfolio,
+    housing,
+    transportation,
+    family,
     events: [],
     origin,
   };

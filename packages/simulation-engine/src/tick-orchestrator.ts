@@ -5,6 +5,15 @@ import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
 import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
 import { applyDailyCareerTick, careerHeadline } from './career-engine.js';
 import { applyDailyInvestmentTick, portfolioPerformanceHeadline } from './investment-engine.js';
+import {
+  applyDailyFamilyTick,
+  applyDailyHousingTick,
+  applyDailyTransportationTick,
+  applyMonthlyHousingSettlement,
+  applyMonthlyTransportCosts,
+  familyHeadline,
+  housingHeadline,
+} from './lifestyle-engine.js';
 
 const MAX_EVENTS = 50;
 const MAX_TRANSACTIONS = 30;
@@ -208,6 +217,40 @@ function maybeEconomyNews(world: WorldInstance): WorldInstance {
   return { ...world, events };
 }
 
+function maybeFamilyNews(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount % 18 !== 0) {
+    return world;
+  }
+
+  const events = appendEvent(world.events, {
+    id: `evt-family-${world.clock.tickCount}`,
+    tickCount: world.clock.tickCount,
+    date: world.currentDate,
+    category: 'life',
+    headline: familyHeadline(world.family),
+    tone: 'info',
+  });
+
+  return { ...world, events };
+}
+
+function maybeHousingNews(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount % 16 !== 0) {
+    return world;
+  }
+
+  const events = appendEvent(world.events, {
+    id: `evt-housing-${world.clock.tickCount}`,
+    tickCount: world.clock.tickCount,
+    date: world.currentDate,
+    category: 'finance',
+    headline: housingHeadline(world.housing),
+    tone: 'info',
+  });
+
+  return { ...world, events };
+}
+
 function maybeMarketNews(world: WorldInstance): WorldInstance {
   if (world.clock.tickCount % 10 !== 0) {
     return world;
@@ -251,16 +294,23 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
       nextWorld.clock.tickCount,
       nextWorld.currentDate,
     ),
+    housing: applyDailyHousingTick(nextWorld.housing, nextWorld.economy),
+    transportation: applyDailyTransportationTick(nextWorld.transportation),
+    family: applyDailyFamilyTick(nextWorld.family, nextWorld.player.traits.happiness),
   };
   nextWorld = applyDailyLivingCosts(nextWorld);
   nextWorld = applyMonthlySalary(nextWorld);
   nextWorld = applyMonthlyCompanySettlement(nextWorld);
+  nextWorld = applyMonthlyHousingSettlement(nextWorld);
+  nextWorld = applyMonthlyTransportCosts(nextWorld);
   nextWorld = applyTraitDrift(nextWorld);
   nextWorld = maybeBirthday(nextWorld);
   nextWorld = maybeEconomyNews(nextWorld);
   nextWorld = maybeCompanyNews(nextWorld);
   nextWorld = maybeCareerNews(nextWorld);
   nextWorld = maybeMarketNews(nextWorld);
+  nextWorld = maybeHousingNews(nextWorld);
+  nextWorld = maybeFamilyNews(nextWorld);
 
   if (nextWorld.events.length === 0) {
     nextWorld = {
