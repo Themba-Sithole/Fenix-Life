@@ -20,6 +20,26 @@ const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
   .map((o) => o.trim())
   .filter(Boolean);
 
+async function checkRedis(): Promise<'ok' | 'skipped' | 'error'> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    return 'skipped';
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(['PING']),
+    });
+    const data = (await response.json()) as { result?: string };
+    return data.result === 'PONG' ? 'ok' : 'error';
+  } catch {
+    return 'error';
+  }
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -34,12 +54,14 @@ app.use(
 );
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
+app.get('/health', async (_req, res) => {
+  const redis = await checkRedis();
   res.json({
     status: 'ok',
     service: 'fenix-life-api',
     version: '0.0.1',
     timestamp: new Date().toISOString(),
+    redis,
   });
 });
 
