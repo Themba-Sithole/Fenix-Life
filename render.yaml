@@ -9,7 +9,7 @@ services:
     region: frankfurt
     plan: free
     rootDir: api
-    buildCommand: npm install && npm run db:generate && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm run start
     healthCheckPath: /health
     envVars:

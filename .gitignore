@@ -9,6 +9,7 @@ build/
 .env
 .env.*
 !.env.example
+prisma/.env
 
 # Logs
 *.log

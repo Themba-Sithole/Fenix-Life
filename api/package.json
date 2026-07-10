@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "prisma generate --schema ../prisma/schema.prisma && tsc",
     "start": "node dist/index.js",
     "db:generate": "prisma generate --schema ../prisma/schema.prisma",
     "db:push": "prisma db push --schema ../prisma/schema.prisma",
@@ -19,16 +19,15 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^3.25.67"
-  },
-  "devDependencies": {
+    "zod": "^3.25.67",
+    "prisma": "^6.9.0",
+    "typescript": "^5.8.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.21",
-    "prisma": "^6.9.0",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
-  }
+    "tsx": "^4.19.4"
+  },
+  "devDependencies": {}
 }
