@@ -1,64 +1,40 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { ArrowLeft, TrendingUp, Award, Briefcase, DollarSign } from "lucide-react";
+import { ArrowLeft, TrendingUp, Award, DollarSign } from "lucide-react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { useSimulation } from "@/context/SimulationContext";
+import {
+  employeeExperienceLabel,
+  employeeInitials,
+  formatMoney,
+  generateCompanyEmployees,
+} from "@fenix/domain";
 
 export default function EmployeeManagement() {
   const navigate = useNavigate();
+  const { world, isLoading } = useSimulation();
 
-  const employees = [
-    {
-      name: "Sarah Johnson",
-      position: "Lead Engineer",
-      department: "Engineering",
-      salary: 145000,
-      productivity: 92,
-      creativity: 88,
-      leadership: 85,
-      loyalty: 90,
-      experience: "8 years",
-      initials: "SJ",
-    },
-    {
-      name: "Michael Chen",
-      position: "Senior Developer",
-      department: "Engineering",
-      salary: 125000,
-      productivity: 88,
-      creativity: 85,
-      leadership: 75,
-      loyalty: 87,
-      experience: "6 years",
-      initials: "MC",
-    },
-    {
-      name: "Emily Rodriguez",
-      position: "Sales Director",
-      department: "Sales",
-      salary: 135000,
-      productivity: 90,
-      creativity: 82,
-      leadership: 92,
-      loyalty: 85,
-      experience: "10 years",
-      initials: "ER",
-    },
-    {
-      name: "David Kim",
-      position: "Marketing Manager",
-      department: "Marketing",
-      salary: 105000,
-      productivity: 86,
-      creativity: 94,
-      leadership: 80,
-      loyalty: 88,
-      experience: "5 years",
-      initials: "DK",
-    },
-  ];
+  const employees = useMemo(() => {
+    if (!world) {
+      return [];
+    }
+
+    return generateCompanyEmployees(world.company, world.saveId, 8);
+  }, [world]);
+
+  if (isLoading || !world) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
+        Loading employee roster…
+      </div>
+    );
+  }
+
+  const currency = world.origin.currency;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
@@ -70,18 +46,20 @@ export default function EmployeeManagement() {
           </Button>
           <div>
             <h1 className="text-3xl text-[#1C2541]">Employee Management</h1>
-            <p className="text-gray-600">42 Total Employees</p>
+            <p className="text-gray-600">
+              {world.company.employeeCount} total employees at {world.company.name}
+            </p>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {employees.map((employee) => (
-            <Card key={employee.name} className="border-[#2EC4B6]/20 shadow-lg">
+            <Card key={employee.id} className="border-[#2EC4B6]/20 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
                   <Avatar className="w-16 h-16 border-2 border-[#2EC4B6]">
                     <AvatarFallback className="bg-gradient-to-br from-[#2EC4B6] to-[#1C2541] text-white">
-                      {employee.initials}
+                      {employeeInitials(employee)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -92,13 +70,15 @@ export default function EmployeeManagement() {
                         {employee.department}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
-                        {employee.experience}
+                        {employeeExperienceLabel(employee.yearsExperience)}
                       </Badge>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-gray-600">Salary</div>
-                    <div className="text-xl text-[#2EC4B6]">${(employee.salary / 1000).toFixed(0)}K</div>
+                    <div className="text-xl text-[#2EC4B6]">
+                      {formatMoney(employee.salaryCents, currency)}
+                    </div>
                   </div>
                 </div>
 
@@ -134,15 +114,15 @@ export default function EmployeeManagement() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">
+                  <Button size="sm" className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white" disabled>
                     <TrendingUp className="w-4 h-4 mr-1" />
                     Promote
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button size="sm" variant="outline" className="flex-1" disabled>
                     <DollarSign className="w-4 h-4 mr-1" />
                     Raise
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button size="sm" variant="outline" className="flex-1" disabled>
                     <Award className="w-4 h-4 mr-1" />
                     Train
                   </Button>

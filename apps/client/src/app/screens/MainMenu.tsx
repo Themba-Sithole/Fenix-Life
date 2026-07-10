@@ -3,14 +3,17 @@ import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { TrendingUp, Building2, User, Play, Settings, Trophy, Users, Award, LogIn } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useSave } from "@/context/SaveContext";
+import { buildMarketTickerItems } from "@fenix/domain";
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { saves } = useSave();
+  const { saves, activeSave } = useSave();
+
+  const newsItems = useMemo(() => buildMarketTickerItems(), []);
 
   function requireAuth(path: string) {
     if (!isAuthenticated) {
@@ -20,11 +23,7 @@ export default function MainMenu() {
     navigate(path);
   }
 
-  const newsItems = [
-    { text: "Tech Startup Raises $50M in Series B Funding", change: "+15%" },
-    { text: "Global Markets See 3.2% Growth This Quarter", change: "+3.2%" },
-    { text: "New Innovation Hub Opens Downtown", change: "NEW" },
-  ];
+  const recentLifeLabel = activeSave?.name ?? (saves[0]?.name ?? "None yet");
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B]">
@@ -161,8 +160,8 @@ export default function MainMenu() {
               </div>
               <div className="text-center">
                 <TrendingUp className="w-6 h-6 mx-auto mb-2 text-[#2EC4B6]" />
-                <div className="text-sm text-gray-400">Status</div>
-                <div>{isAuthenticated ? "Signed In" : "Offline"}</div>
+                <div className="text-sm text-gray-400">Recent Life</div>
+                <div className="text-sm truncate max-w-[140px]">{isAuthenticated ? recentLifeLabel : "—"}</div>
               </div>
             </CardContent>
           </Card>

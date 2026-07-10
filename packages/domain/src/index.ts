@@ -41,6 +41,14 @@ export {
   createDefaultCareer,
   employmentStatusLabel,
 } from './career.js';
+export type { EmployeeDepartment, EmployeeRecord } from './employees.js';
+export {
+  employeeExperienceLabel,
+  employeeInitials,
+  generateCompanyEmployees,
+} from './employees.js';
+export type { MarketTickerItem } from './market-ticker.js';
+export { buildMarketTickerItems } from './market-ticker.js';
 export type { FiveCapitalsSnapshot } from './five-capitals.js';
 export { computeFiveCapitals, FIVE_CAPITALS } from './five-capitals.js';
 export {

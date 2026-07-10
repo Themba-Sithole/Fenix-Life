@@ -424,6 +424,8 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Playable meso loop | ✅ Complete | Banking, company, news, time controls — Phase E–F |
 | Five Capitals dashboard | ✅ Complete | Home strip from live simulation — Phase G |
 | Career / employment v0 | ✅ Complete | Career state, salary sync, education wire — Phase G |
+| Employee roster v0 | ✅ Complete | Deterministic HR roster from company state — Phase H |
+| Main menu live data | ✅ Complete | Save count, recent life, macro ticker — Phase H |
 | Simulation engines | 📋 Planned | Full FSF engine constellation (Doc 14) |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | 📋 Planned | `/content/` not yet created |
@@ -436,7 +438,7 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Milestone | Target | Doc Status | Code Status |
 |---|---|---|---|
 | M0.1 Documentation Foundation | Q3 2026 | ✅ 100% (42/42) | UI prototype |
-| M1.0 Alpha Internal | Q4 2026 | All docs complete | Core loop wired (Phases A–G) |
+| M1.0 Alpha Internal | Q4 2026 | All docs complete | Core loop wired (Phases A–H) |
 | EA 0.5 | Q2 2027 | Docs complete | Full loop |
 | 1.0 Launch | Q4 2027 | Docs complete | Generational play |
 
@@ -444,14 +446,14 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 
 | Screen | Route | UI Shell | Sim Wired | Doc |
 |---|---|---|---|---|
-| MainMenu | `/` | ✅ | ❌ | 34 §5.1 |
+| MainMenu | `/` | ✅ | ✅ | 34 §5.1 |
 | CharacterCreation | `/character-creation` | ✅ | ✅ | 34 §5.2 |
 | HomeScreen | `/home` | ✅ | ✅ | 34 §5.3 |
 | BankingDashboard | `/banking` | ✅ | ✅ | 34 §5.4 |
 | CompanyDashboard | `/company` | ✅ | ✅ | 34 §5.5 |
 | NewsFeed | `/news` | ✅ | ✅ | 34 §5.13 |
 | Education | `/education` | ✅ | ✅ | 34 §5.10 |
-| EmployeeManagement | `/employees` | ✅ | ❌ | 34 §5.6 |
+| EmployeeManagement | `/employees` | ✅ | ✅ | 34 §5.6 |
 | StockMarket | `/stocks` | ✅ | ❌ | 34 §5.7 |
 | RealEstate | `/real-estate` | ✅ | ❌ | 34 §5.8 |
 | VehicleDealership | `/vehicles` | ✅ | ❌ | 34 §5.9 |
