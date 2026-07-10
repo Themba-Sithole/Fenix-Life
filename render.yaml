@@ -8,9 +8,8 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    rootDir: api
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: npm install && npm run build --workspace=@fenix/api
+    startCommand: npm run start --workspace=@fenix/api
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

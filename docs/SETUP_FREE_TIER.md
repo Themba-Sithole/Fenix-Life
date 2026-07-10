@@ -29,7 +29,6 @@ DATABASE_URL="postgresql://..."
 6. Run migrations from project root (after Step 5 install):
 
 ```powershell
-cd api
 npm run db:push
 ```
 
@@ -57,16 +56,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ## Step 3 — Install & run locally
 
 ```powershell
-# Frontend (root)
+# Install once at monorepo root
 npm install
-npm run dev
-
-# API (new terminal)
-cd api
-npm install
-npm run db:generate
 npm run db:push
-npm run dev
+
+# Game client (terminal 1)
+npm run dev:client
+
+# API (terminal 2)
+npm run dev:api
 ```
 
 - Frontend: [http://localhost:5173](http://localhost:5173)
@@ -107,8 +105,6 @@ git push origin main
 7. **After first deploy**, run DB push once (Render shell or locally against Neon):
 
 ```powershell
-cd api
-$env:DATABASE_URL="your-neon-url"
 npm run db:push
 ```
 
@@ -184,7 +180,7 @@ GitHub (code)
 | API returns CORS error | Add your Vercel URL to `CORS_ORIGINS` on Render |
 | API slow first request | Render free tier cold start — normal |
 | `Can't reach database` | Check Neon URL has `?sslmode=require` |
-| Prisma client error | Run `cd api && npm run db:generate` |
+| Prisma client error | Run `npm run build --workspace=@fenix/api` from repo root |
 | Frontend can't reach API | Check `VITE_API_URL` on Vercel includes `/v1` |
 
 ---

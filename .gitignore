@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 build/
+.turbo/
 
 # Environment
 .env
@@ -23,6 +24,7 @@ Thumbs.db
 .vscode/
 
 # Prisma
+apps/api/node_modules/.prisma/
 api/node_modules/.prisma/
 
 # Render / Vercel local

@@ -8,16 +8,15 @@ Premium life and business simulation — build a career, company, family, and le
 # 1. Copy environment file and add your Neon DATABASE_URL
 copy .env.example .env
 
-# 2. Install & run frontend
+# 2. Install dependencies (monorepo root)
 npm install
-npm run dev
 
-# 3. Install & run API (separate terminal)
-cd api
-npm install
-npm run db:generate
+# 3. Push database schema
 npm run db:push
-npm run dev
+
+# 4. Run game client + API (separate terminals)
+npm run dev:client
+npm run dev:api
 ```
 
 - **Game:** http://localhost:5173  
@@ -38,13 +37,20 @@ See **[docs/SETUP_FREE_TIER.md](docs/SETUP_FREE_TIER.md)** for step-by-step setu
 
 ```
 fenix-life/
-├── src/           # React + Vite game UI
-├── api/           # Express API (auth, saves)
+├── apps/
+│   ├── client/    # React + Vite game UI
+│   └── api/       # Express API (auth, saves)
+├── packages/
+│   └── domain/    # Shared domain types (Money, WorldInstance, …)
 ├── prisma/        # Database schema
-├── docs/          # Full design documentation (00–41)
+├── docs/          # Full design documentation (00–42)
 └── prd/           # Product Bible
 ```
+
+Monorepo uses **npm workspaces + Turborepo** (see `docs/28_Project_Architecture.md`).
 
 ## Documentation
 
 Start with [docs/39_Project_Master_Index.md](docs/39_Project_Master_Index.md) for the full doc registry.
+
+Official build kickoff: [docs/BUILD_KICKOFF_PROMPT.md](docs/BUILD_KICKOFF_PROMPT.md)

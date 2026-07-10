@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../api/node_modules/.prisma/client"
+  output   = "../apps/api/node_modules/.prisma/client"
 }
 
 datasource db {
@@ -11,15 +11,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  PLAYER
+  SUPPORT
+  MODERATOR
+  LIVEOPS
+  ADMIN
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String   @map("password_hash")
   displayName  String?  @map("display_name")
+  role         UserRole @default(PLAYER)
+  suspended    Boolean  @default(false)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  saves Save[]
+  saves          Save[]
+  adminAuditLogs AdminAuditLog[] @relation("AdminAuditActor")
 
   @@map("users")
 }
@@ -30,6 +41,8 @@ model Save {
   name          String   @default("My Life")
   schemaVersion Int      @default(1) @map("schema_version")
   worldSeed     String?  @map("world_seed")
+  blobSizeBytes Int?     @map("blob_size_bytes")
+  blobChecksum  String?  @map("blob_checksum")
   lastPlayedAt  DateTime @default(now()) @map("last_played_at")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -38,4 +51,33 @@ model Save {
 
   @@index([userId])
   @@map("saves")
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  actorId      String   @map("actor_id")
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  metadata     Json?
+  ipAddress    String?  @map("ip_address")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  actor User @relation("AdminAuditActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  updatedBy   String?  @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
 }

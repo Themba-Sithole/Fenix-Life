@@ -46,9 +46,10 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | **Phase 4 — Production (32–36)** | 5 | 5 | 0 | 0 |
 | **Phase 5 — Studio (37–41)** | 5 | 5 | 0 | 0 |
 | **Domain Game Design (05–13)** | 9 | 9 | 0 | 0 |
-| **TOTAL (00–41)** | **42** | **42** | **0** | **0** |
+| **Admin & Build (42, kickoff)** | 2 | 2 | 0 | 0 |
+| **TOTAL (00–42)** | **44** | **44** | **0** | **0** |
 
-**Project phase:** Pre-Alpha — Full documentation suite (00–41) complete; simulation implementation next  
+**Project phase:** Pre-Alpha — Documentation complete; **official build starts** via [BUILD_KICKOFF_PROMPT.md](./BUILD_KICKOFF_PROMPT.md)  
 **Next gate:** M1.0 Alpha Internal (Q4 2026) per [37_Roadmap.md](./37_Roadmap.md)
 
 ---
@@ -222,6 +223,19 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | **39** | Project Master Index | [docs/39_Project_Master_Index.md](./39_Project_Master_Index.md) | ✅ Complete | Product Operations | 2026-07-10 |
 | **40** | Developer Onboarding | [docs/40_Developer_Onboarding.md](./40_Developer_Onboarding.md) | ✅ Complete | Engineering Lead | 2026-07-10 |
 | **41** | Fenix Glossary | [docs/41_Fenix_Glossary.md](./41_Fenix_Glossary.md) | ✅ Complete | Technical Writing | 2026-07-10 |
+
+---
+
+## Build & Admin (42+)
+
+| ID | Title | File Path | Status | Owner | Last Updated |
+|---|---|---|---|---|---|
+| **42** | Admin Portal Design | [docs/42_Admin_Portal_Design.md](./42_Admin_Portal_Design.md) | ✅ Complete | Platform Engineering | 2026-07-10 |
+| **—** | Build Kickoff Prompt | [docs/BUILD_KICKOFF_PROMPT.md](./BUILD_KICKOFF_PROMPT.md) | ✅ Complete | Engineering Lead | 2026-07-10 |
+
+**42 — Admin Portal:** Internal ops UI — accounts, moderation, saves inspect, economy health, feature flags, audit log. `apps/admin` per Doc 28.
+
+**Build Kickoff:** Master prompt for new Cursor chat to begin official implementation (Phases A–E).
 
 ---
 
@@ -399,15 +413,18 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 
 | Area | Status | Evidence |
 |---|---|---|
-| UI prototype screens | 🔄 In Progress | 16 routes in `src/app/routes.tsx` |
-| Design tokens | ✅ Complete | `src/styles/theme.css` |
-| shadcn/ui components | ✅ Complete | `src/app/components/ui/` |
-| Simulation engines | 📋 Planned | Not yet in repo |
-| Database / Prisma | 📋 Planned | Schema per doc 04 |
+| Monorepo structure | 🔄 In Progress | `apps/client`, `apps/api`, `packages/domain` — Phase A (Doc 28) |
+| UI prototype screens | 🔄 In Progress | 16 routes in `apps/client/src/app/routes.tsx` |
+| Design tokens | ✅ Complete | `apps/client/src/styles/theme.css` |
+| shadcn/ui components | ✅ Complete | `apps/client/src/app/components/ui/` |
+| Domain package | 🔄 In Progress | `packages/domain` — Money, SaveId, WorldInstance v0 |
+| Simulation engines | 📋 Planned | `packages/simulation-engine` not yet created |
+| Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | 📋 Planned | `/content/` not yet created |
 | Phaser city map | 📋 Planned | Route exists, engine TBD |
-| Save system | 📋 Planned | — |
-| Backend API | 📋 Planned | NestJS per doc 03 |
+| Save system | 📋 Planned | Blob upload Phase C |
+| Backend API | 🔄 In Progress | Express in `apps/api` — auth + saves (NestJS migration deferred) |
+| Admin portal | 📋 Planned | `apps/admin` Phase D |
 
 ## 6.3 Milestone Tracker
 
@@ -455,11 +472,14 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | `docs/32_Art_Direction.md` | 32 |
 | `docs/33_Audio_Direction.md` | 33 |
 | `docs/34_UI_UX_Guidelines.md` | 34 |
-| `src/app/routes.tsx` | 34 §3.1 |
-| `src/app/screens/*.tsx` | 34 §5 |
-| `src/styles/theme.css` | 32 §3 |
-| `src/app/components/ui/` | 32 §8, 34 §4 |
-| `src/imports/pasted_text/fenix-life-ui-ux.md` | 34 (prototype origin) |
+| `apps/client/src/app/routes.tsx` | 34 §3.1 |
+| `apps/client/src/app/screens/*.tsx` | 34 §5 |
+| `apps/client/src/styles/theme.css` | 32 §3 |
+| `apps/client/src/app/components/ui/` | 32 §8, 34 §4 |
+| `apps/client/src/imports/pasted_text/fenix-life-ui-ux.md` | 34 (prototype origin) |
+| `apps/api/src/` | 25, 26 |
+| `packages/domain/src/` | 04, 14, 26 |
+| `prisma/schema.prisma` | 04, 42 |
 | `guidelines/Guidelines.md` | 32, 34 (supplementary) |
 | `content/` (future) | 35 |
 | `audio/` (future) | 33, 30 (planned) |
@@ -470,13 +490,11 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 
 | Tool | Purpose | Link / Location |
 |---|---|---|
-| React + Vite | Client framework | `package.json` |
-| Tailwind CSS 4 | Styling | `src/styles/` |
-| shadcn/ui | Components | `src/app/components/ui/` |
-| Recharts | Data viz | Banking, Company screens |
-| Phaser 3 | 2D world (planned) | TDD §1.2.1 |
-| NestJS | API (planned) | TDD §1.1 |
-| PostgreSQL + Prisma | Database (planned) | DDD |
+| React + Vite | Client framework | `apps/client/package.json` |
+| Tailwind CSS 4 | Styling | `apps/client/src/styles/` |
+| shadcn/ui | Components | `apps/client/src/app/components/ui/` |
+| Express | API (M1.0) | `apps/api/` |
+| PostgreSQL + Prisma | Database | `prisma/schema.prisma` |
 | Figma | Design system (TBD) | Art Director |
 | Steam | PC distribution | Roadmap EA 0.5 |
 
@@ -507,6 +525,7 @@ Any new doc or status change **must** update this file (39) within 48 hours.
 
 | Date | Version | Changes |
 |---|---|---|
+| 2026-07-10 | 1.1 | Phase A monorepo migration: `apps/client`, `apps/api`, `packages/domain`; Prisma admin models |
 | 2026-07-10 | 1.0 | Initial master index; registered docs 00–41; Phase 4 complete |
 | 2026-07-10 | 1.0 | Completed domain specs 08 Education, 09 Family & Relationships, 10 Real Estate & Housing |
 
