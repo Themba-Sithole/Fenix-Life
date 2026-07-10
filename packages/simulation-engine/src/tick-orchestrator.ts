@@ -4,6 +4,7 @@ import { addDays, parseGameDate } from './time-engine.js';
 import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
 import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
 import { applyDailyCareerTick, careerHeadline } from './career-engine.js';
+import { applyDailyInvestmentTick, portfolioPerformanceHeadline } from './investment-engine.js';
 
 const MAX_EVENTS = 50;
 const MAX_TRANSACTIONS = 30;
@@ -207,7 +208,23 @@ function maybeEconomyNews(world: WorldInstance): WorldInstance {
   return { ...world, events };
 }
 
-/** Daily tick orchestrator — Doc 17 §7, Phase F career loop v0. */
+function maybeMarketNews(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount % 10 !== 0) {
+    return world;
+  }
+
+  const events = appendEvent(world.events, {
+    id: `evt-market-${world.clock.tickCount}`,
+    tickCount: world.clock.tickCount,
+    date: world.currentDate,
+    category: 'finance',
+    headline: portfolioPerformanceHeadline(world.portfolio),
+    tone: 'info',
+  });
+
+  return { ...world, events };
+}
+
 export function runDailyTick(world: WorldInstance): WorldInstance {
   if (world.clock.paused) {
     return world;
@@ -226,6 +243,15 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
 
   nextWorld = applyDailyCompanyTick(nextWorld);
   nextWorld = applyDailyCareerTick(nextWorld);
+  nextWorld = {
+    ...nextWorld,
+    portfolio: applyDailyInvestmentTick(
+      nextWorld.portfolio,
+      nextWorld.economy,
+      nextWorld.clock.tickCount,
+      nextWorld.currentDate,
+    ),
+  };
   nextWorld = applyDailyLivingCosts(nextWorld);
   nextWorld = applyMonthlySalary(nextWorld);
   nextWorld = applyMonthlyCompanySettlement(nextWorld);
@@ -234,6 +260,7 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
   nextWorld = maybeEconomyNews(nextWorld);
   nextWorld = maybeCompanyNews(nextWorld);
   nextWorld = maybeCareerNews(nextWorld);
+  nextWorld = maybeMarketNews(nextWorld);
 
   if (nextWorld.events.length === 0) {
     nextWorld = {

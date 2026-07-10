@@ -47,6 +47,25 @@ export {
   employeeInitials,
   generateCompanyEmployees,
 } from './employees.js';
+export type {
+  PortfolioHistoryPoint,
+  PortfolioState,
+  StockHolding,
+  StockQuote,
+} from './portfolio.js';
+export {
+  appendPortfolioHistory,
+  createDefaultPortfolio,
+  createDefaultQuotes,
+  getTrendingQuotes,
+  MARKET_STOCKS,
+  portfolioDayChangeCents,
+  portfolioGainCents,
+  portfolioGainPercent,
+  portfolioValueCents,
+  stockDayChangeCents,
+  stockDayChangePercent,
+} from './portfolio.js';
 export type { MarketTickerItem } from './market-ticker.js';
 export { buildMarketTickerItems } from './market-ticker.js';
 export type { FiveCapitalsSnapshot } from './five-capitals.js';

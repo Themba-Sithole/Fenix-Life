@@ -23,11 +23,15 @@ import {
   serializeSaveBlobV1,
 } from '@fenix/simulation-engine';
 import { ApiError, downloadSaveBlob, uploadSaveBlob } from '@/lib/api';
+import { isAutosaveEnabled } from '@/lib/player-settings';
 import { useSave } from '@/context/SaveContext';
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from '@/simulation-bridge/types';
 
-const AUTOSAVE_EVERY_TICKS = 1;
 const BASE_TICK_MS = 4000;
+
+function autosaveEveryTicks(): number {
+  return isAutosaveEnabled() ? 1 : Number.POSITIVE_INFINITY;
+}
 
 interface SimulationContextValue {
   world: WorldInstance | null;
@@ -106,7 +110,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
   const maybeAutosave = useCallback(async (nextWorld: WorldInstance) => {
     const ticksSinceSave = nextWorld.clock.tickCount - lastSavedTickRef.current;
-    if (ticksSinceSave >= AUTOSAVE_EVERY_TICKS) {
+    if (ticksSinceSave >= autosaveEveryTicks()) {
       await persistWorld(nextWorld);
     }
   }, [persistWorld]);

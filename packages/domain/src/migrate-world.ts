@@ -5,6 +5,7 @@ import { createDefaultCareer } from './career.js';
 import { createDefaultCompany } from './company.js';
 import { createDefaultEconomy } from './economy.js';
 import { createDefaultOrigin } from './locations.js';
+import { createDefaultPortfolio } from './portfolio.js';
 import type { WorldInstance } from './world-instance.js';
 
 const MAX_EVENTS = 50;
@@ -33,6 +34,7 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
 
   const company = world.company ?? createDefaultCompany(player.displayName);
   const career = world.career ?? createDefaultCareer(player.displayName, undefined, company.name);
+  const portfolio = world.portfolio ?? createDefaultPortfolio({ companyStage: company.stage });
   const banking = {
     ...(world.banking ?? createDefaultBanking()),
     monthlySalaryCents: (world.career ?? career).monthlySalaryCents,
@@ -40,12 +42,13 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
 
   return {
     ...world,
-    schemaVersion: Math.max(world.schemaVersion ?? 1, 4),
+    schemaVersion: Math.max(world.schemaVersion ?? 1, 5),
     player,
     banking,
     economy,
     company,
     career,
+    portfolio,
     events: events.slice(0, MAX_EVENTS),
     origin,
   };

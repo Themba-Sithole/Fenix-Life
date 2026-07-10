@@ -426,6 +426,8 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Career / employment v0 | ✅ Complete | Career state, salary sync, education wire — Phase G |
 | Employee roster v0 | ✅ Complete | Deterministic HR roster from company state — Phase H |
 | Main menu live data | ✅ Complete | Save count, recent life, macro ticker — Phase H |
+| Investment portfolio v0 | ✅ Complete | Live quotes, holdings, daily drift — Phase I |
+| Player settings persistence | ✅ Complete | localStorage prefs + autosave toggle — Phase I |
 | Simulation engines | 📋 Planned | Full FSF engine constellation (Doc 14) |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | 📋 Planned | `/content/` not yet created |
@@ -438,7 +440,7 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Milestone | Target | Doc Status | Code Status |
 |---|---|---|---|
 | M0.1 Documentation Foundation | Q3 2026 | ✅ 100% (42/42) | UI prototype |
-| M1.0 Alpha Internal | Q4 2026 | All docs complete | Core loop wired (Phases A–H) |
+| M1.0 Alpha Internal | Q4 2026 | All docs complete | Core loop wired (Phases A–I) |
 | EA 0.5 | Q2 2027 | Docs complete | Full loop |
 | 1.0 Launch | Q4 2027 | Docs complete | Generational play |
 
@@ -454,14 +456,14 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | NewsFeed | `/news` | ✅ | ✅ | 34 §5.13 |
 | Education | `/education` | ✅ | ✅ | 34 §5.10 |
 | EmployeeManagement | `/employees` | ✅ | ✅ | 34 §5.6 |
-| StockMarket | `/stocks` | ✅ | ❌ | 34 §5.7 |
+| StockMarket | `/stocks` | ✅ | ✅ | 34 §5.7 |
 | RealEstate | `/real-estate` | ✅ | ❌ | 34 §5.8 |
 | VehicleDealership | `/vehicles` | ✅ | ❌ | 34 §5.9 |
 | Family | `/family` | ✅ | ❌ | 34 §5.11 |
 | Timeline | `/timeline` | ✅ | ❌ | 34 §5.12 |
 | CityMap | `/city` | 🔄 | ❌ | 34 §5.14 |
 | Smartphone | `/phone` | ✅ | ❌ | 34 §5.15 |
-| Settings | `/settings` | ✅ | ❌ | 34 §5.16 |
+| Settings | `/settings` | ✅ | ✅ | 34 §5.16 |
 
 ---
 

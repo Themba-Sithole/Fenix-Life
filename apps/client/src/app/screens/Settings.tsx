@@ -5,25 +5,46 @@ import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Slider } from "../components/ui/slider";
-import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, Sun, LogOut } from "lucide-react";
+import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, LogOut } from "lucide-react";
 import { API_URL, checkApiHealth } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useSave } from "@/context/SaveContext";
+import {
+  DEFAULT_PLAYER_SETTINGS,
+  loadPlayerSettings,
+  savePlayerSettings,
+  type Difficulty,
+  type GraphicsQuality,
+  type PlayerSettings,
+} from "@/lib/player-settings";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { clearActiveSave } = useSave();
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const [settings, setSettings] = useState<PlayerSettings>(DEFAULT_PLAYER_SETTINGS);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    setSettings(loadPlayerSettings());
     checkApiHealth().then(setApiOnline);
   }, []);
+
+  function updateSettings<K extends keyof PlayerSettings>(key: K, value: PlayerSettings[K]) {
+    setSettings((current) => ({ ...current, [key]: value }));
+    setSavedMessage(null);
+  }
+
+  function handleSave() {
+    savePlayerSettings(settings);
+    setSavedMessage("Settings saved.");
+  }
 
   function handleLogout() {
     clearActiveSave();
     logout();
-    navigate('/');
+    navigate("/");
   }
 
   return (
@@ -41,7 +62,6 @@ export default function Settings() {
         </div>
 
         <div className="space-y-6">
-          {/* Graphics Settings */}
           <Card className="border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541] flex items-center gap-2">
@@ -55,7 +75,10 @@ export default function Settings() {
                   <div className="text-[#1C2541]">Quality</div>
                   <div className="text-sm text-gray-600">Adjust visual quality</div>
                 </div>
-                <Select defaultValue="high">
+                <Select
+                  value={settings.graphicsQuality}
+                  onValueChange={(value) => updateSettings("graphicsQuality", value as GraphicsQuality)}
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -67,13 +90,16 @@ export default function Settings() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[#1C2541]">Fullscreen</div>
                   <div className="text-sm text-gray-600">Enable fullscreen mode</div>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.fullscreen}
+                  onCheckedChange={(checked) => updateSettings("fullscreen", checked)}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -81,12 +107,14 @@ export default function Settings() {
                   <div className="text-[#1C2541]">V-Sync</div>
                   <div className="text-sm text-gray-600">Synchronize frame rate</div>
                 </div>
-                <Switch />
+                <Switch
+                  checked={settings.vSync}
+                  onCheckedChange={(checked) => updateSettings("vSync", checked)}
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Audio Settings */}
           <Card className="border-[#F4B400]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541] flex items-center gap-2">
@@ -98,30 +126,44 @@ export default function Settings() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-[#1C2541]">Master Volume</div>
-                  <div className="text-sm text-gray-600">80%</div>
+                  <div className="text-sm text-gray-600">{settings.masterVolume}%</div>
                 </div>
-                <Slider defaultValue={[80]} max={100} step={1} />
+                <Slider
+                  value={[settings.masterVolume]}
+                  max={100}
+                  step={1}
+                  onValueChange={([value]) => updateSettings("masterVolume", value ?? settings.masterVolume)}
+                />
               </div>
-              
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-[#1C2541]">Music Volume</div>
-                  <div className="text-sm text-gray-600">60%</div>
+                  <div className="text-sm text-gray-600">{settings.musicVolume}%</div>
                 </div>
-                <Slider defaultValue={[60]} max={100} step={1} />
+                <Slider
+                  value={[settings.musicVolume]}
+                  max={100}
+                  step={1}
+                  onValueChange={([value]) => updateSettings("musicVolume", value ?? settings.musicVolume)}
+                />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-[#1C2541]">Effects Volume</div>
-                  <div className="text-sm text-gray-600">70%</div>
+                  <div className="text-sm text-gray-600">{settings.effectsVolume}%</div>
                 </div>
-                <Slider defaultValue={[70]} max={100} step={1} />
+                <Slider
+                  value={[settings.effectsVolume]}
+                  max={100}
+                  step={1}
+                  onValueChange={([value]) => updateSettings("effectsVolume", value ?? settings.effectsVolume)}
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Gameplay Settings */}
           <Card className="border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541] flex items-center gap-2">
@@ -135,7 +177,10 @@ export default function Settings() {
                   <div className="text-[#1C2541]">Difficulty</div>
                   <div className="text-sm text-gray-600">Game difficulty level</div>
                 </div>
-                <Select defaultValue="normal">
+                <Select
+                  value={settings.difficulty}
+                  onValueChange={(value) => updateSettings("difficulty", value as Difficulty)}
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -151,9 +196,12 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[#1C2541]">Autosave</div>
-                  <div className="text-sm text-gray-600">Automatically save progress</div>
+                  <div className="text-sm text-gray-600">Persist simulation progress to the cloud</div>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.autosave}
+                  onCheckedChange={(checked) => updateSettings("autosave", checked)}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -161,12 +209,14 @@ export default function Settings() {
                   <div className="text-[#1C2541]">Tutorial Hints</div>
                   <div className="text-sm text-gray-600">Show helpful tips</div>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.tutorialHints}
+                  onCheckedChange={(checked) => updateSettings("tutorialHints", checked)}
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* General Settings */}
           <Card className="border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541] flex items-center gap-2">
@@ -180,7 +230,10 @@ export default function Settings() {
                   <div className="text-[#1C2541]">Language</div>
                   <div className="text-sm text-gray-600">Select language</div>
                 </div>
-                <Select defaultValue="en">
+                <Select
+                  value={settings.language}
+                  onValueChange={(value) => updateSettings("language", value)}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -202,7 +255,10 @@ export default function Settings() {
                   </div>
                   <div className="text-sm text-gray-600">Enable game notifications</div>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.notifications}
+                  onCheckedChange={(checked) => updateSettings("notifications", checked)}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -218,12 +274,14 @@ export default function Settings() {
                     {apiOnline === false && " — offline (run api locally or deploy)"}
                   </div>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.cloudSaves}
+                  onCheckedChange={(checked) => updateSettings("cloudSaves", checked)}
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Privacy & Account */}
           <Card className="border-[#1C2541]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541] flex items-center gap-2">
@@ -252,7 +310,7 @@ export default function Settings() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate("/login")}
                 >
                   Sign In to Your Account
                 </Button>
@@ -272,21 +330,18 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => navigate("/")}
-            >
+          <div className="flex gap-4 items-center">
+            <Button variant="outline" className="flex-1" onClick={() => navigate("/")}>
               Cancel
             </Button>
             <Button
               className="flex-1 bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] text-white"
+              onClick={handleSave}
             >
               Save Changes
             </Button>
           </div>
+          {savedMessage ? <p className="text-sm text-[#2EC4B6] text-center">{savedMessage}</p> : null}
         </div>
       </div>
     </div>

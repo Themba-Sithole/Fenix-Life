@@ -5,6 +5,7 @@ export { runDailyTick } from './tick-orchestrator.js';
 export { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
 export { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
 export { applyDailyCareerTick, careerHeadline } from './career-engine.js';
+export { applyDailyInvestmentTick, portfolioPerformanceHeadline } from './investment-engine.js';
 export {
   createSaveBlobV1,
   parseSaveBlobV1,
