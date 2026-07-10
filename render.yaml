@@ -20,6 +20,8 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         sync: false
+        # Set in Render dashboard, e.g.:
+        # https://fenix-life.vercel.app,https://fenix-life-admin.vercel.app,http://localhost:5173,http://localhost:5174
       - key: UPSTASH_REDIS_REST_URL
         sync: false
       - key: UPSTASH_REDIS_REST_TOKEN
