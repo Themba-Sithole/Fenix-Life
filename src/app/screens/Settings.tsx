@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -5,9 +6,15 @@ import { Switch } from "../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Slider } from "../components/ui/slider";
 import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, Sun } from "lucide-react";
+import { API_URL, checkApiHealth } from "@/lib/api";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkApiHealth().then(setApiOnline);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
@@ -194,7 +201,12 @@ export default function Settings() {
                     <Cloud className="w-4 h-4" />
                     Cloud Saves
                   </div>
-                  <div className="text-sm text-gray-600">Sync to cloud</div>
+                  <div className="text-sm text-gray-600">
+                    API: {API_URL}
+                    {apiOnline === null && " — checking…"}
+                    {apiOnline === true && " — connected"}
+                    {apiOnline === false && " — offline (run api locally or deploy)"}
+                  </div>
                 </div>
                 <Switch defaultChecked />
               </div>

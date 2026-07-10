@@ -21,5 +21,8 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Vite
-.vite/
+# Prisma
+api/node_modules/.prisma/
+
+# Render / Vercel local
+.vercel/

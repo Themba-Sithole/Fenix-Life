@@ -1,0 +1,40 @@
+// Fenix Life — Platform database (accounts, saves metadata)
+// World simulation state lives in save blobs — see docs/26_Save_System.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String?  @map("display_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  saves Save[]
+
+  @@map("users")
+}
+
+model Save {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  name          String   @default("My Life")
+  schemaVersion Int      @default(1) @map("schema_version")
+  worldSeed     String?  @map("world_seed")
+  lastPlayedAt  DateTime @default(now()) @map("last_played_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saves")
+}

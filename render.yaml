@@ -1,0 +1,23 @@
+# Render Blueprint — Fenix Life API (free tier)
+# Deploy: https://dashboard.render.com → New → Blueprint → connect GitHub repo
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: fenix-life-api
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: api
+    buildCommand: npm install && npm run db:generate && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
