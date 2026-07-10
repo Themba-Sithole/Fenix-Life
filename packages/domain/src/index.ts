@@ -29,6 +29,18 @@ export type { SimEvent, SimEventCategory, SimEventTone } from './sim-event.js';
 export type { Country } from './countries.js';
 export { COUNTRIES, getCountryByCode } from './countries.js';
 export type { City, CharacterOrigin } from './locations.js';
+export { createDefaultOrigin } from './locations.js';
+export type { CompanyState, CompanyStage } from './company.js';
+export {
+  companyMonthlyProfitCents,
+  companyStageLabel,
+  createDefaultCompany,
+} from './company.js';
+export {
+  formatOriginLocation,
+  getCityById,
+  getCountryName,
+} from './location-helpers.js';
 export type { Currency } from './currencies.js';
 export { CURRENCIES, getCurrencyByCode } from './currencies.js';
 export type { CountryProfile } from './country-profiles.js';

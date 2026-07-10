@@ -1,8 +1,9 @@
 import { createDefaultBanking } from './banking.js';
 import { createDefaultCitizen } from './citizen.js';
 import { createCitizenId } from './citizen-id.js';
+import { createDefaultCompany, type CompanyState } from './company.js';
 import { createDefaultEconomy } from './economy.js';
-import type { CharacterOrigin } from './locations.js';
+import { createDefaultOrigin, type CharacterOrigin } from './locations.js';
 import type { BankingState } from './banking.js';
 import type { Citizen } from './citizen.js';
 import type { EconomyState } from './economy.js';
@@ -25,6 +26,7 @@ export interface WorldInstance {
   player: Citizen;
   banking: BankingState;
   economy: EconomyState;
+  company: CompanyState;
   events: SimEvent[];
   origin: CharacterOrigin;
 }
@@ -34,27 +36,26 @@ export function createWorldInstance(params: {
   schemaVersion?: number;
   currentDate?: string;
   playerName?: string;
+  background?: string;
   origin?: Partial<CharacterOrigin>;
 }): WorldInstance {
   const citizenId = createCitizenId(String(params.saveId));
-  const origin: CharacterOrigin = {
-    countryCode: params.origin?.countryCode ?? 'US',
-    cityId: params.origin?.cityId ?? 'us-washington-d-c',
-    currency: params.origin?.currency ?? 'USD',
-  };
+  const playerName = params.playerName ?? 'Citizen';
+  const origin = createDefaultOrigin(params.origin);
 
   return {
     saveId: params.saveId,
-    schemaVersion: params.schemaVersion ?? 2,
+    schemaVersion: params.schemaVersion ?? 3,
     currentDate: params.currentDate ?? '2000-01-01',
     clock: {
       timeScale: 1,
       paused: false,
       tickCount: 0,
     },
-    player: createDefaultCitizen(citizenId, params.playerName ?? 'Citizen'),
+    player: createDefaultCitizen(citizenId, playerName),
     banking: createDefaultBanking(),
     economy: createDefaultEconomy(),
+    company: createDefaultCompany(playerName, params.background),
     events: [],
     origin,
   };

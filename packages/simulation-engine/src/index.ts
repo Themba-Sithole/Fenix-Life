@@ -3,6 +3,7 @@ export { SAVE_BLOB_FORMAT_VERSION, SAVE_SCHEMA_VERSION } from './constants.js';
 export { addDays, formatGameDate, parseGameDate } from './time-engine.js';
 export { runDailyTick } from './tick-orchestrator.js';
 export { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
+export { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
 export {
   createSaveBlobV1,
   parseSaveBlobV1,

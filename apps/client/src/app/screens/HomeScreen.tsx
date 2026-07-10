@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatMoney, totalNetWorthCents, type TimeScale } from "@fenix/domain";
+import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, type TimeScale } from "@fenix/domain";
 import { Pause, Play, SkipForward } from "lucide-react";
 
 const TIME_SCALES: TimeScale[] = [1, 2, 5];
@@ -31,7 +31,6 @@ export default function HomeScreen() {
     setTimeScale,
     tickCount,
   } = useSimulation();
-  const [notifications] = useState(3);
   const [advancing, setAdvancing] = useState(false);
 
   useEffect(() => {
@@ -49,8 +48,10 @@ export default function HomeScreen() {
   }
 
   const displayDate = formattedDate ?? formatSaveDate(activeSave.lastPlayedAt);
+  const locationLabel = formatOriginLocation(world.origin);
   const currency = world.origin.currency;
   const traits = world.player.traits;
+  const company = world.company;
   const netWorth = totalNetWorthCents(world.banking);
   const checking = world.banking.accounts.find((a) => a.id === 'checking');
   const savings = world.banking.accounts.find((a) => a.id === 'savings');
@@ -101,7 +102,7 @@ export default function HomeScreen() {
             <div>
               <h1 className="text-xl">{world.player.displayName}</h1>
               <p className="text-sm text-gray-300">
-                Day {tickCount + 1} · {isPaused ? 'Paused' : `${timeScale}x`}
+                {locationLabel} · Day {tickCount + 1} · {isPaused ? 'Paused' : `${timeScale}x`}
                 {isSaving ? ' · Saving…' : ''}
               </p>
             </div>
@@ -116,11 +117,11 @@ export default function HomeScreen() {
               <Sun className="w-4 h-4 text-[#F4B400]" />
               <span className="text-sm">Tech index {world.economy.techSectorIndex.toFixed(1)}</span>
             </div>
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10" onClick={() => navigate('/news')}>
               <Bell className="w-5 h-5" />
-              {notifications > 0 && (
+              {world.events.length > 0 && (
                 <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-[#2EC4B6] text-xs">
-                  {notifications}
+                  {Math.min(world.events.length, 9)}
                 </Badge>
               )}
             </Button>
@@ -186,7 +187,8 @@ export default function HomeScreen() {
                     <User className="w-12 h-12 text-white" />
                   </div>
                   <h2 className="text-2xl text-[#1C2541] mb-1">{world.player.displayName}</h2>
-                  <Badge className="mb-4 bg-[#F4B400] text-white">Age {world.player.ageYears}</Badge>
+                  <Badge className="mb-2 bg-[#F4B400] text-white">Age {world.player.ageYears}</Badge>
+                  <p className="text-xs text-gray-500 mb-4">Citizen of {nationalityLabel}</p>
                   
                   <div className="w-full space-y-3 mb-4">
                     {stats.map((stat) => (
@@ -253,21 +255,34 @@ export default function HomeScreen() {
               <CardContent className="p-6">
                 <h3 className="text-lg mb-4 flex items-center gap-2 text-[#1C2541]">
                   <Building2 className="w-5 h-5 text-[#2EC4B6]" />
-                  Economy Snapshot
+                  {company.name}
                 </h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Tech Sector Index</span>
-                    <span className="text-[#2EC4B6]">{world.economy.techSectorIndex.toFixed(1)}</span>
+                    <span className="text-sm text-gray-600">Stage</span>
+                    <span className="text-[#2EC4B6]">{companyStageLabel(company.stage)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Monthly Salary</span>
-                    <span className="text-[#2EC4B6]">{formatMoney(world.banking.monthlySalaryCents, currency)}</span>
+                    <span className="text-sm text-gray-600">Valuation</span>
+                    <span className="text-[#2EC4B6]">{formatMoney(company.valuationCents, currency)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Days Simulated</span>
-                    <span className="text-[#1C2541]">{tickCount}</span>
+                    <span className="text-sm text-gray-600">Monthly Profit</span>
+                    <span className={companyMonthlyProfitCents(company) >= 0 ? "text-[#2EC4B6]" : "text-orange-500"}>
+                      {formatMoney(companyMonthlyProfitCents(company), currency)}
+                    </span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Employees</span>
+                    <span className="text-[#1C2541]">{company.employeeCount}</span>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/company")}
+                    variant="outline"
+                    className="w-full border-[#2EC4B6] text-[#2EC4B6] hover:bg-[#2EC4B6] hover:text-white mt-2"
+                  >
+                    Manage Company
+                  </Button>
                 </div>
               </CardContent>
             </Card>

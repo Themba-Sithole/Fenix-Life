@@ -24,19 +24,20 @@ export default function CharacterCreation() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [nationality, setNationality] = useState("US");
+  const [residenceCountry, setResidenceCountry] = useState("US");
   const [cityId, setCityId] = useState("us-washington-d-c");
   const [currency, setCurrency] = useState("USD");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const cities = useMemo(() => getCitiesForCountry(nationality), [nationality]);
+  const cities = useMemo(() => getCitiesForCountry(residenceCountry), [residenceCountry]);
 
   useEffect(() => {
-    const nextCities = getCitiesForCountry(nationality);
-    const nextCurrency = getDefaultCurrencyForCountry(nationality);
+    const nextCities = getCitiesForCountry(residenceCountry);
+    const nextCurrency = getDefaultCurrencyForCountry(residenceCountry);
     setCurrency(nextCurrency);
     setCityId(nextCities[0]?.id ?? "");
-  }, [nationality]);
+  }, [residenceCountry]);
 
   const backgrounds = [
     {
@@ -125,7 +126,7 @@ export default function CharacterCreation() {
     try {
       await createNewSave({
         name,
-        worldSeed: `${selectedBackground}:${selectedAvatar}:${nationality}:${cityId}:${currency}`,
+        worldSeed: `${selectedBackground}:${selectedAvatar}:${nationality}:${residenceCountry}:${cityId}:${currency}`,
       });
       navigate('/home');
     } catch (err) {
@@ -201,7 +202,7 @@ export default function CharacterCreation() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="nationality">Nationality</Label>
+                  <Label htmlFor="nationality">Nationality (Citizenship)</Label>
                   <Select value={nationality} onValueChange={setNationality}>
                     <SelectTrigger className="border-[#2EC4B6]/30">
                       <SelectValue placeholder="Select nationality" />
@@ -214,6 +215,25 @@ export default function CharacterCreation() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="residence">Country You Live In</Label>
+                  <Select value={residenceCountry} onValueChange={setResidenceCountry}>
+                    <SelectTrigger className="border-[#2EC4B6]/30">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[280px]">
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Your starting city and default currency follow the country you live in.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -248,7 +268,7 @@ export default function CharacterCreation() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">
-                    Defaults to {getDefaultCurrencyForCountry(nationality)} for your nationality. You can change it.
+                    Defaults to {getDefaultCurrencyForCountry(residenceCountry)} for your residence country. You can change it.
                   </p>
                 </div>
 

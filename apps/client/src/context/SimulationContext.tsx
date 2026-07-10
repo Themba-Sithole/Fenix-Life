@@ -192,11 +192,12 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         initialWorld = ensureWorldV2(parsed.world, activeSave.name);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
-          const { origin } = parseWorldSeed(activeSave.worldSeed);
+          const { background, origin } = parseWorldSeed(activeSave.worldSeed);
           initialWorld = createWorldInstance({
             saveId: createSaveId(activeSave.id),
             currentDate: '2000-01-01',
             playerName: activeSave.name,
+            background,
             origin,
           });
           await uploadSaveBlob(

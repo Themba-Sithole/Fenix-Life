@@ -1,6 +1,8 @@
 import type { BankingState, BankTransaction, SimEvent, WorldInstance } from '@fenix/domain';
+import { companyMonthlyProfitCents, formatOriginLocation } from '@fenix/domain';
 import { addDays, parseGameDate } from './time-engine.js';
 import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
+import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
 
 const MAX_EVENTS = 50;
 const MAX_TRANSACTIONS = 30;
@@ -83,7 +85,7 @@ function applyMonthlySalary(world: WorldInstance): WorldInstance {
     tickCount: world.clock.tickCount,
     date: world.currentDate,
     category: 'finance',
-    headline: `Salary deposited: ${(world.banking.monthlySalaryCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}`,
+    headline: `Salary deposited: ${(world.banking.monthlySalaryCents / 100).toLocaleString(undefined, { style: 'currency', currency: world.origin.currency, maximumFractionDigits: 0 })}`,
     tone: 'success',
   });
 
@@ -131,6 +133,45 @@ function maybeBirthday(world: WorldInstance): WorldInstance {
   };
 }
 
+function maybeCompanyNews(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount % 14 !== 0) {
+    return world;
+  }
+
+  const events = appendEvent(world.events, {
+    id: `evt-company-${world.clock.tickCount}`,
+    tickCount: world.clock.tickCount,
+    date: world.currentDate,
+    category: 'career',
+    headline: companyPerformanceHeadline(world.company),
+    tone: companyMonthlyProfitCents(world.company) >= 0 ? 'success' : 'warning',
+  });
+
+  return { ...world, events };
+}
+
+function applyMonthlyCompanySettlement(world: WorldInstance): WorldInstance {
+  const { day } = parseGameDate(world.currentDate);
+  if (day !== 1) {
+    return world;
+  }
+
+  const profit = companyMonthlyProfitCents(world.company);
+  if (profit === 0) {
+    return world;
+  }
+
+  let banking = updateAccountBalance(world.banking, 'business', profit);
+  banking = appendTransaction(banking, {
+    date: world.currentDate,
+    description: `${world.company.name} monthly settlement`,
+    amountCents: profit,
+    accountId: 'business',
+  });
+
+  return { ...world, banking };
+}
+
 function maybeEconomyNews(world: WorldInstance): WorldInstance {
   if (world.clock.tickCount % 7 !== 0) {
     return world;
@@ -148,7 +189,7 @@ function maybeEconomyNews(world: WorldInstance): WorldInstance {
   return { ...world, events };
 }
 
-/** Daily tick orchestrator — Doc 17 §7, Phase E meso loop v0. */
+/** Daily tick orchestrator — Doc 17 §7, Phase F career loop v0. */
 export function runDailyTick(world: WorldInstance): WorldInstance {
   if (world.clock.paused) {
     return world;
@@ -165,11 +206,14 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
     economy: applyDailyEconomyTick(world.economy),
   };
 
+  nextWorld = applyDailyCompanyTick(nextWorld);
   nextWorld = applyDailyLivingCosts(nextWorld);
   nextWorld = applyMonthlySalary(nextWorld);
+  nextWorld = applyMonthlyCompanySettlement(nextWorld);
   nextWorld = applyTraitDrift(nextWorld);
   nextWorld = maybeBirthday(nextWorld);
   nextWorld = maybeEconomyNews(nextWorld);
+  nextWorld = maybeCompanyNews(nextWorld);
 
   if (nextWorld.events.length === 0) {
     nextWorld = {
@@ -179,7 +223,7 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
         tickCount: nextWorld.clock.tickCount,
         date: nextWorld.currentDate,
         category: 'life',
-        headline: `${nextWorld.player.displayName} begins a new chapter in Fenix City`,
+        headline: `${nextWorld.player.displayName} begins a new chapter in ${formatOriginLocation(nextWorld.origin)}`,
         tone: 'info',
       }),
     };
