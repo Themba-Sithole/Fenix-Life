@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace=@fenix/client",
+  "buildCommand": "npm run build --workspace=@fenix/domain && npm run build --workspace=@fenix/content && npm run build --workspace=@fenix/simulation-engine && npm run build --workspace=@fenix/client",
   "outputDirectory": "apps/client/dist",
   "framework": "vite",
   "rewrites": [

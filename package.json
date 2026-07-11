@@ -16,7 +16,7 @@
     "dev:client": "npm run dev --workspace=@fenix/client",
     "dev:api": "npm run dev --workspace=@fenix/api",
     "dev:admin": "npm run dev --workspace=@fenix/admin",
-    "build:client": "npm run build --workspace=@fenix/client",
+    "build:client": "npm run build --workspace=@fenix/domain && npm run build --workspace=@fenix/content && npm run build --workspace=@fenix/simulation-engine && npm run build --workspace=@fenix/client",
     "build:api": "npm run build --workspace=@fenix/api",
     "db:push": "npm run db:push --workspace=@fenix/api",
     "db:studio": "npm run db:studio --workspace=@fenix/api",
