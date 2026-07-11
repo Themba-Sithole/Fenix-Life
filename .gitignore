@@ -29,3 +29,7 @@ api/node_modules/.prisma/
 
 # Render / Vercel local
 .vercel/
+
+# Playwright
+test-results/
+playwright-report/
