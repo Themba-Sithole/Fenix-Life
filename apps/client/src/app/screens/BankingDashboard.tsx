@@ -9,6 +9,7 @@ import { ArrowLeft, CreditCard, TrendingUp, DollarSign, PiggyBank, Home, Briefca
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import { creditScoreLabel, formatMoney, totalNetWorthCents, type BankAccountType } from "@fenix/domain";
 
 const ACCOUNT_ICONS: Record<BankAccountType, typeof DollarSign> = {
@@ -38,20 +39,21 @@ function buildBalanceHistory(netWorthCents: number, tickCount: number) {
 
 export default function BankingDashboard() {
   const navigate = useNavigate();
-  const { world, isLoading, transferFunds } = useSimulation();
+  const { world, transferFunds, applyAction } = useSimulation();
   const [fromAccountId, setFromAccountId] = useState("checking");
   const [toAccountId, setToAccountId] = useState("savings");
   const [transferAmount, setTransferAmount] = useState("100");
   const [transferError, setTransferError] = useState<string | null>(null);
   const [isTransferring, setIsTransferring] = useState(false);
+  const [loanAmount, setLoanAmount] = useState("5000");
+  const [loanError, setLoanError] = useState<string | null>(null);
+  const [isApplyingLoan, setIsApplyingLoan] = useState(false);
+  const [isPayingLoan, setIsPayingLoan] = useState(false);
 
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading banking data…
-      </div>
-    );
-  }
+  const simulationGate = useSimulationGate("Loading banking data…");
+  if (simulationGate) return simulationGate;
+
+  if (!world) return null;
 
   const { banking } = world;
   const currency = world.origin.currency;
@@ -88,6 +90,36 @@ export default function BankingDashboard() {
       setTransferError(error instanceof Error ? error.message : "Transfer failed.");
     } finally {
       setIsTransferring(false);
+    }
+  }
+
+  async function handleApplyLoan() {
+    setLoanError(null);
+    const amountCents = Math.round(Number.parseFloat(loanAmount) * 100);
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      setLoanError("Enter a valid loan amount.");
+      return;
+    }
+
+    setIsApplyingLoan(true);
+    try {
+      await applyAction({ kind: "APPLY_LOAN", amountCents });
+    } catch (error) {
+      setLoanError(error instanceof Error ? error.message : "Loan application failed.");
+    } finally {
+      setIsApplyingLoan(false);
+    }
+  }
+
+  async function handlePayOffLoan() {
+    setLoanError(null);
+    setIsPayingLoan(true);
+    try {
+      await applyAction({ kind: "PAY_LOAN" });
+    } catch (error) {
+      setLoanError(error instanceof Error ? error.message : "Loan payoff failed.");
+    } finally {
+      setIsPayingLoan(false);
     }
   }
 
@@ -129,7 +161,7 @@ export default function BankingDashboard() {
           {banking.accounts.map((account) => {
             const Icon = ACCOUNT_ICONS[account.type];
             return (
-              <Card key={account.id} className="border-[#2EC4B6]/20 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+              <Card key={account.id} className="border-[#2EC4B6]/20 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-3">
                     <Icon className={`w-5 h-5 ${ACCOUNT_COLORS[account.type]}`} />
@@ -149,6 +181,7 @@ export default function BankingDashboard() {
           <Card className="lg:col-span-2 border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Balance History</CardTitle>
+              <p className="text-xs text-gray-500">Estimated from current net worth (not stored history)</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -209,6 +242,7 @@ export default function BankingDashboard() {
           <Card className="lg:col-span-2 border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Income vs Expenses</CardTitle>
+              <p className="text-xs text-gray-500">Current monthly salary and expenses</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -279,6 +313,62 @@ export default function BankingDashboard() {
               >
                 Transfer
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[#F4B400]/20 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-[#1C2541]">Personal Loan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {banking.activeLoan ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Remaining balance</span>
+                    <span className="text-[#1C2541]">{formatMoney(banking.activeLoan.remainingCents, currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Monthly payment</span>
+                    <span>{formatMoney(banking.activeLoan.monthlyPaymentCents, currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">APR</span>
+                    <span>{(banking.activeLoan.apr * 100).toFixed(1)}%</span>
+                  </div>
+                  {loanError ? <p className="text-sm text-red-600">{loanError}</p> : null}
+                  <Button
+                    className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                    onClick={handlePayOffLoan}
+                    disabled={isPayingLoan}
+                  >
+                    Pay Off Loan ({formatMoney(banking.activeLoan.remainingCents, currency)})
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-600">Loan amount</label>
+                    <Input
+                      type="number"
+                      min="100"
+                      step="100"
+                      value={loanAmount}
+                      onChange={(event) => setLoanAmount(event.target.value)}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Credit score {banking.creditScore} ({creditScoreLabel(banking.creditScore)}). One active loan at a time.
+                  </p>
+                  {loanError ? <p className="text-sm text-red-600">{loanError}</p> : null}
+                  <Button
+                    className="w-full bg-[#F4B400] hover:bg-[#d69f00] text-white"
+                    onClick={handleApplyLoan}
+                    disabled={isApplyingLoan || banking.creditScore < 580}
+                  >
+                    Apply for Loan
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 

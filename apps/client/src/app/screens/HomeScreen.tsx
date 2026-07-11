@@ -6,13 +6,14 @@ import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { 
   User, Heart, Zap, Brain, TrendingUp, DollarSign, Building2, 
-  Smartphone, Map, Users, Briefcase, Car, Home, Calendar,
-  Bell, Cloud, Sun, Menu, GraduationCap, ShoppingBag
+  Smartphone, Map, Users, Briefcase, Home, Calendar,
+  Bell, Sun, Menu, GraduationCap, Settings, Trophy
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, type TimeScale } from "@fenix/domain";
+import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, cyclePhaseLabel, type TimeScale } from "@fenix/domain";
 import { FiveCapitalsStrip } from "../components/FiveCapitalsStrip";
+import { HomeNavSheet } from "../components/HomeNavSheet";
 import { Pause, Play, SkipForward } from "lucide-react";
 
 const TIME_SCALES: TimeScale[] = [1, 2, 5];
@@ -27,12 +28,16 @@ export default function HomeScreen() {
     timeScale,
     isSaving,
     isLoading: simLoading,
+    loadError,
+    reloadSimulation,
     advanceDay,
     setPaused,
     setTimeScale,
     tickCount,
   } = useSimulation();
   const [advancing, setAdvancing] = useState(false);
+  const [simError, setSimError] = useState<string | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !activeSave) {
@@ -40,7 +45,21 @@ export default function HomeScreen() {
     }
   }, [activeSave, isLoading, navigate]);
 
-  if (isLoading || !activeSave || simLoading || !world) {
+  if (!isLoading && !activeSave) {
+    return null;
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F7FA] text-[#1C2541] p-6 gap-4">
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4 max-w-md text-center">{loadError}</p>
+        <Button onClick={() => reloadSimulation()} className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">Retry Loading</Button>
+        <Button variant="outline" onClick={() => navigate("/continue")}>Back to Saves</Button>
+      </div>
+    );
+  }
+
+  if (isLoading || simLoading || !world) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
         Loading your life…
@@ -48,8 +67,9 @@ export default function HomeScreen() {
     );
   }
 
-  const displayDate = formattedDate ?? formatSaveDate(activeSave.lastPlayedAt);
+  const displayDate = formattedDate ?? (activeSave ? formatSaveDate(activeSave.lastPlayedAt) : "");
   const locationLabel = formatOriginLocation(world.origin);
+  const nationalityLabel = getCountryName(world.origin.nationalityCode);
   const currency = world.origin.currency;
   const traits = world.player.traits;
   const company = world.company;
@@ -60,19 +80,36 @@ export default function HomeScreen() {
   const recentEvents = world.events.slice(0, 4);
 
   async function handleAdvanceDay() {
+    setSimError(null);
     setAdvancing(true);
     try {
       await advanceDay();
+    } catch (error) {
+      setSimError(error instanceof Error ? error.message : "Could not advance time.");
     } finally {
       setAdvancing(false);
     }
   }
 
   async function handleTimeScale(scale: TimeScale) {
-    if (isPaused) {
-      await setPaused(false);
+    setSimError(null);
+    try {
+      if (isPaused) {
+        await setPaused(false);
+      }
+      await setTimeScale(scale);
+    } catch (error) {
+      setSimError(error instanceof Error ? error.message : "Could not change time scale.");
     }
-    await setTimeScale(scale);
+  }
+
+  async function handleTogglePause() {
+    setSimError(null);
+    try {
+      await setPaused(!isPaused);
+    } catch (error) {
+      setSimError(error instanceof Error ? error.message : "Could not pause or resume.");
+    }
   }
 
   const stats = [
@@ -87,18 +124,19 @@ export default function HomeScreen() {
     { label: "City", icon: Map, path: "/city", color: "bg-[#1C2541]" },
     { label: "Family", icon: Users, path: "/family", color: "bg-[#F4B400]" },
     { label: "Company", icon: Briefcase, path: "/company", color: "bg-[#2EC4B6]" },
-    { label: "Vehicle", icon: Car, path: "/vehicles", color: "bg-[#1C2541]" },
-    { label: "Property", icon: Home, path: "/real-estate", color: "bg-[#F4B400]" },
+    { label: "Stocks", icon: TrendingUp, path: "/stocks", color: "bg-[#F4B400]" },
+    { label: "Property", icon: Home, path: "/real-estate", color: "bg-[#1C2541]" },
     { label: "Education", icon: GraduationCap, path: "/education", color: "bg-[#2EC4B6]" },
-    { label: "Shopping", icon: ShoppingBag, path: "/city", color: "bg-[#1C2541]" },
+    { label: "Timeline", icon: Trophy, path: "/timeline", color: "bg-[#F4B400]" },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
+      <HomeNavSheet open={navOpen} onOpenChange={setNavOpen} />
       <div className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white p-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => setNavOpen(true)}>
               <Menu className="w-5 h-5" />
             </Button>
             <div>
@@ -117,8 +155,13 @@ export default function HomeScreen() {
             </div>
             <div className="flex items-center gap-2">
               <Sun className="w-4 h-4 text-[#F4B400]" />
-              <span className="text-sm">Tech index {world.economy.techSectorIndex.toFixed(1)}</span>
+              <span className="text-sm">
+                {cyclePhaseLabel(world.economy.cyclePhase)} · Tech {world.economy.techSectorIndex.toFixed(1)}
+              </span>
             </div>
+            <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10" onClick={() => navigate('/settings')} title="Settings">
+              <Settings className="w-5 h-5" />
+            </Button>
             <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10" onClick={() => navigate('/news')}>
               <Bell className="w-5 h-5" />
               {world.events.length > 0 && (
@@ -132,13 +175,16 @@ export default function HomeScreen() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pt-4">
+        {simError ? (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{simError}</p>
+        ) : null}
         <Card className="border-[#2EC4B6]/20 shadow-sm">
           <CardContent className="p-4 flex flex-wrap items-center gap-3">
             <span className="text-sm text-[#1C2541] font-medium">Time Controls</span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPaused(!isPaused)}
+              onClick={handleTogglePause}
             >
               {isPaused ? (
                 <>
@@ -285,11 +331,18 @@ export default function HomeScreen() {
                     <span className="text-[#1C2541]">{company.employeeCount}</span>
                   </div>
                   <Button 
+                    onClick={() => navigate("/employees")}
+                    variant="outline"
+                    className="w-full border-[#F4B400] text-[#F4B400] hover:bg-[#F4B400] hover:text-white mt-2"
+                  >
+                    Manage Employees
+                  </Button>
+                  <Button 
                     onClick={() => navigate("/company")}
                     variant="outline"
                     className="w-full border-[#2EC4B6] text-[#2EC4B6] hover:bg-[#2EC4B6] hover:text-white mt-2"
                   >
-                    Manage Company
+                    Company Dashboard
                   </Button>
                 </div>
               </CardContent>
@@ -325,7 +378,11 @@ export default function HomeScreen() {
                     recentEvents.map((activity) => (
                       <div
                         key={activity.id}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => navigate("/news")}
+                        onKeyDown={(event) => event.key === "Enter" && navigate("/news")}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                       >
                         <div className="text-xs text-gray-500 min-w-[80px]">{activity.date}</div>
                         <div className="flex-1 text-sm text-gray-700">{activity.headline}</div>

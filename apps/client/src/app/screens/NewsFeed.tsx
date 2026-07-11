@@ -4,6 +4,8 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
+import { cyclePhaseLabel } from "@fenix/domain";
 
 function toneToImpact(tone: string): "positive" | "negative" | "neutral" {
   switch (tone) {
@@ -20,20 +22,18 @@ export default function NewsFeed() {
   const navigate = useNavigate();
   const { world, isLoading } = useSimulation();
 
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading news feed…
-      </div>
-    );
-  }
+  const simulationGate = useSimulationGate("Loading news feed…");
+  if (simulationGate) return simulationGate;
+  if (!world) return null;
 
   const news = world.events.map((event) => ({
     headline: event.headline,
     category: event.category,
     impact: toneToImpact(event.tone),
     time: event.date,
-    summary: `Simulated on day ${event.tickCount + 1} of your life.`,
+    summary: event.category === "news"
+      ? `Market and economy update during ${cyclePhaseLabel(world.economy.cyclePhase).toLowerCase()} phase.`
+      : `${event.headline} — recorded on day ${event.tickCount + 1}.`,
   }));
 
   return (
@@ -49,7 +49,9 @@ export default function NewsFeed() {
             Back
           </Button>
           <h1 className="text-3xl mb-2">News Feed</h1>
-          <p className="text-gray-300">Headlines generated from your simulation</p>
+          <p className="text-gray-300">
+            Economy in {cyclePhaseLabel(world.economy.cyclePhase)} phase · inflation {(world.economy.inflationRateAnnual * 100).toFixed(1)}%
+          </p>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import type { BankingState, BankTransaction, SimEvent, WorldInstance } from '@fenix/domain';
 import {
   applyDailyCreditScoreDrift,
+  applyMonthlyLoanPayment,
   companyMonthlyProfitCents,
   formatOriginLocation,
   globalDomainEventBus,
@@ -20,6 +21,7 @@ import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
 import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
 import { applyDailyCareerTick, careerHeadline } from './career-engine.js';
 import { applyDailyInvestmentTick, portfolioPerformanceHeadline } from './investment-engine.js';
+import { applyDailyEducationTick } from './education-engine.js';
 
 const MAX_EVENTS = 50;
 const MAX_TRANSACTIONS = 30;
@@ -283,6 +285,18 @@ function maybeMarketNews(world: WorldInstance): WorldInstance {
   return { ...world, events };
 }
 
+function applyMonthlyLoan(world: WorldInstance): WorldInstance {
+  const { day } = parseGameDate(world.currentDate);
+  if (day !== 1 || !world.banking.activeLoan) {
+    return world;
+  }
+
+  return {
+    ...world,
+    banking: applyMonthlyLoanPayment(world.banking, world.currentDate),
+  };
+}
+
 export function runDailyTick(world: WorldInstance): WorldInstance {
   if (world.clock.paused) {
     return world;
@@ -312,10 +326,12 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
     housing: applyDailyHousingTick(nextWorld.housing, nextWorld.economy),
     transportation: applyDailyTransportationTick(nextWorld.transportation),
     family: applyDailyFamilyTick(nextWorld.family, nextWorld.player.traits.happiness),
+    education: applyDailyEducationTick(nextWorld.education),
   };
   nextWorld = applyDailyLivingCosts(nextWorld);
   nextWorld = applyMonthlySalary(nextWorld);
   nextWorld = applyMonthlyCompanySettlement(nextWorld);
+  nextWorld = applyMonthlyLoan(nextWorld);
   nextWorld = applyMonthlyHousingSettlement(nextWorld);
   nextWorld = applyMonthlyTransportCosts(nextWorld);
   nextWorld = {

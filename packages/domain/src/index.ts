@@ -15,6 +15,7 @@ export type {
 } from './banking.js';
 export {
   createDefaultBanking,
+  createBankingForBackground,
   formatUsd,
   formatMoney,
   totalNetWorthCents,
@@ -22,14 +23,17 @@ export {
 export {
   applyDailyCreditScoreDrift,
   creditScoreLabel,
+  debitFromBestAccount,
   transferBetweenAccounts,
 } from './banking-actions.js';
 export { DomainEventBus, globalDomainEventBus } from './event-bus.js';
-export type { EconomyState } from './economy.js';
+export type { EconomyState, EconomyCyclePhase } from './economy.js';
 export {
   createDefaultEconomy,
+  cyclePhaseLabel,
   DEFAULT_INFLATION_RATE_ANNUAL,
   DEFAULT_TECH_SECTOR_INDEX,
+  deriveCyclePhase,
 } from './economy.js';
 export type { SimEvent, SimEventCategory, SimEventTone } from './sim-event.js';
 export type { Country } from './countries.js';
@@ -49,8 +53,11 @@ export {
 } from './career.js';
 export type { EmployeeDepartment, EmployeeRecord } from './employees.js';
 export {
+  clampEmployeeStat,
+  createHiredEmployee,
   employeeExperienceLabel,
   employeeInitials,
+  ensureCompanyEmployees,
   generateCompanyEmployees,
 } from './employees.js';
 export type {
@@ -115,3 +122,18 @@ export {
   getDefaultCurrencyForCountry,
 } from './country-profiles.js';
 export { parseWorldSeed } from './world-seed.js';
+export type { EducationState } from './education.js';
+export {
+  createDefaultEducation,
+  educationCompleted,
+  educationProgressPercent,
+} from './education.js';
+export type { LoanRecord } from './loans.js';
+export {
+  applyLoanProceeds,
+  applyMonthlyLoanPayment,
+  createLoan,
+  payOffActiveLoan,
+} from './loans.js';
+export type { PlayerAction } from './player-actions.js';
+export { applyPlayerAction, portfolioSnapshotValue } from './player-actions.js';

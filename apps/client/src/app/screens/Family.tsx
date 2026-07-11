@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -7,19 +8,37 @@ import { ArrowLeft, Calendar, Gift, Heart } from "lucide-react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import { averageFamilyHappiness, familyDisplayName, formatMoney } from "@fenix/domain";
 
 export default function Family() {
   const navigate = useNavigate();
-  const { world, isLoading } = useSimulation();
+  const { world, isLoading, applyAction } = useSimulation();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading family data…
-      </div>
-    );
+  async function handleFamilyAction(
+    kind: "FAMILY_PLAN_EVENT" | "FAMILY_SEND_GIFT" | "FAMILY_SCHEDULE_VISIT",
+    memberId?: string,
+  ) {
+    setActionError(null);
+    setBusyKey(memberId ? `${kind}:${memberId}` : kind);
+    try {
+      if (kind === "FAMILY_PLAN_EVENT") {
+        await applyAction({ kind });
+      } else if (memberId) {
+        await applyAction({ kind, memberId });
+      }
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Action failed.");
+    } finally {
+      setBusyKey(null);
+    }
   }
+
+  const simulationGate = useSimulationGate("Loading family data…");
+  if (simulationGate) return simulationGate;
+  if (!world) return null;
 
   const currency = world.origin.currency;
   const family = world.family;
@@ -49,6 +68,9 @@ export default function Family() {
       </div>
 
       <div className="max-w-6xl mx-auto p-6">
+        {actionError ? (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+        ) : null}
         <Card className="mb-6 border-[#2EC4B6]/20 shadow-lg bg-gradient-to-br from-[#1C2541] to-[#0B132B] text-white">
           <CardContent className="p-8 grid md:grid-cols-3 gap-8">
             <div>
@@ -97,23 +119,40 @@ export default function Family() {
                   </div>
                   <Progress value={member.happiness} className="h-2 bg-[#F4B400]" />
                 </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busyKey !== null}
+                    onClick={() => handleFamilyAction("FAMILY_SEND_GIFT", member.id)}
+                  >
+                    <Gift className="w-4 h-4 mr-1" />
+                    Gift
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busyKey !== null}
+                    onClick={() => handleFamilyAction("FAMILY_SCHEDULE_VISIT", member.id)}
+                  >
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Visit
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <Button variant="outline" className="h-14" disabled>
+          <Button
+            variant="outline"
+            className="h-14"
+            disabled={busyKey !== null}
+            onClick={() => handleFamilyAction("FAMILY_PLAN_EVENT")}
+          >
             <Heart className="w-4 h-4 mr-2" />
-            Plan Family Event
-          </Button>
-          <Button variant="outline" className="h-14" disabled>
-            <Gift className="w-4 h-4 mr-2" />
-            Send Gift
-          </Button>
-          <Button variant="outline" className="h-14" disabled>
-            <Calendar className="w-4 h-4 mr-2" />
-            Schedule Visit
+            Plan Family Event ($200)
           </Button>
         </div>
       </div>

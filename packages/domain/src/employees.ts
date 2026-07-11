@@ -132,3 +132,46 @@ export function employeeInitials(employee: EmployeeRecord): string {
 export function employeeExperienceLabel(yearsExperience: number): string {
   return yearsExperience === 1 ? '1 year' : `${yearsExperience} years`;
 }
+
+export function ensureCompanyEmployees(
+  company: CompanyState,
+  seed: string,
+  existing?: readonly EmployeeRecord[],
+  limit = 8,
+): EmployeeRecord[] {
+  if (existing && existing.length > 0) {
+    return [...existing];
+  }
+  return generateCompanyEmployees(company, seed, limit);
+}
+
+/** Append one deterministic hire to the visible roster. */
+export function createHiredEmployee(
+  company: CompanyState,
+  seed: string,
+  rosterIndex: number,
+): EmployeeRecord {
+  const random = createSeededRandom(`${seed}:${company.id}:hire:${company.employeeCount}:${rosterIndex}`);
+  const firstName = pick(FIRST_NAMES, random);
+  const lastName = pick(LAST_NAMES, random);
+  const department = DEPARTMENTS[rosterIndex % DEPARTMENTS.length]!;
+  const position = pick(POSITIONS[department], random);
+  const avgSalaryCents = Math.round(company.monthlyExpensesCents / Math.max(company.employeeCount, 1));
+
+  return {
+    id: `${company.id}-emp-${rosterIndex + 1}`,
+    name: `${firstName} ${lastName}`,
+    position,
+    department,
+    salaryCents: Math.round(avgSalaryCents * (0.85 + random() * 0.2)),
+    productivity: clamp(Math.round(62 + random() * 25), 50, 95),
+    creativity: clamp(Math.round(58 + random() * 28), 45, 95),
+    leadership: clamp(Math.round(50 + random() * 30), 40, 90),
+    loyalty: clamp(Math.round(72 + random() * 20), 60, 95),
+    yearsExperience: clamp(Math.floor(1 + random() * 8), 1, 15),
+  };
+}
+
+export function clampEmployeeStat(value: number): number {
+  return clamp(value, 0, 99);
+}

@@ -40,12 +40,16 @@ describe('save migration', () => {
 
     const migrated = ensureWorldV2(legacyWorld as never, 'Legacy Citizen');
 
-    expect(migrated.schemaVersion).toBeGreaterThanOrEqual(6);
+    expect(migrated.schemaVersion).toBeGreaterThanOrEqual(9);
     expect(migrated.portfolio).toBeDefined();
     expect(migrated.housing).toBeDefined();
     expect(migrated.transportation).toBeDefined();
     expect(migrated.family).toBeDefined();
+    expect(migrated.education).toBeDefined();
+    expect(migrated.employees.length).toBeGreaterThan(0);
+    expect(migrated.economy.cyclePhase).toBeDefined();
     expect(migrated.banking.creditScore).toBeGreaterThan(0);
+    expect(migrated.banking.activeLoan).toBeNull();
   });
 });
 

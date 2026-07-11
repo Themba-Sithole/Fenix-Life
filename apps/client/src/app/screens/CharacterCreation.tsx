@@ -12,8 +12,11 @@ import { useSave } from "@/context/SaveContext";
 import {
   COUNTRIES,
   CURRENCIES,
+  createBankingForBackground,
+  formatMoney,
   getCitiesForCountry,
   getDefaultCurrencyForCountry,
+  totalNetWorthCents,
 } from "@fenix/domain";
 
 export default function CharacterCreation() {
@@ -27,6 +30,10 @@ export default function CharacterCreation() {
   const [residenceCountry, setResidenceCountry] = useState("US");
   const [cityId, setCityId] = useState("us-washington-d-c");
   const [currency, setCurrency] = useState("USD");
+  const [gender, setGender] = useState("male");
+  const [birthday, setBirthday] = useState("1990-01-01");
+  const [skinTone, setSkinTone] = useState("medium");
+  const [hairstyle, setHairstyle] = useState("medium");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,11 +46,19 @@ export default function CharacterCreation() {
     setCityId(nextCities[0]?.id ?? "");
   }, [residenceCountry]);
 
-  const backgrounds = [
+  function startingCashForBackground(backgroundId: string): string {
+    return formatMoney(
+      totalNetWorthCents(createBankingForBackground(backgroundId)),
+      currency,
+    );
+  }
+
+  const backgrounds = useMemo(
+    () => [
     {
       id: "wealthy",
       name: "Wealthy Family",
-      startingCash: "$500,000",
+      startingCash: startingCashForBackground("wealthy"),
       education: "Private School",
       relationships: "Excellent",
       connections: "High Society",
@@ -55,7 +70,7 @@ export default function CharacterCreation() {
     {
       id: "middle-class",
       name: "Middle Class",
-      startingCash: "$25,000",
+      startingCash: startingCashForBackground("middle-class"),
       education: "Public School",
       relationships: "Good",
       connections: "Community",
@@ -67,7 +82,7 @@ export default function CharacterCreation() {
     {
       id: "working-class",
       name: "Working Class",
-      startingCash: "$5,000",
+      startingCash: startingCashForBackground("working-class"),
       education: "Public School",
       relationships: "Strong",
       connections: "Local",
@@ -79,7 +94,7 @@ export default function CharacterCreation() {
     {
       id: "orphan",
       name: "Orphan",
-      startingCash: "$500",
+      startingCash: startingCashForBackground("orphan"),
       education: "Basic",
       relationships: "None",
       connections: "None",
@@ -91,7 +106,7 @@ export default function CharacterCreation() {
     {
       id: "immigrant",
       name: "Immigrant",
-      startingCash: "$2,000",
+      startingCash: startingCashForBackground("immigrant"),
       education: "Variable",
       relationships: "Family Abroad",
       connections: "Community",
@@ -103,7 +118,7 @@ export default function CharacterCreation() {
     {
       id: "entrepreneur-family",
       name: "Entrepreneur Family",
-      startingCash: "$100,000",
+      startingCash: startingCashForBackground("entrepreneur-family"),
       education: "Business School",
       relationships: "Business Network",
       connections: "Industry Leaders",
@@ -112,7 +127,9 @@ export default function CharacterCreation() {
       difficulty: "Normal",
       difficultyColor: "text-[#F4B400]",
     },
-  ];
+  ],
+    [currency],
+  );
 
   async function handleStartJourney() {
     const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ') || 'My Life';
@@ -126,7 +143,7 @@ export default function CharacterCreation() {
     try {
       await createNewSave({
         name,
-        worldSeed: `${selectedBackground}:${selectedAvatar}:${nationality}:${residenceCountry}:${cityId}:${currency}`,
+        worldSeed: `${selectedBackground}:${selectedAvatar}:${nationality}:${residenceCountry}:${cityId}:${currency}:${gender}:${birthday}:${skinTone}:${hairstyle}`,
       });
       navigate('/home');
     } catch (err) {
@@ -183,7 +200,7 @@ export default function CharacterCreation() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
-                    <Select>
+                    <Select value={gender} onValueChange={setGender}>
                       <SelectTrigger className="border-[#2EC4B6]/30">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
@@ -197,7 +214,7 @@ export default function CharacterCreation() {
 
                   <div className="space-y-2">
                     <Label htmlFor="birthday">Birthday</Label>
-                    <Input id="birthday" type="date" className="border-[#2EC4B6]/30" />
+                    <Input id="birthday" type="date" className="border-[#2EC4B6]/30" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
                   </div>
                 </div>
 
@@ -283,7 +300,7 @@ export default function CharacterCreation() {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3">
-                    <Select>
+                    <Select value={skinTone} onValueChange={setSkinTone}>
                       <SelectTrigger className="border-[#2EC4B6]/30">
                         <SelectValue placeholder="Skin Tone" />
                       </SelectTrigger>
@@ -293,7 +310,7 @@ export default function CharacterCreation() {
                         <SelectItem value="dark">Dark</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select>
+                    <Select value={hairstyle} onValueChange={setHairstyle}>
                       <SelectTrigger className="border-[#2EC4B6]/30">
                         <SelectValue placeholder="Hairstyle" />
                       </SelectTrigger>

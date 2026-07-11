@@ -1,12 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import {
   formatMoney,
   getTrendingQuotes,
@@ -20,7 +21,21 @@ import {
 
 export default function StockMarket() {
   const navigate = useNavigate();
-  const { world, isLoading } = useSimulation();
+  const { world, isLoading, applyAction } = useSimulation();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busySymbol, setBusySymbol] = useState<string | null>(null);
+
+  async function handleTrade(symbol: string, kind: "BUY_STOCK" | "SELL_STOCK", shares: number) {
+    setActionError(null);
+    setBusySymbol(symbol);
+    try {
+      await applyAction({ kind, symbol, shares });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Trade failed.");
+    } finally {
+      setBusySymbol(null);
+    }
+  }
 
   const portfolioView = useMemo(() => {
     if (!world) {
@@ -86,13 +101,9 @@ export default function StockMarket() {
     };
   }, [world]);
 
-  if (isLoading || !world || !portfolioView) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading portfolio…
-      </div>
-    );
-  }
+  const simulationGate = useSimulationGate("Loading portfolio…");
+  if (simulationGate) return simulationGate;
+  if (!world || !portfolioView) return null;
 
   const {
     currency,
@@ -142,6 +153,9 @@ export default function StockMarket() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {actionError ? (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+        ) : null}
         <Card className="mb-6 border-[#2EC4B6]/20 shadow-xl bg-gradient-to-br from-[#1C2541] to-[#0B132B] text-white">
           <CardContent className="p-8">
             <div className="grid md:grid-cols-4 gap-8">
@@ -230,11 +244,16 @@ export default function StockMarket() {
                         {stock.change}%
                       </Badge>
                     </div>
+                    <Button
+                      size="sm"
+                      className="w-full mt-3 bg-[#F4B400] hover:bg-[#d69f00] text-white"
+                      disabled={busySymbol === stock.symbol}
+                      onClick={() => handleTrade(stock.symbol, "BUY_STOCK", 1)}
+                    >
+                      Buy 1 Share
+                    </Button>
                   </div>
                 ))}
-                <Button className="w-full bg-[#F4B400] hover:bg-[#d69f00] text-white" disabled>
-                  Explore Market
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -243,13 +262,14 @@ export default function StockMarket() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-[#1C2541]">Your Holdings</CardTitle>
-                <Button className="bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] text-white" disabled>
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Buy Stocks
-                </Button>
               </div>
             </CardHeader>
             <CardContent>
+              {holdings.length === 0 ? (
+                <p className="text-sm text-gray-500 py-8 text-center">
+                  No holdings yet. Buy shares from the market to start building your portfolio.
+                </p>
+              ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {holdings.map((stock) => (
                   <Card key={stock.symbol} className="border-gray-200">
@@ -292,10 +312,21 @@ export default function StockMarket() {
                       </div>
 
                       <div className="flex gap-2 mt-4">
-                        <Button size="sm" className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white" disabled>
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                          disabled={busySymbol === stock.symbol}
+                          onClick={() => handleTrade(stock.symbol, "BUY_STOCK", 1)}
+                        >
                           Buy
                         </Button>
-                        <Button size="sm" variant="outline" className="flex-1" disabled>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          disabled={busySymbol === stock.symbol || stock.shares < 1}
+                          onClick={() => handleTrade(stock.symbol, "SELL_STOCK", 1)}
+                        >
                           Sell
                         </Button>
                       </div>
@@ -303,6 +334,7 @@ export default function StockMarket() {
                   </Card>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </div>

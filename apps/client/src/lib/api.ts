@@ -102,6 +102,10 @@ export async function apiFetch<T>(
     throw new ApiError(body.error ?? `Request failed: ${response.status}`, response.status);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -163,6 +167,14 @@ export async function touchSave(saveId: string): Promise<SaveSummary> {
   return data.save;
 }
 
+export async function renameSave(saveId: string, name: string): Promise<SaveSummary> {
+  const data = await apiFetch<{ save: SaveSummary }>(`/saves/${saveId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+  return data.save;
+}
+
 export async function uploadSaveBlob(saveId: string, blob: string): Promise<void> {
   await apiFetch(`/saves/${saveId}/blob`, {
     method: 'PUT',
@@ -173,6 +185,37 @@ export async function uploadSaveBlob(saveId: string, blob: string): Promise<void
 export async function downloadSaveBlob(saveId: string): Promise<string> {
   const data = await apiFetch<{ blob: string }>(`/saves/${saveId}/blob`);
   return data.blob;
+}
+
+export async function deleteSave(saveId: string): Promise<void> {
+  await apiFetch(`/saves/${saveId}`, { method: 'DELETE' });
+}
+
+export async function updateProfile(displayName: string): Promise<User> {
+  const data = await apiFetch<{ user: User }>('/auth/profile', {
+    method: 'PATCH',
+    body: JSON.stringify({ displayName }),
+  });
+  setStoredUser(data.user);
+  return data.user;
+}
+
+export async function changePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> {
+  await apiFetch('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteAccount(password: string): Promise<void> {
+  await apiFetch('/auth/account', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+  clearSession();
 }
 
 export function clearSession(): void {

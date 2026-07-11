@@ -15,6 +15,7 @@ import {
   parseWorldSeed,
   type TimeScale,
   type WorldInstance,
+  type PlayerAction,
 } from '@fenix/domain';
 import {
   createSaveBlobV1,
@@ -44,15 +45,18 @@ interface SimulationContextValue {
   tickCount: number;
   isLoading: boolean;
   isSaving: boolean;
+  loadError: string | null;
   advanceDay: () => Promise<void>;
   setPaused: (paused: boolean) => Promise<void>;
   setTimeScale: (timeScale: TimeScale) => Promise<void>;
   persistNow: () => Promise<void>;
+  reloadSimulation: () => Promise<void>;
   transferFunds: (input: {
     fromAccountId: string;
     toAccountId: string;
     amountCents: number;
   }) => Promise<void>;
+  applyAction: (action: PlayerAction) => Promise<void>;
 }
 
 const SimulationContext = createContext<SimulationContextValue | null>(null);
@@ -102,6 +106,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
   const [world, setWorld] = useState<WorldInstance | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const persistWorld = useCallback(async (nextWorld: WorldInstance) => {
     if (!activeSave) return;
@@ -149,7 +154,10 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
   const advanceDay = useCallback(async () => {
     const worker = workerRef.current;
-    if (!worker || advancingRef.current) return;
+    if (!worker) {
+      throw new Error('Simulation is not ready yet');
+    }
+    if (advancingRef.current) return;
 
     advancingRef.current = true;
     try {
@@ -162,7 +170,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
   const setPaused = useCallback(async (paused: boolean) => {
     const worker = workerRef.current;
-    if (!worker) return;
+    if (!worker) {
+      throw new Error('Simulation is not ready yet');
+    }
 
     const response = await postAndWait(worker, { type: 'SET_PAUSED', paused });
     if (response.type !== 'STATE') return;
@@ -174,7 +184,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
   const setTimeScale = useCallback(async (timeScale: TimeScale) => {
     const worker = workerRef.current;
-    if (!worker) return;
+    if (!worker) {
+      throw new Error('Simulation is not ready yet');
+    }
 
     const response = await postAndWait(worker, { type: 'SET_TIME_SCALE', timeScale });
     if (response.type !== 'STATE') return;
@@ -190,17 +202,20 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       workerRef.current = null;
       worldRef.current = null;
       setWorld(null);
+      setLoadError(null);
       return;
     }
 
     setIsLoading(true);
+    setLoadError(null);
     try {
       let initialWorld: WorldInstance;
 
       try {
         const rawBlob = await downloadSaveBlob(activeSave.id);
         const parsed = parseSaveBlobV1(rawBlob);
-        let migrated = ensureWorldV2(parsed.world, activeSave.name);
+        const seed = parseWorldSeed(activeSave.worldSeed);
+        let migrated = ensureWorldV2(parsed.world, activeSave.name, seed.background);
         const catchUpDays = estimateCatchUpDays(parsed.savedAt);
         if (catchUpDays > 0) {
           migrated = runCatchUpTicks(migrated, catchUpDays);
@@ -208,13 +223,18 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         initialWorld = migrated;
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
-          const { background, origin } = parseWorldSeed(activeSave.worldSeed);
+          const seed = parseWorldSeed(activeSave.worldSeed);
           initialWorld = createWorldInstance({
             saveId: createSaveId(activeSave.id),
             currentDate: '2000-01-01',
             playerName: activeSave.name,
-            background,
-            origin,
+            background: seed.background,
+            origin: seed.origin,
+            avatarId: seed.avatar,
+            gender: seed.gender,
+            birthday: seed.birthday,
+            skinTone: seed.skinTone,
+            hairstyle: seed.hairstyle,
           });
           await uploadSaveBlob(
             activeSave.id,
@@ -226,6 +246,13 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       }
 
       await initWorker(initialWorld);
+    } catch (error) {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+      worldRef.current = null;
+      setWorld(null);
+      setLoadError(error instanceof Error ? error.message : 'Failed to load simulation');
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +300,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
   const transferFunds = useCallback(
     async (input: { fromAccountId: string; toAccountId: string; amountCents: number }) => {
       const worker = workerRef.current;
-      if (!worker) return;
+      if (!worker) {
+        throw new Error('Simulation is not ready yet');
+      }
 
       const response = await postAndWait(worker, { type: 'TRANSFER', ...input });
       if (response.type === 'ERROR') {
@@ -288,6 +317,30 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     [persistWorld],
   );
 
+  const applyAction = useCallback(
+    async (action: PlayerAction) => {
+      const worker = workerRef.current;
+      if (!worker) {
+        throw new Error('Simulation is not ready yet');
+      }
+
+      const response = await postAndWait(worker, { type: 'APPLY_ACTION', action });
+      if (response.type === 'ERROR') {
+        throw new Error(response.message);
+      }
+      if (response.type !== 'STATE') return;
+
+      worldRef.current = response.world;
+      setWorld(response.world);
+      await persistWorld(response.world);
+    },
+    [persistWorld],
+  );
+
+  const reloadSimulation = useCallback(async () => {
+    await loadSimulation();
+  }, [loadSimulation]);
+
   const value = useMemo<SimulationContextValue>(
     () => ({
       world,
@@ -298,6 +351,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       tickCount: world?.clock.tickCount ?? 0,
       isLoading,
       isSaving,
+      loadError,
       advanceDay,
       setPaused,
       setTimeScale,
@@ -306,9 +360,11 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
           await persistWorld(worldRef.current);
         }
       },
+      reloadSimulation,
       transferFunds,
+      applyAction,
     }),
-    [world, isLoading, isSaving, advanceDay, setPaused, setTimeScale, persistWorld, transferFunds],
+    [world, isLoading, isSaving, loadError, advanceDay, setPaused, setTimeScale, persistWorld, reloadSimulation, transferFunds, applyAction],
   );
 
   return (

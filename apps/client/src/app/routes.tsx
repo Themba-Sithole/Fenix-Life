@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { Navigate, createBrowserRouter } from "react-router";
 import type { ComponentType } from "react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RootLayout } from "./layouts/RootLayout";
@@ -42,6 +42,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     Component: AuthScreen,
+  },
+  {
+    path: "/auth",
+    element: <Navigate to="/login" replace />,
   },
   {
     path: "/continue",
@@ -105,7 +109,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/settings",
-    Component: Settings,
+    Component: protect(Settings),
   },
     ],
   },

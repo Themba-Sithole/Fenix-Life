@@ -74,6 +74,49 @@ export function transferBetweenAccounts(
   };
 }
 
+const DEBIT_ACCOUNT_ORDER = ['checking', 'savings', 'business', 'investment'] as const;
+
+/** Debits the first account with sufficient balance (checking preferred). */
+export function debitFromBestAccount(
+  banking: BankingState,
+  amountCents: number,
+  date: string,
+  description: string,
+): BankingState {
+  if (amountCents <= 0) {
+    throw new Error('Debit amount must be positive');
+  }
+
+  const accountId = DEBIT_ACCOUNT_ORDER.find((id) => {
+    const account = banking.accounts.find((item) => item.id === id);
+    return account && account.balanceCents >= amountCents;
+  });
+
+  if (!accountId) {
+    throw new Error('Insufficient funds across accounts');
+  }
+
+  const accounts = banking.accounts.map((account) =>
+    account.id === accountId
+      ? { ...account, balanceCents: account.balanceCents - amountCents }
+      : account,
+  );
+
+  const transaction: BankTransaction = {
+    id: `tx-${description.slice(0, 12)}-${date}-${banking.transactions.length}`,
+    date,
+    description,
+    amountCents: -amountCents,
+    accountId,
+  };
+
+  return {
+    ...banking,
+    accounts,
+    transactions: [transaction, ...banking.transactions].slice(0, 30),
+  };
+}
+
 export function applyDailyCreditScoreDrift(banking: BankingState): BankingState {
   const cashFlow = banking.monthlySalaryCents - banking.monthlyExpensesCents;
   const delta = cashFlow >= 0 ? 1 : -1;

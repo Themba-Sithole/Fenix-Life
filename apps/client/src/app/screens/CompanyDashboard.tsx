@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -6,6 +7,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, Users, DollarSign, Package, BarCha
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import {
   companyMonthlyProfitCents,
   companyStageLabel,
@@ -14,15 +16,25 @@ import {
 
 export default function CompanyDashboard() {
   const navigate = useNavigate();
-  const { world, isLoading } = useSimulation();
+  const { world, isLoading, applyAction } = useSimulation();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
 
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading company data…
-      </div>
-    );
+  async function handleCompanyAction(kind: "COMPANY_HIRE" | "COMPANY_LAUNCH_PRODUCT") {
+    setActionError(null);
+    setBusyAction(kind);
+    try {
+      await applyAction({ kind });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Action failed.");
+    } finally {
+      setBusyAction(null);
+    }
   }
+
+  const simulationGate = useSimulationGate("Loading company data…");
+  if (simulationGate) return simulationGate;
+  if (!world) return null;
 
   const { company } = world;
   const currency = world.origin.currency;
@@ -143,6 +155,7 @@ export default function CompanyDashboard() {
                 <BarChart3 className="w-5 h-5 text-[#2EC4B6]" />
                 Revenue & Profit Trend
               </CardTitle>
+              <p className="text-xs text-gray-500">Estimated trend from current monthly figures</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -161,6 +174,7 @@ export default function CompanyDashboard() {
           <Card className="border-[#F4B400]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Team Breakdown</CardTitle>
+              <p className="text-xs text-gray-500">Estimated split by headcount</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={220}>
@@ -184,6 +198,38 @@ export default function CompanyDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {actionError ? (
+          <p className="mt-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+        ) : null}
+
+        <Card className="mt-6 border-[#2EC4B6]/20 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-[#1C2541]">Company Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/employees")}
+            >
+              Manage Employees
+            </Button>
+            <Button
+              className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+              disabled={busyAction !== null}
+              onClick={() => handleCompanyAction("COMPANY_HIRE")}
+            >
+              Hire Employee ($5,000)
+            </Button>
+            <Button
+              className="bg-[#F4B400] hover:bg-[#d69f00] text-white"
+              disabled={busyAction !== null}
+              onClick={() => handleCompanyAction("COMPANY_LAUNCH_PRODUCT")}
+            >
+              Launch Product ($12,000)
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

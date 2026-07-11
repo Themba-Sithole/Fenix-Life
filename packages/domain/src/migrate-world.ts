@@ -1,26 +1,36 @@
 import { createCitizenId } from './citizen-id.js';
-import { createDefaultBanking } from './banking.js';
+import { createBankingForBackground } from './banking.js';
 import { createDefaultCitizen } from './citizen.js';
 import { createDefaultCareer } from './career.js';
 import { createDefaultCompany } from './company.js';
-import { createDefaultEconomy } from './economy.js';
+import { createDefaultEconomy, deriveCyclePhase } from './economy.js';
 import { createDefaultOrigin } from './locations.js';
 import { createDefaultPortfolio } from './portfolio.js';
 import { createDefaultHousing } from './housing.js';
 import { createDefaultTransportation } from './transportation.js';
 import { createDefaultFamily } from './family.js';
+import { createDefaultEducation } from './education.js';
+import { ensureCompanyEmployees } from './employees.js';
 import { formatOriginLocation } from './location-helpers.js';
 import type { WorldInstance } from './world-instance.js';
 
 const MAX_EVENTS = 50;
 
 /** Upgrade legacy save blobs to current playable state. */
-export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): WorldInstance {
+export function ensureWorldV2(
+  world: WorldInstance,
+  playerName = 'Citizen',
+  background = 'middle-class',
+): WorldInstance {
   const player =
     world.player ??
     createDefaultCitizen(createCitizenId(String(world.saveId)), playerName);
 
   const economy = world.economy ?? createDefaultEconomy();
+  const normalizedEconomy = {
+    ...economy,
+    cyclePhase: economy.cyclePhase ?? deriveCyclePhase(economy.techSectorIndex),
+  };
   const events = world.events ?? [];
   const legacyOrigin = world.origin as Partial<{
     nationalityCode: string;
@@ -45,24 +55,30 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
     createDefaultHousing(cityLabel, undefined, company.stage);
   const transportation = world.transportation ?? createDefaultTransportation();
   const family = world.family ?? createDefaultFamily(player.displayName);
+  const defaultBanking = createBankingForBackground(background);
   const banking = {
-    ...(world.banking ?? createDefaultBanking()),
+    ...(world.banking ?? defaultBanking),
     monthlySalaryCents: (world.career ?? career).monthlySalaryCents,
-    creditScore: world.banking?.creditScore ?? createDefaultBanking().creditScore,
+    creditScore: world.banking?.creditScore ?? defaultBanking.creditScore,
+    activeLoan: world.banking?.activeLoan ?? null,
   };
+  const education = world.education ?? createDefaultEducation();
+  const employees = ensureCompanyEmployees(company, String(world.saveId), world.employees);
 
   return {
     ...world,
-    schemaVersion: Math.max(world.schemaVersion ?? 1, 6),
+    schemaVersion: Math.max(world.schemaVersion ?? 1, 9),
     player,
     banking,
-    economy,
+    economy: normalizedEconomy,
     company,
     career,
     portfolio,
     housing,
     transportation,
     family,
+    education,
+    employees,
     events: events.slice(0, MAX_EVENTS),
     origin,
   };

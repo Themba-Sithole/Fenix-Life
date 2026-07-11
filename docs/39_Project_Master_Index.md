@@ -434,12 +434,28 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Life timeline + legacy | ✅ Complete | Events river, legacy score — Phase K |
 | Smartphone hub | ✅ Complete | Live stats, app launcher — Phase L |
 | City map districts | ✅ Complete | Origin-based districts + activity — Phase M |
-| Save migration tests | ✅ Complete | Golden legacy blob → schema v6 — Phase N |
+| Save migration tests | ✅ Complete | Golden legacy blob → schema v9 — Phase N |
 | Admin deploy config | ✅ Complete | `apps/admin/vercel.json` + `build:admin` — Phase N |
 | Content packs v1 | ✅ Complete | `/content/` + `@fenix/content` — Phase O |
 | Banking transfers + credit | ✅ Complete | Inter-account transfers, credit score — Phase P |
 | E2E smoke tests | ✅ Complete | Playwright main menu spec — Phase Q |
 | Event bus + offline catch-up | ✅ Complete | DomainEventBus, catch-up ticks — Phase R |
+| Marketplace buy/sell actions | ✅ Complete | Stocks, property, vehicles — Phase S |
+| Education state + loans v0 | ✅ Complete | Program progress, loan apply/pay — Phase T |
+| Company ops v0 | ✅ Complete | Hire employee, launch product — Phase U |
+| Employee HR actions | ✅ Complete | Promote, raise, train — Phase V |
+| Family household actions | ✅ Complete | Events, gifts, visits — Phase W |
+| Multi-account payments | ✅ Complete | Purchases debit best account — Phase X |
+| Auth E2E UI smoke | ✅ Complete | Playwright auth screen spec — Phase Y |
+| Career actions v0 | ✅ Complete | Raise, upskill, network — Phase Z |
+| Economy cycle phase | ✅ Complete | Expansion/peak/contraction/trough — Phase AA |
+| Save export + delete | ✅ Complete | JSON export, DELETE /saves/:id — Phase AB |
+| Account password + profile | ✅ Complete | Change password, display name — Phase AC |
+| Continue screen save mgmt | ✅ Complete | Rename + delete from list — Phase AD |
+| Asset sell actions | ✅ Complete | Sell property/vehicle — Phase AE |
+| Account deletion | ✅ Complete | DELETE /auth/account — Phase AF |
+| Loan payoff + job search | ✅ Complete | Pay loan, apply job, district visits — Phase AG |
+| Smartphone app routing | ✅ Complete | Messages/Email/Calendar/Contacts/Marketplace — Phase AH |
 | Simulation engines | 📋 Planned | Full FSF engine constellation (Doc 14) |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
 | Content packs | ✅ Complete | Starter headlines, occupations, industries |
@@ -452,7 +468,7 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Milestone | Target | Doc Status | Code Status |
 |---|---|---|---|
 | M0.1 Documentation Foundation | Q3 2026 | ✅ 100% (42/42) | UI prototype |
-| M1.0 Alpha Internal | Q4 2026 | All docs complete | Complete (Phases A–R) |
+| M1.0 Alpha Internal | Q4 2026 | All docs complete | Complete (Phases A–AH + UI hardening) |
 | EA 0.5 | Q2 2027 | Docs complete | Full loop |
 | 1.0 Launch | Q4 2027 | Docs complete | Generational play |
 
@@ -547,6 +563,8 @@ Any new doc or status change **must** update this file (39) within 48 hours.
 
 | Date | Version | Changes |
 |---|---|---|
+| 2026-07-11 | 1.6 | Gap fixes: simulation gate on all screens, world-seed identity fields, background migration, E2E auth route |
+| 2026-07-11 | 1.5 | Phases AG–AH: loan payoff, job search, district visits, smartphone app routes |
 | 2026-07-10 | 1.4 | Phase D admin portal: staff login, accounts, saves inspect, audit log |
 | 2026-07-10 | 1.3 | Phase C simulation kernel v0: time engine, worker bridge, save blobs |
 | 2026-07-10 | 1.2 | Phase B auth + save loop: login, register, JWT, create/continue saves |

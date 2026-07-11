@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -5,19 +6,42 @@ import { Badge } from "../components/ui/badge";
 import { ArrowLeft, DollarSign, Gauge, Zap } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import { formatMoney, ownedVehicles, transportationTotalValueCents } from "@fenix/domain";
 
 export default function VehicleDealership() {
   const navigate = useNavigate();
-  const { world, isLoading } = useSimulation();
+  const { world, isLoading, applyAction } = useSimulation();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading garage…
-      </div>
-    );
+  async function handlePurchase(vehicleId: string) {
+    setActionError(null);
+    setBusyId(vehicleId);
+    try {
+      await applyAction({ kind: "PURCHASE_VEHICLE", vehicleId });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Purchase failed.");
+    } finally {
+      setBusyId(null);
+    }
   }
+
+  async function handleSell(vehicleId: string) {
+    setActionError(null);
+    setBusyId(vehicleId);
+    try {
+      await applyAction({ kind: "SELL_VEHICLE", vehicleId });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Sale failed.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const simulationGate = useSimulationGate("Loading garage…");
+  if (simulationGate) return simulationGate;
+  if (!world) return null;
 
   const currency = world.origin.currency;
   const vehicles = world.transportation.vehicles;
@@ -54,6 +78,9 @@ export default function VehicleDealership() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {actionError ? (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+        ) : null}
         <Card className="mb-6 border-[#2EC4B6]/20 shadow-lg bg-gradient-to-br from-[#1C2541] to-[#0B132B] text-white">
           <CardContent className="p-8 grid md:grid-cols-3 gap-8">
             <div>
@@ -110,9 +137,16 @@ export default function VehicleDealership() {
                   </div>
                 </div>
 
-                <Button size="sm" className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white" disabled>
+                <Button
+                  size="sm"
+                  className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                  disabled={busyId === vehicle.id}
+                  onClick={() =>
+                    vehicle.owned ? handleSell(vehicle.id) : handlePurchase(vehicle.id)
+                  }
+                >
                   <DollarSign className="w-4 h-4 mr-1" />
-                  {vehicle.owned ? "Maintain" : "Purchase"}
+                  {vehicle.owned ? "Sell (80% value)" : "Purchase"}
                 </Button>
               </CardContent>
             </Card>

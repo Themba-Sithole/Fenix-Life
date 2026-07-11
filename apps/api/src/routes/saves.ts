@@ -83,6 +83,41 @@ savesRouter.get('/:id', async (req: AuthenticatedRequest, res) => {
   res.json({ save });
 });
 
+const renameSaveSchema = z.object({
+  name: z.string().min(1).max(128),
+});
+
+savesRouter.patch('/:id', async (req: AuthenticatedRequest, res) => {
+  const saveId = String(req.params.id);
+  const parsed = renameSaveSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten() });
+    return;
+  }
+
+  const owned = await assertSaveOwner(saveId, req.user!.userId);
+  if (!owned) {
+    res.status(404).json({ error: 'Save not found' });
+    return;
+  }
+
+  const save = await prisma.save.update({
+    where: { id: saveId },
+    data: { name: parsed.data.name },
+    select: {
+      id: true,
+      name: true,
+      schemaVersion: true,
+      worldSeed: true,
+      lastPlayedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  res.json({ save });
+});
+
 savesRouter.post('/:id/play', async (req: AuthenticatedRequest, res) => {
   const saveId = String(req.params.id);
   const existing = await prisma.save.findFirst({
@@ -203,4 +238,16 @@ savesRouter.get('/:id/blob', async (req: AuthenticatedRequest, res) => {
     checksum: record.checksum,
     blob: payload,
   });
+});
+
+savesRouter.delete('/:id', async (req: AuthenticatedRequest, res) => {
+  const saveId = String(req.params.id);
+  const owned = await assertSaveOwner(saveId, req.user!.userId);
+  if (!owned) {
+    res.status(404).json({ error: 'Save not found' });
+    return;
+  }
+
+  await prisma.save.delete({ where: { id: saveId } });
+  res.status(204).send();
 });

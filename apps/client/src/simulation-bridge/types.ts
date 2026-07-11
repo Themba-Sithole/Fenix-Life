@@ -1,4 +1,4 @@
-import type { TimeScale, WorldInstance } from '@fenix/domain';
+import type { TimeScale, WorldInstance, PlayerAction } from '@fenix/domain';
 
 export type SimulationWorkerRequest =
   | { type: 'INIT'; world: WorldInstance }
@@ -11,7 +11,8 @@ export type SimulationWorkerRequest =
       fromAccountId: string;
       toAccountId: string;
       amountCents: number;
-    };
+    }
+  | { type: 'APPLY_ACTION'; action: PlayerAction };
 
 export type SimulationWorkerResponse =
   | { type: 'READY'; world: WorldInstance }

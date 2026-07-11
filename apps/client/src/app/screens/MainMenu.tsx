@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { TrendingUp, Building2, User, Play, Settings, Trophy, Users, Award, LogIn } from "lucide-react";
+import { TrendingUp, Building2, User, Play, Settings, Trophy, Users, Award } from "lucide-react";
 import React, { useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useSave } from "@/context/SaveContext";
@@ -189,37 +189,38 @@ export default function MainMenu() {
             Continue
           </Button>
           <Button
-            className="h-14 bg-[#1C2541]/80 hover:bg-[#1C2541] text-white border border-[#2EC4B6]/20"
+            disabled
+            title="Coming in a future update"
+            className="h-14 bg-[#1C2541]/80 text-white/60 border border-[#2EC4B6]/20 cursor-not-allowed"
             variant="outline"
           >
             <Users className="w-5 h-5 mr-2" />
-            Multiplayer
+            Multiplayer (Soon)
           </Button>
           <Button
-            onClick={() => navigate(isAuthenticated ? "/settings" : "/login")}
+            onClick={() => requireAuth("/settings")}
             className="h-14 bg-[#1C2541]/80 hover:bg-[#1C2541] text-white border border-[#2EC4B6]/20"
             variant="outline"
           >
-            {isAuthenticated ? (
-              <Settings className="w-5 h-5 mr-2" />
-            ) : (
-              <LogIn className="w-5 h-5 mr-2" />
-            )}
-            {isAuthenticated ? "Settings" : "Sign In"}
+            <Settings className="w-5 h-5 mr-2" />
+            Settings
           </Button>
           <Button
+            onClick={() => requireAuth("/timeline")}
             className="h-14 bg-[#1C2541]/80 hover:bg-[#1C2541] text-white border border-[#2EC4B6]/20"
             variant="outline"
           >
             <Trophy className="w-5 h-5 mr-2" />
-            Achievements
+            Life Timeline
           </Button>
           <Button
-            className="h-14 bg-[#1C2541]/80 hover:bg-[#1C2541] text-white border border-[#2EC4B6]/20"
+            disabled
+            title="Coming in a future update"
+            className="h-14 bg-[#1C2541]/80 text-white/60 border border-[#2EC4B6]/20 cursor-not-allowed"
             variant="outline"
           >
             <Award className="w-5 h-5 mr-2" />
-            Leaderboards
+            Leaderboards (Soon)
           </Button>
         </motion.div>
 

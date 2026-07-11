@@ -9,6 +9,8 @@ import {
 } from 'react';
 import {
   createSave,
+  deleteSave,
+  renameSave,
   getActiveSaveId,
   getSave,
   listSaves,
@@ -25,6 +27,8 @@ interface SaveContextValue {
   refreshSaves: () => Promise<SaveSummary[]>;
   selectSave: (saveId: string) => Promise<SaveSummary>;
   createNewSave: (input: { name?: string; worldSeed?: string }) => Promise<SaveSummary>;
+  deleteSaveById: (saveId: string) => Promise<void>;
+  renameSaveById: (saveId: string, name: string) => Promise<SaveSummary>;
   clearActiveSave: () => void;
 }
 
@@ -100,6 +104,24 @@ export function SaveProvider({ children }: { children: ReactNode }) {
     return save;
   }, [refreshSaves]);
 
+  const deleteSaveById = useCallback(async (saveId: string) => {
+    await deleteSave(saveId);
+    if (getActiveSaveId() === saveId) {
+      setActiveSaveId(null);
+      setActiveSave(null);
+    }
+    await refreshSaves();
+  }, [refreshSaves]);
+
+  const renameSaveById = useCallback(async (saveId: string, name: string) => {
+    const save = await renameSave(saveId, name);
+    if (getActiveSaveId() === saveId) {
+      setActiveSave(save);
+    }
+    await refreshSaves();
+    return save;
+  }, [refreshSaves]);
+
   const clearActiveSave = useCallback(() => {
     setActiveSaveId(null);
     setActiveSave(null);
@@ -113,9 +135,11 @@ export function SaveProvider({ children }: { children: ReactNode }) {
       refreshSaves,
       selectSave,
       createNewSave,
+      deleteSaveById,
+      renameSaveById,
       clearActiveSave,
     }),
-    [activeSave, saves, isLoading, refreshSaves, selectSave, createNewSave, clearActiveSave],
+    [activeSave, saves, isLoading, refreshSaves, selectSave, createNewSave, deleteSaveById, renameSaveById, clearActiveSave],
   );
 
   return <SaveContext.Provider value={value}>{children}</SaveContext.Provider>;

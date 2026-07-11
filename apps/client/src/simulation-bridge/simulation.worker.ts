@@ -1,5 +1,5 @@
-import type { WorldInstance } from '@fenix/domain';
-import { transferBetweenAccounts } from '@fenix/domain';
+import type { TimeScale, WorldInstance, PlayerAction } from '@fenix/domain';
+import { applyPlayerAction, transferBetweenAccounts } from '@fenix/domain';
 import { runDailyTick } from '@fenix/simulation-engine';
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from './types';
 
@@ -62,6 +62,13 @@ self.onmessage = (event: MessageEvent<SimulationWorkerRequest>) => {
             date: world.currentDate,
           }),
         };
+        reply({ type: 'STATE', world });
+        break;
+      case 'APPLY_ACTION':
+        if (!world) {
+          throw new Error('Simulation not initialized');
+        }
+        world = applyPlayerAction(world, event.data.action);
         reply({ type: 'STATE', world });
         break;
       default: {

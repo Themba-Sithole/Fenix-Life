@@ -5,10 +5,13 @@ import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Slider } from "../components/ui/slider";
-import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, LogOut } from "lucide-react";
-import { API_URL, checkApiHealth } from "@/lib/api";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { ArrowLeft, Volume2, Monitor, Gamepad2, Globe, Bell, Lock, Cloud, LogOut, Download, Trash2 } from "lucide-react";
+import { API_URL, changePassword, checkApiHealth, deleteAccount, downloadSaveBlob } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useSave } from "@/context/SaveContext";
+import { useSimulation } from "@/context/SimulationContext";
 import {
   DEFAULT_PLAYER_SETTINGS,
   loadPlayerSettings,
@@ -20,16 +23,32 @@ import {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
-  const { clearActiveSave } = useSave();
+  const { user, isAuthenticated, logout, updateDisplayName } = useAuth();
+  const { activeSave, clearActiveSave, deleteSaveById } = useSave();
+  const { persistNow } = useSimulation();
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [settings, setSettings] = useState<PlayerSettings>(DEFAULT_PLAYER_SETTINGS);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [saveActionError, setSaveActionError] = useState<string | null>(null);
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   useEffect(() => {
     setSettings(loadPlayerSettings());
     checkApiHealth().then(setApiOnline);
   }, []);
+
+  useEffect(() => {
+    setDisplayName(user?.displayName ?? "");
+  }, [user?.displayName]);
 
   function updateSettings<K extends keyof PlayerSettings>(key: K, value: PlayerSettings[K]) {
     setSettings((current) => ({ ...current, [key]: value }));
@@ -47,13 +66,113 @@ export default function Settings() {
     navigate("/");
   }
 
+  async function handleExportSave() {
+    if (!activeSave) {
+      return;
+    }
+
+    setSaveActionError(null);
+    setIsExporting(true);
+    try {
+      await persistNow();
+      const blob = await downloadSaveBlob(activeSave.id);
+      const file = new Blob([blob], { type: "application/json" });
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${activeSave.name.replace(/\s+/g, "-")}-save.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setSavedMessage("Save exported.");
+    } catch (error) {
+      setSaveActionError(error instanceof Error ? error.message : "Export failed.");
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  async function handleDeleteSave() {
+    if (!activeSave) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete "${activeSave.name}" permanently? This cannot be undone.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setSaveActionError(null);
+    setIsDeleting(true);
+    try {
+      await deleteSaveById(activeSave.id);
+      clearActiveSave();
+      navigate("/continue");
+    } catch (error) {
+      setSaveActionError(error instanceof Error ? error.message : "Delete failed.");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  async function handleUpdateProfile() {
+    setAccountError(null);
+    setIsUpdatingProfile(true);
+    try {
+      await updateDisplayName(displayName.trim());
+      setSavedMessage("Profile updated.");
+    } catch (error) {
+      setAccountError(error instanceof Error ? error.message : "Profile update failed.");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    setAccountError(null);
+    setIsChangingPassword(true);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      setCurrentPassword("");
+      setNewPassword("");
+      setSavedMessage("Password changed.");
+    } catch (error) {
+      setAccountError(error instanceof Error ? error.message : "Password change failed.");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Delete your Fenix Life account and all saves permanently?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setAccountError(null);
+    setIsDeletingAccount(true);
+    try {
+      await deleteAccount(deletePassword);
+      clearActiveSave();
+      logout();
+      navigate("/");
+    } catch (error) {
+      setAccountError(error instanceof Error ? error.message : "Account deletion failed.");
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" onClick={() => navigate("/")}>
+          <Button variant="outline" onClick={() => navigate(activeSave ? "/home" : "/")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Menu
+            {activeSave ? "Back to Home" : "Back to Menu"}
           </Button>
           <div>
             <h1 className="text-3xl text-[#1C2541]">Settings</h1>
@@ -273,6 +392,7 @@ export default function Settings() {
                     {apiOnline === true && " — connected"}
                     {apiOnline === false && " — offline (run api locally or deploy)"}
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Preference only — saves always sync when autosave is on.</p>
                 </div>
                 <Switch
                   checked={settings.cloudSaves}
@@ -282,6 +402,43 @@ export default function Settings() {
             </CardContent>
           </Card>
 
+          {isAuthenticated && activeSave ? (
+            <Card className="border-[#F4B400]/20 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-[#1C2541] flex items-center gap-2">
+                  <Cloud className="w-5 h-5 text-[#F4B400]" />
+                  Save Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-[#2EC4B6]/20 bg-[#F5F7FA] p-4">
+                  <div className="text-sm text-gray-600">Active life</div>
+                  <div className="text-[#1C2541] font-medium">{activeSave.name}</div>
+                  <div className="text-sm text-gray-500">Schema v{activeSave.schemaVersion}</div>
+                </div>
+                {saveActionError ? <p className="text-sm text-red-600">{saveActionError}</p> : null}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleExportSave}
+                  disabled={isExporting || isDeleting}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {isExporting ? "Exporting…" : "Export Save JSON"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={handleDeleteSave}
+                  disabled={isExporting || isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {isDeleting ? "Deleting…" : "Delete Current Life"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card className="border-[#1C2541]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541] flex items-center gap-2">
@@ -290,43 +447,80 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isAuthenticated ? (
-                <>
-                  <div className="rounded-lg border border-[#2EC4B6]/20 bg-[#F5F7FA] p-4">
-                    <div className="text-sm text-gray-600">Signed in as</div>
-                    <div className="text-[#1C2541] font-medium">{user?.displayName ?? user?.email}</div>
-                    <div className="text-sm text-gray-500">{user?.email}</div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Log Out
-                  </Button>
-                </>
-              ) : (
+              <div className="rounded-lg border border-[#2EC4B6]/20 bg-[#F5F7FA] p-4">
+                <div className="text-sm text-gray-600">Signed in as</div>
+                <div className="text-[#1C2541] font-medium">{user?.displayName ?? user?.email}</div>
+                <div className="text-sm text-gray-500">{user?.email}</div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log Out
+              </Button>
+              {accountError ? <p className="text-sm text-red-600">{accountError}</p> : null}
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Display name</Label>
+                <Input
+                  id="displayName"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                />
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/login")}
+                  onClick={handleUpdateProfile}
+                  disabled={!isAuthenticated || isUpdatingProfile}
                 >
-                  Sign In to Your Account
+                  Manage Account
                 </Button>
-              )}
-              <Button variant="outline" className="w-full justify-start" disabled>
-                Change Password
-              </Button>
-              <Button variant="outline" className="w-full justify-start" disabled>
-                Manage Account
-              </Button>
-              <Button variant="outline" className="w-full justify-start" disabled>
-                Privacy Settings
-              </Button>
-              <Button variant="outline" className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50" disabled>
-                Delete Account
-              </Button>
+              </div>
+              <div className="space-y-2 pt-2 border-t border-gray-200">
+                <Label htmlFor="currentPassword">Current password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                />
+                <Label htmlFor="newPassword">New password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleChangePassword}
+                  disabled={!isAuthenticated || isChangingPassword || !currentPassword || !newPassword}
+                >
+                  Change Password
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Privacy preferences are managed under General → Notifications.
+              </p>
+              <div className="space-y-2 pt-2 border-t border-gray-200">
+                <Label htmlFor="deletePassword">Confirm password to delete account</Label>
+                <Input
+                  id="deletePassword"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={handleDeleteAccount}
+                  disabled={!isAuthenticated || isDeletingAccount || !deletePassword}
+                >
+                  Delete Account
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

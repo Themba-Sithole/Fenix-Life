@@ -11,24 +11,22 @@ import {
   GraduationCap,
   Heart,
   Home as HomeIcon,
-  Mail,
   Map,
-  MessageSquare,
   Newspaper,
   Settings,
-  ShoppingCart,
   TrendingUp,
   Trophy,
-  Users,
   X,
 } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
 import { formatGameDate } from "@/context/SimulationContext";
 import { formatMoney, totalNetWorthCents } from "@fenix/domain";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 
 export default function Smartphone() {
   const navigate = useNavigate();
-  const { world, formattedDate, tickCount, isLoading } = useSimulation();
+  const { world, formattedDate, tickCount } = useSimulation();
+  const simulationGate = useSimulationGate("Loading phone…", "bg-[#0B132B] text-white");
 
   const stats = useMemo(() => {
     if (!world) {
@@ -47,30 +45,26 @@ export default function Smartphone() {
   }, [world]);
 
   const apps = [
-    { name: "Messages", icon: MessageSquare, color: "bg-green-500" },
-    { name: "Email", icon: Mail, color: "bg-blue-500" },
-    { name: "Calendar", icon: Calendar, color: "bg-red-500", badge: formattedDate ?? undefined },
-    { name: "Contacts", icon: Users, color: "bg-gray-600", badge: stats ? `${world?.family.members.length ?? 0}` : undefined },
-    { name: "Bank", icon: Building2, color: "bg-[#2EC4B6]", action: () => navigate("/banking"), badge: stats ? formatMoney(stats.netWorth, stats.currency) : undefined },
-    { name: "Stocks", icon: TrendingUp, color: "bg-[#F4B400]", action: () => navigate("/stocks") },
-    { name: "News", icon: Newspaper, color: "bg-orange-500", action: () => navigate("/news"), badge: stats && stats.unreadNews > 0 ? `${stats.unreadNews}` : undefined },
-    { name: "Maps", icon: Map, color: "bg-blue-400", action: () => navigate("/city") },
-    { name: "Family", icon: Heart, color: "bg-pink-500", action: () => navigate("/family") },
-    { name: "Business", icon: Building2, color: "bg-[#1C2541]", action: () => navigate("/company"), badge: stats?.company.slice(0, 8) },
-    { name: "University", icon: GraduationCap, color: "bg-purple-500", action: () => navigate("/education") },
-    { name: "Properties", icon: HomeIcon, color: "bg-indigo-500", action: () => navigate("/real-estate") },
-    { name: "Vehicles", icon: Car, color: "bg-gray-700", action: () => navigate("/vehicles") },
-    { name: "Achievements", icon: Trophy, color: "bg-amber-500", action: () => navigate("/timeline") },
-    { name: "Marketplace", icon: ShoppingCart, color: "bg-emerald-500" },
-    { name: "Settings", icon: Settings, color: "bg-gray-500", action: () => navigate("/settings") },
+    { id: "news", name: "News", icon: Newspaper, color: "bg-orange-500", action: () => navigate("/news"), badge: stats && stats.unreadNews > 0 ? `${stats.unreadNews}` : undefined },
+    { id: "banking", name: "Banking", icon: Building2, color: "bg-[#2EC4B6]", action: () => navigate("/banking"), badge: stats ? formatMoney(stats.netWorth, stats.currency) : undefined },
+    { id: "timeline", name: "Timeline", icon: Calendar, color: "bg-red-500", action: () => navigate("/timeline"), badge: formattedDate ?? undefined },
+    { id: "family", name: "Family", icon: Heart, color: "bg-pink-500", action: () => navigate("/family"), badge: stats ? `${world?.family.members.length ?? 0}` : undefined },
+    { id: "maps", name: "City Map", icon: Map, color: "bg-blue-400", action: () => navigate("/city") },
+    { id: "company", name: "Business", icon: Building2, color: "bg-[#1C2541]", action: () => navigate("/company"), badge: stats?.company.slice(0, 8) },
+    { id: "education", name: "University", icon: GraduationCap, color: "bg-purple-500", action: () => navigate("/education") },
+    { id: "properties", name: "Properties", icon: HomeIcon, color: "bg-indigo-500", action: () => navigate("/real-estate") },
+    { id: "vehicles", name: "Vehicles", icon: Car, color: "bg-gray-700", action: () => navigate("/vehicles") },
+    { id: "stocks", name: "Stocks", icon: TrendingUp, color: "bg-[#F4B400]", action: () => navigate("/stocks") },
+    { id: "achievements", name: "Legacy", icon: Trophy, color: "bg-amber-500", action: () => navigate("/timeline") },
+    { id: "settings", name: "Settings", icon: Settings, color: "bg-gray-500", action: () => navigate("/settings") },
   ];
 
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B132B] text-white">
-        Loading phone…
-      </div>
-    );
+  if (simulationGate) {
+    return simulationGate;
+  }
+
+  if (!world) {
+    return null;
   }
 
   return (
@@ -99,7 +93,7 @@ export default function Smartphone() {
               <div className="grid grid-cols-4 gap-4">
                 {apps.map((app) => (
                   <button
-                    key={app.name}
+                    key={app.id}
                     onClick={app.action}
                     className="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-gray-100 transition-colors relative"
                   >

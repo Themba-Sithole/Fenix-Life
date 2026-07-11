@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Label } from "./ui/label";
 import { User, UserCircle2, Smile, Brain, Trophy, Briefcase, GraduationCap, Crown, Heart, Zap, Star, Target } from "lucide-react";

@@ -1,4 +1,4 @@
-import type { EconomyState } from '@fenix/domain';
+import { deriveCyclePhase, type EconomyState } from '@fenix/domain';
 
 /** Daily tech sector drift with mild mean reversion — Economy Engine v0. */
 export function applyDailyEconomyTick(economy: EconomyState): EconomyState {
@@ -12,6 +12,7 @@ export function applyDailyEconomyTick(economy: EconomyState): EconomyState {
   return {
     ...economy,
     techSectorIndex: Number(nextIndex.toFixed(2)),
+    cyclePhase: deriveCyclePhase(nextIndex),
   };
 }
 

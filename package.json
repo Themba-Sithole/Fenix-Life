@@ -22,7 +22,7 @@
     "db:studio": "npm run db:studio --workspace=@fenix/api",
     "admin:seed": "npm run admin:seed --workspace=@fenix/api",
     "build:admin": "npm run build --workspace=@fenix/admin",
-    "test:unit": "npm test --workspace=@fenix/simulation-engine",
+    "test:unit": "npm test --workspace=@fenix/domain && npm test --workspace=@fenix/simulation-engine",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

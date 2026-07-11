@@ -16,6 +16,7 @@ import {
   registerUser,
   setAuthToken,
   setStoredUser,
+  updateProfile,
   type User,
 } from '@/lib/api';
 
@@ -25,6 +26,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName?: string) => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -62,6 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applyAuth(nextUser, token);
   }, [applyAuth]);
 
+  const updateDisplayName = useCallback(async (displayName: string) => {
+    const nextUser = await updateProfile(displayName);
+    setUser(nextUser);
+  }, []);
+
   const logout = useCallback(() => {
     clearSession();
     setUser(null);
@@ -74,9 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login,
       register,
+      updateDisplayName,
       logout,
     }),
-    [user, isLoading, login, register, logout],
+    [user, isLoading, login, register, updateDisplayName, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -7,32 +7,39 @@ import { Progress } from "../components/ui/progress";
 import { ArrowLeft, TrendingUp, Award, DollarSign } from "lucide-react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import {
   employeeExperienceLabel,
   employeeInitials,
   formatMoney,
-  generateCompanyEmployees,
 } from "@fenix/domain";
 
 export default function EmployeeManagement() {
   const navigate = useNavigate();
-  const { world, isLoading } = useSimulation();
+  const { world, isLoading, applyAction } = useSimulation();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  const employees = useMemo(() => {
-    if (!world) {
-      return [];
+  const employees = useMemo(() => world?.employees ?? [], [world]);
+
+  async function handleAction(
+    employeeId: string,
+    kind: "EMPLOYEE_PROMOTE" | "EMPLOYEE_RAISE" | "EMPLOYEE_TRAIN",
+  ) {
+    setActionError(null);
+    setBusyKey(`${kind}:${employeeId}`);
+    try {
+      await applyAction({ kind, employeeId });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Action failed.");
+    } finally {
+      setBusyKey(null);
     }
-
-    return generateCompanyEmployees(world.company, world.saveId, 8);
-  }, [world]);
-
-  if (isLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading employee roster…
-      </div>
-    );
   }
+
+  const simulationGate = useSimulationGate("Loading employee roster…");
+  if (simulationGate) return simulationGate;
+  if (!world) return null;
 
   const currency = world.origin.currency;
 
@@ -52,6 +59,21 @@ export default function EmployeeManagement() {
           </div>
         </div>
 
+        {actionError ? (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+        ) : null}
+
+        {employees.length === 0 ? (
+          <Card className="border-[#2EC4B6]/20 shadow-lg">
+            <CardContent className="p-8 text-center space-y-4">
+              <p className="text-gray-600">No employees on the roster yet.</p>
+              <p className="text-sm text-gray-500">Hire staff from the Company Dashboard to build your team.</p>
+              <Button onClick={() => navigate("/company")} className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">
+                Go to Company Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
         <div className="grid md:grid-cols-2 gap-6">
           {employees.map((employee) => (
             <Card key={employee.id} className="border-[#2EC4B6]/20 shadow-lg">
@@ -114,15 +136,32 @@ export default function EmployeeManagement() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white" disabled>
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                    disabled={busyKey !== null}
+                    onClick={() => handleAction(employee.id, "EMPLOYEE_PROMOTE")}
+                  >
                     <TrendingUp className="w-4 h-4 mr-1" />
                     Promote
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1" disabled>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={busyKey !== null}
+                    onClick={() => handleAction(employee.id, "EMPLOYEE_RAISE")}
+                  >
                     <DollarSign className="w-4 h-4 mr-1" />
                     Raise
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1" disabled>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={busyKey !== null}
+                    onClick={() => handleAction(employee.id, "EMPLOYEE_TRAIN")}
+                  >
                     <Award className="w-4 h-4 mr-1" />
                     Train
                   </Button>
@@ -131,6 +170,7 @@ export default function EmployeeManagement() {
             </Card>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

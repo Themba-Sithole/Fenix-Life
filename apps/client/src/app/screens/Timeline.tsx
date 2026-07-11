@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Award, Building2, DollarSign, GraduationCap, Heart, TrendingUp, Users } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
+import { useSimulationGate } from "@/hooks/useSimulationGate";
 import { buildLifeTimeline, computeLegacySnapshot, formatMoney, type TimelineCategory } from "@fenix/domain";
 
 const CATEGORY_ICONS: Record<TimelineCategory, typeof Users> = {
@@ -37,13 +38,9 @@ export default function Timeline() {
     };
   }, [world]);
 
-  if (isLoading || !world || !legacy) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading life timeline…
-      </div>
-    );
-  }
+  const simulationGate = useSimulationGate("Loading life timeline…");
+  if (simulationGate) return simulationGate;
+  if (!world || !legacy) return null;
 
   const currency = world.origin.currency;
 
@@ -91,6 +88,11 @@ export default function Timeline() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {timeline.length === 0 ? (
+              <p className="text-sm text-gray-500 py-8 text-center">
+                Your timeline will fill in as you advance time and make life decisions.
+              </p>
+            ) : (
             <div className="relative">
               <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#2EC4B6] to-[#1C2541]" />
               <div className="space-y-8">
@@ -120,6 +122,7 @@ export default function Timeline() {
                 })}
               </div>
             </div>
+            )}
           </CardContent>
         </Card>
       </div>
