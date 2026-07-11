@@ -1,4 +1,5 @@
 import type { WorldInstance } from '@fenix/domain';
+import { transferBetweenAccounts } from '@fenix/domain';
 import { runDailyTick } from '@fenix/simulation-engine';
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from './types';
 
@@ -46,6 +47,21 @@ self.onmessage = (event: MessageEvent<SimulationWorkerRequest>) => {
         if (!world) {
           throw new Error('Simulation not initialized');
         }
+        reply({ type: 'STATE', world });
+        break;
+      case 'TRANSFER':
+        if (!world) {
+          throw new Error('Simulation not initialized');
+        }
+        world = {
+          ...world,
+          banking: transferBetweenAccounts(world.banking, {
+            fromAccountId: event.data.fromAccountId,
+            toAccountId: event.data.toAccountId,
+            amountCents: event.data.amountCents,
+            date: world.currentDate,
+          }),
+        };
         reply({ type: 'STATE', world });
         break;
       default: {

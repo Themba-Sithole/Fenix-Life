@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "headlines": [
+    {
+      "id": "news-tech-rally",
+      "template": "Tech sector rally lifts {city} startups as index hits {index}",
+      "tags": ["tech", "economy"]
+    },
+    {
+      "id": "news-housing",
+      "template": "Residential demand steadies in {city} amid {inflation}% inflation outlook",
+      "tags": ["housing", "economy"]
+    },
+    {
+      "id": "news-hiring",
+      "template": "{industry} firms expand hiring pipelines across {city}",
+      "tags": ["career", "business"]
+    },
+    {
+      "id": "news-consumer",
+      "template": "Consumer confidence holds firm while markets watch central bank guidance",
+      "tags": ["economy"]
+    },
+    {
+      "id": "news-founder",
+      "template": "Founder-led ventures in {city} attract early-stage capital",
+      "tags": ["business", "career"]
+    }
+  ]
+}

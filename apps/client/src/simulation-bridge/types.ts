@@ -5,7 +5,13 @@ export type SimulationWorkerRequest =
   | { type: 'ADVANCE_DAY' }
   | { type: 'SET_PAUSED'; paused: boolean }
   | { type: 'SET_TIME_SCALE'; timeScale: TimeScale }
-  | { type: 'GET_STATE' };
+  | { type: 'GET_STATE' }
+  | {
+      type: 'TRANSFER';
+      fromAccountId: string;
+      toAccountId: string;
+      amountCents: number;
+    };
 
 export type SimulationWorkerResponse =
   | { type: 'READY'; world: WorldInstance }

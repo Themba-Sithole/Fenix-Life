@@ -1,10 +1,11 @@
 import type { BankingState, BankTransaction, SimEvent, WorldInstance } from '@fenix/domain';
-import { companyMonthlyProfitCents, formatOriginLocation } from '@fenix/domain';
-import { addDays, parseGameDate } from './time-engine.js';
-import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
-import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
-import { applyDailyCareerTick, careerHeadline } from './career-engine.js';
-import { applyDailyInvestmentTick, portfolioPerformanceHeadline } from './investment-engine.js';
+import {
+  applyDailyCreditScoreDrift,
+  companyMonthlyProfitCents,
+  formatOriginLocation,
+  globalDomainEventBus,
+} from '@fenix/domain';
+import { pickNewsHeadline, STARTER_INDUSTRIES } from '@fenix/content';
 import {
   applyDailyFamilyTick,
   applyDailyHousingTick,
@@ -14,6 +15,11 @@ import {
   familyHeadline,
   housingHeadline,
 } from './lifestyle-engine.js';
+import { addDays, parseGameDate } from './time-engine.js';
+import { applyDailyEconomyTick, inflationHeadline } from './economy-engine.js';
+import { applyDailyCompanyTick, companyPerformanceHeadline } from './company-engine.js';
+import { applyDailyCareerTick, careerHeadline } from './career-engine.js';
+import { applyDailyInvestmentTick, portfolioPerformanceHeadline } from './investment-engine.js';
 
 const MAX_EVENTS = 50;
 const MAX_TRANSACTIONS = 30;
@@ -53,6 +59,7 @@ function appendTransaction(
 }
 
 function appendEvent(events: SimEvent[], event: SimEvent): SimEvent[] {
+  globalDomainEventBus.publish(event);
   return [event, ...events].slice(0, MAX_EVENTS);
 }
 
@@ -210,7 +217,15 @@ function maybeEconomyNews(world: WorldInstance): WorldInstance {
     tickCount: world.clock.tickCount,
     date: world.currentDate,
     category: 'news',
-    headline: inflationHeadline(world.economy),
+    headline:
+      world.clock.tickCount % 14 === 0
+        ? pickNewsHeadline(`news-${world.clock.tickCount}`, {
+            city: formatOriginLocation(world.origin).split(',')[0],
+            index: world.economy.techSectorIndex,
+            inflation: world.economy.inflationRateAnnual * 100,
+            industry: STARTER_INDUSTRIES[0]?.name ?? 'Technology',
+          })
+        : inflationHeadline(world.economy),
     tone: 'info',
   });
 
@@ -303,6 +318,10 @@ export function runDailyTick(world: WorldInstance): WorldInstance {
   nextWorld = applyMonthlyCompanySettlement(nextWorld);
   nextWorld = applyMonthlyHousingSettlement(nextWorld);
   nextWorld = applyMonthlyTransportCosts(nextWorld);
+  nextWorld = {
+    ...nextWorld,
+    banking: applyDailyCreditScoreDrift(nextWorld.banking),
+  };
   nextWorld = applyTraitDrift(nextWorld);
   nextWorld = maybeBirthday(nextWorld);
   nextWorld = maybeEconomyNews(nextWorld);

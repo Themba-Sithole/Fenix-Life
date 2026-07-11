@@ -48,6 +48,7 @@ export function ensureWorldV2(world: WorldInstance, playerName = 'Citizen'): Wor
   const banking = {
     ...(world.banking ?? createDefaultBanking()),
     monthlySalaryCents: (world.career ?? career).monthlySalaryCents,
+    creditScore: world.banking?.creditScore ?? createDefaultBanking().creditScore,
   };
 
   return {

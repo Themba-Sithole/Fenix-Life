@@ -434,9 +434,15 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Life timeline + legacy | ✅ Complete | Events river, legacy score — Phase K |
 | Smartphone hub | ✅ Complete | Live stats, app launcher — Phase L |
 | City map districts | ✅ Complete | Origin-based districts + activity — Phase M |
+| Save migration tests | ✅ Complete | Golden legacy blob → schema v6 — Phase N |
+| Admin deploy config | ✅ Complete | `apps/admin/vercel.json` + `build:admin` — Phase N |
+| Content packs v1 | ✅ Complete | `/content/` + `@fenix/content` — Phase O |
+| Banking transfers + credit | ✅ Complete | Inter-account transfers, credit score — Phase P |
+| E2E smoke tests | ✅ Complete | Playwright main menu spec — Phase Q |
+| Event bus + offline catch-up | ✅ Complete | DomainEventBus, catch-up ticks — Phase R |
 | Simulation engines | 📋 Planned | Full FSF engine constellation (Doc 14) |
 | Database / Prisma | 🔄 In Progress | Platform schema + UserRole, AdminAuditLog, FeatureFlag (Doc 42) |
-| Content packs | 📋 Planned | `/content/` not yet created |
+| Content packs | ✅ Complete | Starter headlines, occupations, industries |
 | Phaser city map | 📋 Planned | Route exists, engine TBD |
 | Save system | 🔄 In Progress | Blob upload/download + autosave; full FLSS binary format later |
 | Backend API | 🔄 In Progress | Express in `apps/api` — auth, saves, admin routes |
@@ -446,7 +452,7 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Milestone | Target | Doc Status | Code Status |
 |---|---|---|---|
 | M0.1 Documentation Foundation | Q3 2026 | ✅ 100% (42/42) | UI prototype |
-| M1.0 Alpha Internal | Q4 2026 | All docs complete | All screens wired (Phases A–M) |
+| M1.0 Alpha Internal | Q4 2026 | All docs complete | Complete (Phases A–R) |
 | EA 0.5 | Q2 2027 | Docs complete | Full loop |
 | 1.0 Launch | Q4 2027 | Docs complete | Generational play |
 

@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "industries": [
+    { "id": "ind-tech", "name": "Technology", "growthRate": 0.08, "volatility": 0.12 },
+    { "id": "ind-finance", "name": "Financial Services", "growthRate": 0.04, "volatility": 0.07 },
+    { "id": "ind-health", "name": "Healthcare", "growthRate": 0.05, "volatility": 0.05 },
+    { "id": "ind-retail", "name": "Retail & Consumer", "growthRate": 0.03, "volatility": 0.06 },
+    { "id": "ind-energy", "name": "Energy", "growthRate": 0.02, "volatility": 0.09 },
+    { "id": "ind-re", "name": "Real Estate", "growthRate": 0.035, "volatility": 0.08 },
+    { "id": "ind-edu", "name": "Education", "growthRate": 0.025, "volatility": 0.04 },
+    { "id": "ind-logistics", "name": "Logistics", "growthRate": 0.045, "volatility": 0.06 },
+    { "id": "ind-media", "name": "Media & Entertainment", "growthRate": 0.05, "volatility": 0.11 },
+    { "id": "ind-hospitality", "name": "Hospitality", "growthRate": 0.04, "volatility": 0.1 }
+  ]
+}

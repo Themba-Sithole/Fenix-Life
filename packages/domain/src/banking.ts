@@ -20,6 +20,7 @@ export interface BankingState {
   transactions: BankTransaction[];
   monthlySalaryCents: number;
   monthlyExpensesCents: number;
+  creditScore: number;
 }
 
 export function createDefaultBanking(): BankingState {
@@ -33,6 +34,7 @@ export function createDefaultBanking(): BankingState {
     transactions: [],
     monthlySalaryCents: 8_500_00,
     monthlyExpensesCents: 3_500_00,
+    creditScore: 720,
   };
 }
 

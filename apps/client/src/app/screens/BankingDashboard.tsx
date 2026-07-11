@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { ArrowLeft, CreditCard, TrendingUp, DollarSign, PiggyBank, Home, Briefcase } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatMoney, totalNetWorthCents, type BankAccountType } from "@fenix/domain";
+import { creditScoreLabel, formatMoney, totalNetWorthCents, type BankAccountType } from "@fenix/domain";
 
 const ACCOUNT_ICONS: Record<BankAccountType, typeof DollarSign> = {
   checking: DollarSign,
@@ -35,7 +38,12 @@ function buildBalanceHistory(netWorthCents: number, tickCount: number) {
 
 export default function BankingDashboard() {
   const navigate = useNavigate();
-  const { world, isLoading } = useSimulation();
+  const { world, isLoading, transferFunds } = useSimulation();
+  const [fromAccountId, setFromAccountId] = useState("checking");
+  const [toAccountId, setToAccountId] = useState("savings");
+  const [transferAmount, setTransferAmount] = useState("100");
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   if (isLoading || !world) {
     return (
@@ -64,6 +72,24 @@ export default function BankingDashboard() {
     amount: tx.amountCents / 100,
     type: tx.amountCents >= 0 ? "credit" as const : "debit" as const,
   }));
+
+  async function handleTransfer() {
+    setTransferError(null);
+    const amountCents = Math.round(Number.parseFloat(transferAmount) * 100);
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      setTransferError("Enter a valid transfer amount.");
+      return;
+    }
+
+    setIsTransferring(true);
+    try {
+      await transferFunds({ fromAccountId, toAccountId, amountCents });
+    } catch (error) {
+      setTransferError(error instanceof Error ? error.message : "Transfer failed.");
+    } finally {
+      setIsTransferring(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
@@ -161,6 +187,14 @@ export default function BankingDashboard() {
               <div className="p-4 rounded-lg bg-gray-50">
                 <div className="flex items-center gap-2 mb-2">
                   <CreditCard className="w-4 h-4 text-[#F4B400]" />
+                  <span className="text-sm">Credit Score</span>
+                </div>
+                <div className="text-xl text-[#1C2541]">{banking.creditScore}</div>
+                <div className="text-xs text-gray-500 mt-1">{creditScoreLabel(banking.creditScore)}</div>
+              </div>
+              <div className="p-4 rounded-lg bg-gray-50">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="w-4 h-4 text-[#F4B400]" />
                   <span className="text-sm">Monthly Salary</span>
                 </div>
                 <div className="text-xl text-[#1C2541]">{formatMoney(banking.monthlySalaryCents, currency)}</div>
@@ -187,6 +221,64 @@ export default function BankingDashboard() {
                   <Bar dataKey="expenses" fill="#F4B400" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-[#2EC4B6]/20 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-[#1C2541]">Transfer Funds</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">From</label>
+                  <Select value={fromAccountId} onValueChange={setFromAccountId}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {banking.accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">To</label>
+                  <Select value={toAccountId} onValueChange={setToAccountId}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {banking.accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-600">Amount</label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={transferAmount}
+                  onChange={(event) => setTransferAmount(event.target.value)}
+                />
+              </div>
+              {transferError ? <p className="text-sm text-red-600">{transferError}</p> : null}
+              <Button
+                className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                onClick={handleTransfer}
+                disabled={isTransferring}
+              >
+                Transfer
+              </Button>
             </CardContent>
           </Card>
 

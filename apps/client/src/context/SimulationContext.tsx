@@ -20,6 +20,8 @@ import {
   createSaveBlobV1,
   formatGameDate,
   parseSaveBlobV1,
+  runCatchUpTicks,
+  estimateCatchUpDays,
   serializeSaveBlobV1,
 } from '@fenix/simulation-engine';
 import { ApiError, downloadSaveBlob, uploadSaveBlob } from '@/lib/api';
@@ -46,6 +48,11 @@ interface SimulationContextValue {
   setPaused: (paused: boolean) => Promise<void>;
   setTimeScale: (timeScale: TimeScale) => Promise<void>;
   persistNow: () => Promise<void>;
+  transferFunds: (input: {
+    fromAccountId: string;
+    toAccountId: string;
+    amountCents: number;
+  }) => Promise<void>;
 }
 
 const SimulationContext = createContext<SimulationContextValue | null>(null);
@@ -193,7 +200,12 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       try {
         const rawBlob = await downloadSaveBlob(activeSave.id);
         const parsed = parseSaveBlobV1(rawBlob);
-        initialWorld = ensureWorldV2(parsed.world, activeSave.name);
+        let migrated = ensureWorldV2(parsed.world, activeSave.name);
+        const catchUpDays = estimateCatchUpDays(parsed.savedAt);
+        if (catchUpDays > 0) {
+          migrated = runCatchUpTicks(migrated, catchUpDays);
+        }
+        initialWorld = migrated;
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
           const { background, origin } = parseWorldSeed(activeSave.worldSeed);
@@ -258,6 +270,24 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     };
   }, [world?.clock.paused, world?.clock.timeScale, advanceDay, world]);
 
+  const transferFunds = useCallback(
+    async (input: { fromAccountId: string; toAccountId: string; amountCents: number }) => {
+      const worker = workerRef.current;
+      if (!worker) return;
+
+      const response = await postAndWait(worker, { type: 'TRANSFER', ...input });
+      if (response.type === 'ERROR') {
+        throw new Error(response.message);
+      }
+      if (response.type !== 'STATE') return;
+
+      worldRef.current = response.world;
+      setWorld(response.world);
+      await persistWorld(response.world);
+    },
+    [persistWorld],
+  );
+
   const value = useMemo<SimulationContextValue>(
     () => ({
       world,
@@ -276,8 +306,9 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
           await persistWorld(worldRef.current);
         }
       },
+      transferFunds,
     }),
-    [world, isLoading, isSaving, advanceDay, setPaused, setTimeScale, persistWorld],
+    [world, isLoading, isSaving, advanceDay, setPaused, setTimeScale, persistWorld, transferFunds],
   );
 
   return (

@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "occupations": [
+    { "id": "occ-analyst", "title": "Junior Analyst", "sector": "finance", "salaryBandCents": 4500000 },
+    { "id": "occ-engineer", "title": "Software Engineer", "sector": "tech", "salaryBandCents": 7500000 },
+    { "id": "occ-nurse", "title": "Registered Nurse", "sector": "healthcare", "salaryBandCents": 5200000 },
+    { "id": "occ-teacher", "title": "Secondary Teacher", "sector": "education", "salaryBandCents": 4800000 },
+    { "id": "occ-sales", "title": "Account Executive", "sector": "sales", "salaryBandCents": 6200000 },
+    { "id": "occ-designer", "title": "Product Designer", "sector": "tech", "salaryBandCents": 6800000 },
+    { "id": "occ-logistics", "title": "Operations Associate", "sector": "logistics", "salaryBandCents": 3200000 },
+    { "id": "occ-marketing", "title": "Marketing Specialist", "sector": "marketing", "salaryBandCents": 5500000 },
+    { "id": "occ-founder", "title": "Startup Founder", "sector": "entrepreneurship", "salaryBandCents": 9000000 },
+    { "id": "occ-consultant", "title": "Management Consultant", "sector": "consulting", "salaryBandCents": 8200000 },
+    { "id": "occ-trades", "title": "Skilled Tradesperson", "sector": "trades", "salaryBandCents": 4100000 },
+    { "id": "occ-researcher", "title": "Research Associate", "sector": "science", "salaryBandCents": 5800000 }
+  ]
+}

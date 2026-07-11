@@ -19,6 +19,12 @@ export {
   formatMoney,
   totalNetWorthCents,
 } from './banking.js';
+export {
+  applyDailyCreditScoreDrift,
+  creditScoreLabel,
+  transferBetweenAccounts,
+} from './banking-actions.js';
+export { DomainEventBus, globalDomainEventBus } from './event-bus.js';
 export type { EconomyState } from './economy.js';
 export {
   createDefaultEconomy,

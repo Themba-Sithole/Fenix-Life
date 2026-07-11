@@ -1,5 +1,5 @@
 {
-  "name": "@fenix/simulation-engine",
+  "name": "@fenix/content",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,16 +13,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
-    "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@fenix/content": "*",
-    "@fenix/domain": "*"
-  },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.8.3"
   }
 }
