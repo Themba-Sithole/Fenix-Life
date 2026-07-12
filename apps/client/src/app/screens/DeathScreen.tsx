@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Heart, Users, Landmark, Building2 } from 'lucide-react';
-import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useSimulation } from '@/context/SimulationContext';
@@ -11,6 +10,7 @@ import {
   formatMoney,
   selectHeir,
 } from '@fenix/domain';
+import { DecisionPanel, EmptyState, LifeShell } from "../components/shell";
 
 function isEligibleHeir(relationship: string): boolean {
   const rel = relationship.toLowerCase();
@@ -65,82 +65,79 @@ export default function DeathScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B] p-4 md:p-8 flex flex-col items-center">
-      <div className="w-full max-w-lg space-y-5 pt-8">
+    <LifeShell
+      playerName={world.deathPending.deceasedName}
+      ageYears={world.player.ageYears}
+      statusLine="A life remembered"
+      showDock={false}
+      className="bg-brand-atmosphere text-white"
+      contentClassName="max-w-lg"
+    >
+      <div className="space-y-5 pt-8">
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
-            <Heart className="w-8 h-8 text-red-400" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-surface-2">
+            <Heart className="h-8 w-8 text-muted-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-white">A Life Ends</h1>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-muted-foreground">
             {world.deathPending.deceasedName} passed away on {world.deathPending.date}.
           </p>
           {world.deathPending.diagnosis ? (
-            <p className="text-xs text-orange-300">{world.deathPending.diagnosis}</p>
+            <p className="text-xs text-accent">{world.deathPending.diagnosis}</p>
           ) : null}
-          <Badge className="bg-red-600/20 text-red-300 border-red-700 capitalize">
+          <Badge variant="outline" className="capitalize">
             {world.deathPending.riskLabel} mortality risk
           </Badge>
         </div>
 
-        <Card className="border-[#E0E4EF]/20 bg-white/5 text-white">
-          <CardContent className="p-5 space-y-3">
-            <div className="flex items-center gap-2 text-[#2EC4B6]">
+        <section className="space-y-3 border-y border-border py-5">
+            <div className="flex items-center gap-2 text-secondary">
               <Landmark className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wide">Estate Summary</span>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-400">Liquid accounts</p>
+                <p className="text-muted-foreground">Liquid accounts</p>
                 <p className="font-semibold">{formatMoney(estate.liquidCents, world.origin.currency)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Portfolio</p>
+                <p className="text-muted-foreground">Portfolio</p>
                 <p className="font-semibold">{formatMoney(estate.portfolioCents, world.origin.currency)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Housing equity</p>
+                <p className="text-muted-foreground">Housing equity</p>
                 <p className="font-semibold">{formatMoney(estate.housingCents, world.origin.currency)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Company proceeds</p>
+                <p className="text-muted-foreground">Company proceeds</p>
                 <p className="font-semibold">{formatMoney(estate.companyCents, world.origin.currency)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Gross estate</p>
+                <p className="text-muted-foreground">Gross estate</p>
                 <p className="font-semibold">{formatMoney(estate.grossEstateCents, world.origin.currency)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Inheritance tax (15%)</p>
-                <p className="font-semibold text-yellow-300">
+                <p className="text-muted-foreground">Inheritance tax (15%)</p>
+                <p className="font-semibold text-accent">
                   -{formatMoney(estate.taxCents, world.origin.currency)}
                 </p>
               </div>
               <div className="col-span-2">
-                <p className="text-gray-400">Net to heir</p>
-                <p className="text-xl font-bold text-[#2EC4B6]">
+                <p className="text-muted-foreground">Net to heir</p>
+                <p className="font-display text-xl text-secondary">
                   {formatMoney(estate.transferredCents, world.origin.currency)}
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+        </section>
 
         {world.company ? (
-          <Card className="border-[#E0E4EF]/20 bg-white/5 text-white">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-2 text-[#2EC4B6]">
-                <Building2 className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Company disposition</span>
-              </div>
-              <p className="text-sm text-gray-300">
-                {world.company.name} — keep under the heir, or force-sell into the estate (BitLife-style).
-              </p>
+          <DecisionPanel title="Company disposition" description={`${world.company.name} can transfer to your heir or be sold into the estate.`}>
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant={!keepCompany ? 'default' : 'outline'}
-                  className={!keepCompany ? 'bg-[#F4B400] text-[#0B132B]' : 'border-white/20 text-white'}
+                  className={!keepCompany ? 'bg-secondary text-secondary-foreground' : ''}
                   onClick={() => setKeepCompany(false)}
                 >
                   Sell for estate
@@ -148,47 +145,39 @@ export default function DeathScreen() {
                 <Button
                   size="sm"
                   variant={keepCompany ? 'default' : 'outline'}
-                  className={keepCompany ? 'bg-[#2EC4B6] text-white' : 'border-white/20 text-white'}
+                  className={keepCompany ? 'bg-secondary text-secondary-foreground' : ''}
                   onClick={() => setKeepCompany(true)}
                 >
                   Keep company
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+          </DecisionPanel>
         ) : null}
 
-        <Card className="border-[#E0E4EF]/20 bg-white/5 text-white">
-          <CardContent className="p-5 space-y-4">
-            <div className="flex items-center gap-2 text-[#2EC4B6]">
-              <Users className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-wide">Continue as…</span>
-            </div>
+        <DecisionPanel title="Continue as…" description="Choose the person who will carry this life forward.">
 
             {actionError ? (
-              <p className="text-sm text-red-300 bg-red-950/40 border border-red-800 rounded-lg p-3">
+              <p className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
                 {actionError}
               </p>
             ) : null}
 
             {heirs.length === 0 ? (
-              <p className="text-sm text-gray-300">
-                No eligible heirs found. Build family relationships during life to enable succession.
-              </p>
+              <EmptyState title="No eligible heirs" description="Build family relationships during life to enable succession." />
             ) : (
               <div className="space-y-2">
                 {heirs.map((member) => (
                   <Button
                     key={member.id}
                     variant="outline"
-                    className="w-full justify-between border-white/20 text-white hover:bg-white/10"
+                    className="w-full justify-between"
                     disabled={busyId !== null}
                     onClick={() => handleAcceptHeir(member.id)}
                   >
                     <span>
-                      {member.emoji} {member.name}
+                      {member.name}
                     </span>
-                    <span className="text-xs text-gray-400 capitalize">{member.relationship}</span>
+                    <span className="text-xs capitalize text-muted-foreground">{member.relationship}</span>
                   </Button>
                 ))}
               </div>
@@ -196,16 +185,15 @@ export default function DeathScreen() {
 
             {suggestedHeir && heirs.some((member) => member.id === suggestedHeir.id) ? (
               <Button
-                className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                className="w-full bg-secondary text-secondary-foreground hover:opacity-90"
                 disabled={busyId !== null}
                 onClick={() => handleAcceptHeir(suggestedHeir.id)}
               >
                 Continue as {suggestedHeir.name} (recommended)
               </Button>
             ) : null}
-          </CardContent>
-        </Card>
+        </DecisionPanel>
       </div>
-    </div>
+    </LifeShell>
   );
 }

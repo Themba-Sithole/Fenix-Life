@@ -23,8 +23,8 @@ export function LifeGateBanner({ world }: LifeGateBannerProps) {
     <div
       className={`rounded-xl border p-4 mb-4 ${
         hard.length > 0
-          ? "bg-orange-50 border-orange-300 text-orange-950"
-          : "bg-amber-50 border-amber-200 text-amber-950"
+          ? "border-destructive/30 bg-destructive/10 text-foreground"
+          : "border-accent/30 bg-accent/10 text-foreground"
       }`}
       role="alert"
     >
@@ -45,7 +45,7 @@ export function LifeGateBanner({ world }: LifeGateBannerProps) {
           {primary.route ? (
             <Button
               size="sm"
-              className="bg-[#1C2541] hover:bg-[#0B132B] text-white"
+              className="bg-secondary text-secondary-foreground hover:opacity-90"
               onClick={() => navigate(primary.route!)}
             >
               Resolve

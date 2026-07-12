@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
@@ -71,7 +71,7 @@ export default function CharacterCreation() {
       advantages: ["Trust Fund", "Business Contacts", "Premium Education"],
       disadvantages: ["High Expectations", "Pressure"],
       difficulty: "Standard",
-      difficultyColor: "text-[#F4B400]",
+      difficultyColor: "text-fenix-gold",
     },
     {
       id: "middle-class",
@@ -83,7 +83,7 @@ export default function CharacterCreation() {
       advantages: ["Stable Family", "Good Education", "Support Network"],
       disadvantages: ["Limited Capital", "Average Connections"],
       difficulty: "Normal",
-      difficultyColor: "text-[#F4B400]",
+      difficultyColor: "text-fenix-gold",
     },
     {
       id: "working-class",
@@ -131,7 +131,7 @@ export default function CharacterCreation() {
       advantages: ["Business Knowledge", "Mentorship", "Startup Capital"],
       disadvantages: ["Following in Footsteps", "Comparison Pressure"],
       difficulty: "Normal",
-      difficultyColor: "text-[#F4B400]",
+      difficultyColor: "text-fenix-gold",
     },
   ],
     [currency],
@@ -200,7 +200,7 @@ export default function CharacterCreation() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-8">
+    <main className="min-h-screen bg-life-atmosphere px-6 py-10">
       <div className="max-w-6xl mx-auto">
         <Button
           variant="outline"
@@ -211,22 +211,26 @@ export default function CharacterCreation() {
           Back to Menu
         </Button>
 
-        <Card className="border-[#2EC4B6]/20 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white rounded-t-lg">
-            <CardTitle className="text-3xl text-center">Create Your Character</CardTitle>
-            <p className="text-center text-gray-300">Begin at 18 — build your life from zero</p>
-          </CardHeader>
-          <CardContent className="p-8">
+        <section className="border-y border-border py-8">
+          <header className="mb-8">
+            <p className="text-xs font-medium tracking-[0.16em] text-fenix-gold">A NEW LIFE</p>
+            <h1 className="mt-2 font-display text-3xl text-fenix-navy">Create your character</h1>
+            <p className="mt-2 text-muted-foreground">Choose who you were born as. Your story begins at 18.</p>
+            <p className="mt-4 border-l-2 border-fenix-emerald bg-fenix-emerald/5 px-4 py-3 text-sm text-fenix-navy">
+              Born {birthday} → start {youngAdultStartDate} at age 18
+            </p>
+          </header>
+          <div>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
-                <h3 className="text-xl text-[#1C2541] mb-4">Personal Information</h3>
+                <h3 className="text-xl text-secondary mb-4">Personal Information</h3>
                 
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
                     id="firstName"
                     placeholder="Enter first name"
-                    className="border-[#2EC4B6]/30"
+                    className="border-accent/30"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                   />
@@ -237,7 +241,7 @@ export default function CharacterCreation() {
                   <Input
                     id="lastName"
                     placeholder="Enter last name"
-                    className="border-[#2EC4B6]/30"
+                    className="border-accent/30"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                   />
@@ -247,7 +251,7 @@ export default function CharacterCreation() {
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
                     <Select value={gender} onValueChange={setGender}>
-                      <SelectTrigger className="border-[#2EC4B6]/30">
+                      <SelectTrigger className="border-accent/30">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -260,8 +264,8 @@ export default function CharacterCreation() {
 
                   <div className="space-y-2">
                     <Label htmlFor="birthday">Birthday</Label>
-                    <Input id="birthday" type="date" className="border-[#2EC4B6]/30" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
-                    <p className="text-xs text-[#2EC4B6]">
+                    <Input id="birthday" type="date" className="border-accent/30" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+                    <p className="text-xs text-fenix-emerald">
                       Born {birthday} → start {youngAdultStartDate} at age 18
                     </p>
                   </div>
@@ -270,7 +274,7 @@ export default function CharacterCreation() {
                 <div className="space-y-2">
                   <Label htmlFor="nationality">Nationality (Citizenship)</Label>
                   <Select value={nationality} onValueChange={setNationality}>
-                    <SelectTrigger className="border-[#2EC4B6]/30">
+                    <SelectTrigger className="border-accent/30">
                       <SelectValue placeholder="Select nationality" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[280px]">
@@ -286,7 +290,7 @@ export default function CharacterCreation() {
                 <div className="space-y-2">
                   <Label htmlFor="residence">Country You Live In</Label>
                   <Select value={residenceCountry} onValueChange={setResidenceCountry}>
-                    <SelectTrigger className="border-[#2EC4B6]/30">
+                    <SelectTrigger className="border-accent/30">
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[280px]">
@@ -305,7 +309,7 @@ export default function CharacterCreation() {
                 <div className="space-y-2">
                   <Label htmlFor="city">Starting City</Label>
                   <Select value={cityId} onValueChange={setCityId} disabled={cities.length === 0}>
-                    <SelectTrigger className="border-[#2EC4B6]/30">
+                    <SelectTrigger className="border-accent/30">
                       <SelectValue placeholder="Select city" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[280px]">
@@ -322,7 +326,7 @@ export default function CharacterCreation() {
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
                   <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="border-[#2EC4B6]/30">
+                    <SelectTrigger className="border-accent/30">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[280px]">
@@ -338,8 +342,8 @@ export default function CharacterCreation() {
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#2EC4B6]/20">
-                  <h4 className="mb-3 text-[#1C2541]">Appearance</h4>
+                <div className="pt-4 border-t border-accent/20">
+                  <h4 className="mb-3 text-secondary">Appearance</h4>
                   
                   <div className="mb-4">
                     <AvatarSelector 
@@ -350,7 +354,7 @@ export default function CharacterCreation() {
                   
                   <div className="grid grid-cols-2 gap-3">
                     <Select value={skinTone} onValueChange={setSkinTone}>
-                      <SelectTrigger className="border-[#2EC4B6]/30">
+                      <SelectTrigger className="border-accent/30">
                         <SelectValue placeholder="Skin Tone" />
                       </SelectTrigger>
                       <SelectContent>
@@ -360,7 +364,7 @@ export default function CharacterCreation() {
                       </SelectContent>
                     </Select>
                     <Select value={hairstyle} onValueChange={setHairstyle}>
-                      <SelectTrigger className="border-[#2EC4B6]/30">
+                      <SelectTrigger className="border-accent/30">
                         <SelectValue placeholder="Hairstyle" />
                       </SelectTrigger>
                       <SelectContent>
@@ -374,7 +378,7 @@ export default function CharacterCreation() {
               </div>
 
               <div>
-                <h3 className="text-xl text-[#1C2541] mb-4">Choose Your Background</h3>
+                <h3 className="text-xl text-secondary mb-4">Choose Your Background</h3>
                 
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                   {backgrounds.map((bg) => (
@@ -382,14 +386,14 @@ export default function CharacterCreation() {
                       key={bg.id}
                       className={`cursor-pointer transition-all hover:shadow-lg ${
                         selectedBackground === bg.id
-                          ? 'border-[#2EC4B6] shadow-md shadow-[#2EC4B6]/20 bg-[#2EC4B6]/5'
-                          : 'border-gray-200 hover:border-[#2EC4B6]/50'
+                          ? 'border-fenix-emerald bg-fenix-emerald/5'
+                          : 'border-gray-200 hover:border-accent/50'
                       }`}
                       onClick={() => setSelectedBackground(bg.id)}
                     >
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="text-[#1C2541]">{bg.name}</h4>
+                          <h4 className="text-secondary">{bg.name}</h4>
                           <Badge className={`${bg.difficultyColor} bg-transparent border`}>
                             {bg.difficulty}
                           </Badge>
@@ -397,31 +401,31 @@ export default function CharacterCreation() {
                         
                         <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                           <div className="flex items-center gap-1">
-                            <DollarSign className="w-3 h-3 text-[#2EC4B6]" />
+                            <DollarSign className="w-3 h-3 text-accent" />
                             <span className="text-gray-600">Cash:</span>
-                            <span className="text-[#2EC4B6]">{bg.startingCash}</span>
+                            <span className="text-accent">{bg.startingCash}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <GraduationCap className="w-3 h-3 text-[#F4B400]" />
+                            <GraduationCap className="w-3 h-3 text-fenix-gold" />
                             <span className="text-gray-600">{bg.education}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Users className="w-3 h-3 text-[#2EC4B6]" />
+                            <Users className="w-3 h-3 text-accent" />
                             <span className="text-gray-600">{bg.relationships}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Briefcase className="w-3 h-3 text-[#F4B400]" />
+                            <Briefcase className="w-3 h-3 text-fenix-gold" />
                             <span className="text-gray-600">{bg.connections}</span>
                           </div>
                         </div>
 
                         {selectedBackground === bg.id && (
-                          <div className="pt-3 border-t border-[#2EC4B6]/20">
+                          <div className="pt-3 border-t border-accent/20">
                             <div className="mb-2">
                               <div className="text-xs text-gray-500 mb-1">Advantages:</div>
                               <div className="flex flex-wrap gap-1">
                                 {bg.advantages.map((adv, i) => (
-                                  <Badge key={i} variant="outline" className="text-xs bg-[#2EC4B6]/10 text-[#2EC4B6] border-[#2EC4B6]/30">
+                                  <Badge key={i} variant="outline" className="text-xs bg-accent/10 text-accent border-accent/30">
                                     <TrendingUp className="w-3 h-3 mr-1" />
                                     {adv}
                                   </Badge>
@@ -448,8 +452,8 @@ export default function CharacterCreation() {
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[#2EC4B6]/20">
-              <h3 className="text-xl text-[#1C2541] mb-2">Suggested Path (Optional)</h3>
+            <div className="mt-8 pt-6 border-t border-accent/20">
+              <h3 className="text-xl text-secondary mb-2">Suggested Path (Optional)</h3>
               <p className="text-sm text-gray-500 mb-4">
                 UX hints only — any path is achievable from any background (GDD §6.3).
               </p>
@@ -459,13 +463,13 @@ export default function CharacterCreation() {
                     key={path.id}
                     className={`cursor-pointer transition-all hover:shadow-md ${
                       selectedLifePath === path.id
-                        ? "border-[#2EC4B6] bg-[#2EC4B6]/5 shadow-md"
-                        : "border-gray-200 hover:border-[#2EC4B6]/50"
+                        ? "border-accent bg-accent/5 shadow-md"
+                        : "border-gray-200 hover:border-accent/50"
                     }`}
                     onClick={() => setSelectedLifePath(path.id)}
                   >
                     <CardContent className="p-4">
-                      <h4 className="text-[#1C2541] font-medium mb-1">{path.label}</h4>
+                      <h4 className="text-secondary font-medium mb-1">{path.label}</h4>
                       <p className="text-xs text-gray-500">{path.hint}</p>
                     </CardContent>
                   </Card>
@@ -473,7 +477,7 @@ export default function CharacterCreation() {
               </div>
             </div>
 
-            <div className="flex justify-between mt-8 pt-6 border-t border-[#2EC4B6]/20">
+            <div className="flex justify-between mt-8 pt-6 border-t border-accent/20">
               {error && (
                 <p className="text-sm text-red-600 self-center mr-4">{error}</p>
               )}
@@ -483,14 +487,14 @@ export default function CharacterCreation() {
               <Button
                 onClick={handleStartJourney}
                 disabled={isSubmitting || !cityId}
-                className="bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] hover:from-[#1C9B8F] hover:to-[#2EC4B6] text-white px-8"
+                className="bg-primary px-8 text-primary-foreground hover:bg-primary/90"
               >
                 {isSubmitting ? 'Creating save…' : 'Start Your Journey'}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

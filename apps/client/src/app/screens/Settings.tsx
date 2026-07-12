@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
@@ -20,12 +19,13 @@ import {
   type GraphicsQuality,
   type PlayerSettings,
 } from "@/lib/player-settings";
+import { LifeShell } from "../components/shell";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, updateDisplayName } = useAuth();
   const { activeSave, clearActiveSave, deleteSaveById } = useSave();
-  const { persistNow } = useSimulation();
+  const { persistNow, world, formattedDate } = useSimulation();
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [settings, setSettings] = useState<PlayerSettings>(DEFAULT_PLAYER_SETTINGS);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
@@ -167,31 +167,35 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
-      <div className="max-w-4xl mx-auto">
+    <LifeShell
+      playerName={world?.player.displayName}
+      ageYears={world?.player.ageYears}
+      dateLabel={formattedDate ?? undefined}
+      statusLine="Settings"
+      showDock={Boolean(activeSave)}
+    >
+      <div className="mx-auto max-w-4xl">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" onClick={() => navigate(activeSave ? "/home" : "/")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             {activeSave ? "Back to Home" : "Back to Menu"}
           </Button>
           <div>
-            <h1 className="text-3xl text-[#1C2541]">Settings</h1>
+            <h1 className="text-3xl text-secondary">Settings</h1>
             <p className="text-gray-600">Customize your experience</p>
           </div>
         </div>
 
         <div className="space-y-6">
-          <Card className="border-[#2EC4B6]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Monitor className="w-5 h-5 text-[#2EC4B6]" />
+          <section className="border-y border-border py-5">
+              <h2 className="text-secondary flex items-center gap-2">
+                <Monitor className="w-5 h-5 text-accent" />
                 Graphics
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+            <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">Quality</div>
+                  <div className="text-secondary">Quality</div>
                   <div className="text-sm text-gray-600">Adjust visual quality</div>
                 </div>
                 <Select
@@ -212,7 +216,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">Fullscreen</div>
+                  <div className="text-secondary">Fullscreen</div>
                   <div className="text-sm text-gray-600">Enable fullscreen mode</div>
                 </div>
                 <Switch
@@ -223,7 +227,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">V-Sync</div>
+                  <div className="text-secondary">V-Sync</div>
                   <div className="text-sm text-gray-600">Synchronize frame rate</div>
                 </div>
                 <Switch
@@ -231,20 +235,18 @@ export default function Settings() {
                   onCheckedChange={(checked) => updateSettings("vSync", checked)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          <Card className="border-[#F4B400]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Volume2 className="w-5 h-5 text-[#F4B400]" />
+          <section className="border-b border-border pb-5">
+              <h2 className="text-secondary flex items-center gap-2">
+                <Volume2 className="w-5 h-5 text-fenix-gold" />
                 Audio
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              </h2>
+            <div className="mt-4 space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[#1C2541]">Master Volume</div>
+                  <div className="text-secondary">Master Volume</div>
                   <div className="text-sm text-gray-600">{settings.masterVolume}%</div>
                 </div>
                 <Slider
@@ -257,7 +259,7 @@ export default function Settings() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[#1C2541]">Music Volume</div>
+                  <div className="text-secondary">Music Volume</div>
                   <div className="text-sm text-gray-600">{settings.musicVolume}%</div>
                 </div>
                 <Slider
@@ -270,7 +272,7 @@ export default function Settings() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[#1C2541]">Effects Volume</div>
+                  <div className="text-secondary">Effects Volume</div>
                   <div className="text-sm text-gray-600">{settings.effectsVolume}%</div>
                 </div>
                 <Slider
@@ -280,20 +282,18 @@ export default function Settings() {
                   onValueChange={([value]) => updateSettings("effectsVolume", value ?? settings.effectsVolume)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          <Card className="border-[#2EC4B6]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Gamepad2 className="w-5 h-5 text-[#2EC4B6]" />
+          <section className="border-b border-border pb-5">
+              <h2 className="text-secondary flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5 text-accent" />
                 Gameplay
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+            <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">Difficulty</div>
+                  <div className="text-secondary">Difficulty</div>
                   <div className="text-sm text-gray-600">Game difficulty level</div>
                 </div>
                 <Select
@@ -314,7 +314,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">Autosave</div>
+                  <div className="text-secondary">Autosave</div>
                   <div className="text-sm text-gray-600">Persist simulation progress to the cloud</div>
                 </div>
                 <Switch
@@ -325,7 +325,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">Tutorial Hints</div>
+                  <div className="text-secondary">Tutorial Hints</div>
                   <div className="text-sm text-gray-600">Show helpful tips</div>
                 </div>
                 <Switch
@@ -333,20 +333,18 @@ export default function Settings() {
                   onCheckedChange={(checked) => updateSettings("tutorialHints", checked)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          <Card className="border-[#2EC4B6]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Globe className="w-5 h-5 text-[#2EC4B6]" />
+          <section className="border-b border-border pb-5">
+              <h2 className="text-secondary flex items-center gap-2">
+                <Globe className="w-5 h-5 text-accent" />
                 General
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h2>
+            <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541]">Language</div>
+                  <div className="text-secondary">Language</div>
                   <div className="text-sm text-gray-600">Select language</div>
                 </div>
                 <Select
@@ -368,7 +366,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541] flex items-center gap-2">
+                  <div className="text-secondary flex items-center gap-2">
                     <Bell className="w-4 h-4" />
                     Notifications
                   </div>
@@ -382,7 +380,7 @@ export default function Settings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[#1C2541] flex items-center gap-2">
+                  <div className="text-secondary flex items-center gap-2">
                     <Cloud className="w-4 h-4" />
                     Cloud Saves
                   </div>
@@ -399,23 +397,22 @@ export default function Settings() {
                   onCheckedChange={(checked) => updateSettings("cloudSaves", checked)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
           {isAuthenticated && activeSave ? (
-            <Card className="border-[#F4B400]/20 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                  <Cloud className="w-5 h-5 text-[#F4B400]" />
+            <section className="border-b border-border pb-5">
+                <h2 className="text-secondary flex items-center gap-2">
+                  <Cloud className="w-5 h-5 text-fenix-gold" />
                   Save Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="rounded-lg border border-[#2EC4B6]/20 bg-[#F5F7FA] p-4">
-                  <div className="text-sm text-gray-600">Active life</div>
-                  <div className="text-[#1C2541] font-medium">{activeSave.name}</div>
-                  <div className="text-sm text-gray-500">Schema v{activeSave.schemaVersion}</div>
-                </div>
+                </h2>
+              <div className="mt-4 space-y-4">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                  <dt className="text-muted-foreground">Active life</dt>
+                  <dd className="font-medium text-secondary">{activeSave.name}</dd>
+                  <dt className="text-muted-foreground">Schema</dt>
+                  <dd>v{activeSave.schemaVersion}</dd>
+                </dl>
                 {saveActionError ? <p className="text-sm text-red-600">{saveActionError}</p> : null}
                 <Button
                   variant="outline"
@@ -435,23 +432,22 @@ export default function Settings() {
                   <Trash2 className="w-4 h-4 mr-2" />
                   {isDeleting ? "Deleting…" : "Delete Current Life"}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           ) : null}
 
-          <Card className="border-[#1C2541]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Lock className="w-5 h-5 text-[#1C2541]" />
+          <section className="border-b border-border pb-5">
+              <h2 className="text-secondary flex items-center gap-2">
+                <Lock className="w-5 h-5 text-secondary" />
                 Privacy & Account
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border border-[#2EC4B6]/20 bg-[#F5F7FA] p-4">
-                <div className="text-sm text-gray-600">Signed in as</div>
-                <div className="text-[#1C2541] font-medium">{user?.displayName ?? user?.email}</div>
-                <div className="text-sm text-gray-500">{user?.email}</div>
-              </div>
+              </h2>
+            <div className="mt-4 space-y-4">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                <dt className="text-muted-foreground">Signed in as</dt>
+                <dd className="font-medium text-secondary">{user?.displayName ?? user?.email}</dd>
+                <dt className="text-muted-foreground">Email</dt>
+                <dd>{user?.email}</dd>
+              </dl>
               <Button
                 variant="outline"
                 className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
@@ -521,23 +517,23 @@ export default function Settings() {
                   Delete Account
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
           <div className="flex gap-4 items-center">
             <Button variant="outline" className="flex-1" onClick={() => navigate("/")}>
               Cancel
             </Button>
             <Button
-              className="flex-1 bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] text-white"
+              className="flex-1 bg-secondary text-secondary-foreground hover:opacity-90"
               onClick={handleSave}
             >
               Save Changes
             </Button>
           </div>
-          {savedMessage ? <p className="text-sm text-[#2EC4B6] text-center">{savedMessage}</p> : null}
+          {savedMessage ? <p className="text-sm text-accent text-center">{savedMessage}</p> : null}
         </div>
       </div>
-    </div>
+    </LifeShell>
   );
 }

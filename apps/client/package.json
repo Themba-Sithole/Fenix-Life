@@ -11,12 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@emotion/react": "11.14.0",
-    "@emotion/styled": "11.14.1",
     "@fenix/domain": "*",
     "@fenix/simulation-engine": "*",
-    "@mui/icons-material": "7.3.5",
-    "@mui/material": "7.3.5",
+    "@fontsource/fraunces": "^5.2.9",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@popperjs/core": "2.11.8",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",

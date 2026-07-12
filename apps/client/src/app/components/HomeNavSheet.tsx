@@ -1,44 +1,14 @@
 import { useNavigate } from "react-router";
-import {
-  Building2,
-  Briefcase,
-  Car,
-  GraduationCap,
-  Heart,
-  Home as HomeIcon,
-  Map,
-  Newspaper,
-  Settings,
-  Smartphone,
-  TrendingUp,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { MORE_ITEMS } from "./shell/LifeDock";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
-import { Button } from "./ui/button";
-
-const NAV_ITEMS = [
-  { label: "Smartphone", icon: Smartphone, path: "/phone" },
-  { label: "City Map", icon: Map, path: "/city" },
-  { label: "Banking", icon: Building2, path: "/banking" },
-  { label: "Stocks", icon: TrendingUp, path: "/stocks" },
-  { label: "Company", icon: Briefcase, path: "/company" },
-  { label: "Employees", icon: Users, path: "/employees" },
-  { label: "Real Estate", icon: HomeIcon, path: "/real-estate" },
-  { label: "Vehicles", icon: Car, path: "/vehicles" },
-  { label: "Education", icon: GraduationCap, path: "/education" },
-  { label: "Career", icon: Briefcase, path: "/career" },
-  { label: "Family", icon: Heart, path: "/family" },
-  { label: "Timeline", icon: Trophy, path: "/timeline" },
-  { label: "News", icon: Newspaper, path: "/news" },
-  { label: "Settings", icon: Settings, path: "/settings" },
-] as const;
+import { cn } from "./ui/utils";
 
 interface HomeNavSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+/** @deprecated Prefer LifeDock “More” sheet — kept as thin alias for existing callers. */
 export function HomeNavSheet({ open, onOpenChange }: HomeNavSheetProps) {
   const navigate = useNavigate();
 
@@ -49,23 +19,27 @@ export function HomeNavSheet({ open, onOpenChange }: HomeNavSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[300px]">
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh]">
         <SheetHeader>
-          <SheetTitle className="text-[#1C2541]">Navigate</SheetTitle>
+          <SheetTitle className="font-display text-foreground">More</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-2 mt-6">
-          {NAV_ITEMS.map((item) => (
-            <Button
-              key={item.path}
-              variant="outline"
-              className="justify-start gap-3"
-              onClick={() => goTo(item.path)}
-            >
-              <item.icon className="w-4 h-4 text-[#2EC4B6]" />
-              {item.label}
-            </Button>
+        <ul className="mt-4 grid gap-1 pb-6">
+          {MORE_ITEMS.map((item) => (
+            <li key={item.path}>
+              <button
+                type="button"
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm text-foreground hover:bg-muted",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                )}
+                onClick={() => goTo(item.path)}
+              >
+                <item.icon className="h-4 w-4 text-secondary" aria-hidden />
+                {item.label}
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </SheetContent>
     </Sheet>
   );

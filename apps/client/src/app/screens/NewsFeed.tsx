@@ -1,9 +1,7 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
-import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
 import {
@@ -12,6 +10,7 @@ import {
   type SimEventCategory,
   type WorldImpactTag,
 } from "@fenix/domain";
+import { EmptyState, LifeShell } from "../components/shell";
 
 function toneToImpact(tone: string): "positive" | "negative" | "neutral" {
   switch (tone) {
@@ -27,8 +26,7 @@ function toneToImpact(tone: string): "positive" | "negative" | "neutral" {
 const CATEGORIES: Array<SimEventCategory | "all"> = ["all", "news", "finance", "career", "life"];
 
 export default function NewsFeed() {
-  const navigate = useNavigate();
-  const { world } = useSimulation();
+  const { world, formattedDate } = useSimulation();
   const [category, setCategory] = useState<SimEventCategory | "all">("all");
   const [impactOnly, setImpactOnly] = useState(false);
 
@@ -57,23 +55,20 @@ export default function NewsFeed() {
   if (!world) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
-      <div className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white p-6 shadow-lg">
-        <div className="max-w-4xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/home")}
-            className="text-white hover:bg-white/10 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl mb-2">News Feed</h1>
-          <p className="text-gray-300">
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      dateLabel={formattedDate ?? undefined}
+      statusLine="News desk"
+    >
+      <header className="mb-6">
+          <p className="text-sm text-muted-foreground">World report</p>
+          <h1 className="font-display text-3xl tracking-tight text-foreground">News Feed</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Economy in {cyclePhaseLabel(world.economy.cyclePhase)} phase · inflation{" "}
             {(world.economy.inflationRateAnnual * 100).toFixed(1)}%
           </p>
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             {CATEGORIES.map((item) => (
               <Button
                 key={item}
@@ -81,8 +76,8 @@ export default function NewsFeed() {
                 variant={category === item ? "default" : "outline"}
                 className={
                   category === item
-                    ? "bg-[#2EC4B6] text-white"
-                    : "border-white/30 text-white hover:bg-white/10"
+                    ? "bg-secondary text-secondary-foreground"
+                    : ""
                 }
                 onClick={() => setCategory(item)}
               >
@@ -94,61 +89,50 @@ export default function NewsFeed() {
               variant={impactOnly ? "default" : "outline"}
               className={
                 impactOnly
-                  ? "bg-[#F4B400] text-[#0B132B]"
-                  : "border-white/30 text-white hover:bg-white/10"
+                  ? "bg-accent text-accent-foreground"
+                  : ""
               }
               onClick={() => setImpactOnly((value) => !value)}
             >
               World-changing only
             </Button>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto p-6 space-y-4">
+      </header>
+      <section className="space-y-4">
         {news.length === 0 ? (
-          <Card className="border-[#2EC4B6]/20">
-            <CardContent className="p-6 text-sm text-gray-600">
-              Advance time on Home to generate news about your finances, company, and the economy.
-            </CardContent>
-          </Card>
+          <EmptyState title="No reports yet" description="Advance time to generate news about your finances, company, and the economy." />
         ) : (
-          news.map((item) => (
-            <Card
-              key={`${item.time}-${item.headline}`}
-              className="border-[#2EC4B6]/20 shadow-md hover:shadow-lg transition-shadow"
-            >
-              <CardContent className="p-6">
+          <ul className="divide-y divide-border">
+          {news.map((item) => (
+            <li key={`${item.time}-${item.headline}`} className="py-5">
                 <div className="flex items-start gap-4">
-                  <div className="text-3xl">
-                    {item.impact === "positive" ? "📈" : item.impact === "negative" ? "⚠️" : "📰"}
-                  </div>
+                  {item.impact === "positive" ? <TrendingUp className="h-5 w-5 shrink-0 text-secondary" aria-hidden /> : item.impact === "negative" ? <TrendingDown className="h-5 w-5 shrink-0 text-destructive" aria-hidden /> : <AlertCircle className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />}
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="text-lg text-[#1C2541]">{item.headline}</h3>
+                      <h3 className="text-lg text-secondary">{item.headline}</h3>
                       <Badge
                         variant="outline"
                         className={
                           item.impact === "positive"
-                            ? "bg-[#2EC4B6]/10 text-[#2EC4B6] border-[#2EC4B6]/30"
+                            ? "border-secondary/30 bg-secondary/10 text-secondary"
                             : item.impact === "negative"
-                              ? "bg-orange-50 text-orange-600 border-orange-200"
-                              : "bg-blue-50 text-blue-600 border-blue-200"
+                              ? "border-destructive/30 bg-destructive/10 text-destructive"
+                              : ""
                         }
                       >
                         {item.category}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">{item.summary}</p>
+                    <p className="mb-3 text-sm text-muted-foreground">{item.summary}</p>
                     {item.worldImpact && item.worldImpact !== "none" ? (
-                      <p className="text-xs text-[#1C2541] mb-2 font-medium">
+                      <p className="text-xs text-secondary mb-2 font-medium">
                         This changes {impactChangesLabel(item.worldImpact)}
                       </p>
                     ) : null}
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>{item.time}</span>
                       {item.impact === "positive" && (
-                        <span className="flex items-center gap-1 text-[#2EC4B6]">
+                        <span className="flex items-center gap-1 text-accent">
                           <TrendingUp className="w-3 h-3" /> Positive
                         </span>
                       )}
@@ -165,11 +149,11 @@ export default function NewsFeed() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
+            </li>
+          ))}
+          </ul>
         )}
-      </div>
-    </div>
+      </section>
+    </LifeShell>
   );
 }

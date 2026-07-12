@@ -1,10 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
 import {
-  ArrowLeft,
   Building2,
   Coffee,
   Factory,
@@ -14,9 +10,18 @@ import {
   Plane,
   ShoppingBag,
 } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Progress } from "../components/ui/progress";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
-import { buildCityDistricts, cyclePhaseLabel, formatOriginLocation } from "@fenix/domain";
+import {
+  buildCityDistricts,
+  cyclePhaseLabel,
+  districtCooldownRemaining,
+  formatOriginLocation,
+} from "@fenix/domain";
+import { LifeShell } from "../components/shell";
+import { cn } from "../components/ui/utils";
 
 const DISTRICT_ICONS = {
   downtown: Building2,
@@ -29,20 +34,20 @@ const DISTRICT_ICONS = {
   residential: Home,
 } as const;
 
-const DISTRICT_COLORS: Record<string, string> = {
-  downtown: "bg-[#1C2541]",
-  university: "bg-[#2EC4B6]",
-  hospital: "bg-red-400",
-  mall: "bg-[#F4B400]",
-  airport: "bg-blue-400",
-  cafe: "bg-amber-600",
-  tech: "bg-[#2EC4B6]",
-  residential: "bg-green-500",
+const DISTRICT_TONES: Record<string, string> = {
+  downtown: "bg-primary text-primary-foreground",
+  university: "bg-secondary text-secondary-foreground",
+  hospital: "bg-destructive text-destructive-foreground",
+  mall: "bg-accent text-accent-foreground",
+  airport: "bg-fenix-blue text-white",
+  cafe: "bg-fenix-gold text-fenix-navy",
+  tech: "bg-secondary text-secondary-foreground",
+  residential: "bg-primary text-primary-foreground",
 };
 
 export default function CityMap() {
   const navigate = useNavigate();
-  const { world, isLoading, applyAction } = useSimulation();
+  const { world, applyAction, formattedDate } = useSimulation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyDistrict, setBusyDistrict] = useState<string | null>(null);
 
@@ -60,88 +65,85 @@ export default function CityMap() {
     }
   }
 
-  const simulationGate = useSimulationGate("Loading city map…", "bg-sky-100");
+  const simulationGate = useSimulationGate("Loading city map…");
   if (simulationGate) return simulationGate;
   if (!world) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-emerald-100 to-blue-200 p-6">
-      <div className="max-w-6xl mx-auto">
-        <Button variant="outline" onClick={() => navigate("/home")} className="mb-6 bg-white">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back Home
-        </Button>
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      dateLabel={formattedDate ?? undefined}
+      statusLine={`${formatOriginLocation(world.origin)} · ${cyclePhaseLabel(world.economy.cyclePhase)}`}
+    >
+      <header className="mb-6">
+        <p className="text-sm text-muted-foreground">Explore</p>
+        <h1 className="font-display text-3xl text-foreground tracking-tight">Fenix City</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pick a place. Risk and opportunity change with the cycle.
+        </p>
+      </header>
 
-        <Card className="border-[#2EC4B6]/20 shadow-xl mb-6">
-          <CardContent className="p-6">
-            <h1 className="text-3xl text-[#1C2541] mb-2">Fenix City</h1>
-            <p className="text-gray-600">
-              {formatOriginLocation(world.origin)} · {cyclePhaseLabel(world.economy.cyclePhase)} · Tech {world.economy.techSectorIndex.toFixed(1)}
-            </p>
-          </CardContent>
-        </Card>
+      {actionError ? (
+        <p className="mb-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+          {actionError}
+        </p>
+      ) : null}
 
-        {actionError ? (
-          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
-        ) : null}
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {districts.map((district) => {
+          const Icon = DISTRICT_ICONS[district.id as keyof typeof DISTRICT_ICONS] ?? Building2;
+          const tone = DISTRICT_TONES[district.id] ?? "bg-primary text-primary-foreground";
+          const cooldownRemaining = districtCooldownRemaining(world, district.id);
+          const onCooldown = cooldownRemaining > 0;
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {districts.map((district) => {
-            const Icon = DISTRICT_ICONS[district.id as keyof typeof DISTRICT_ICONS] ?? Building2;
-            const color = DISTRICT_COLORS[district.id] ?? "bg-[#1C2541]";
-
-            return (
-              <Card key={district.id} className="border-[#2EC4B6]/20 shadow-lg overflow-hidden">
-                {district.route ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate(district.route!)}
-                    className={`${color} w-full p-6 text-white text-left hover:opacity-90 transition-all`}
-                  >
-                    <Icon className="w-10 h-10 mb-3" />
-                    <div className="font-semibold">{district.name}</div>
-                  </button>
-                ) : (
-                  <div className={`${color} w-full p-6 text-white text-left`}>
-                    <Icon className="w-10 h-10 mb-3" />
-                    <div className="font-semibold">{district.name}</div>
+          return (
+            <li key={district.id} className="overflow-hidden rounded-lg border border-border bg-surface-1">
+              <div className={cn("flex items-center gap-3 px-4 py-3", tone)}>
+                <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                <div className="min-w-0">
+                  <p className="font-display text-lg leading-tight">{district.name}</p>
+                  <p className="text-xs opacity-80 truncate">{district.description}</p>
+                </div>
+              </div>
+              <div className="px-4 py-3 space-y-3">
+                <div>
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Activity</span>
+                    <span>{district.activityLevel}% · Risk {Math.round(district.visitOutcome.crimeRisk * 100)}%</span>
                   </div>
-                )}
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm text-gray-600">{district.description}</p>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500">Activity</span>
-                      <span>{district.activityLevel}%</span>
-                    </div>
-                    <Progress value={district.activityLevel} className="h-2 bg-[#2EC4B6]" />
-                  </div>
-                  <div className="flex gap-2">
-                    {district.route ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => navigate(district.route!)}
-                      >
-                        Open
-                      </Button>
-                    ) : null}
+                  <Progress value={district.activityLevel} className="h-1.5" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {district.route ? (
                     <Button
+                      type="button"
                       size="sm"
-                      className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
-                      onClick={() => handleVisit(district.id)}
-                      disabled={busyDistrict === district.id}
+                      variant="outline"
+                      onClick={() => navigate(district.route!)}
                     >
-                      {busyDistrict === district.id ? "Visiting…" : "Visit"}
+                      Enter
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+                  ) : null}
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-secondary text-secondary-foreground hover:opacity-90"
+                    disabled={busyDistrict !== null || onCooldown}
+                    onClick={() => handleVisit(district.id)}
+                  >
+                    {busyDistrict === district.id
+                      ? "Visiting…"
+                      : onCooldown
+                        ? `Cooldown ${cooldownRemaining}d`
+                        : "Visit"}
+                  </Button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </LifeShell>
   );
 }

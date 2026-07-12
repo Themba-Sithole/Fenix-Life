@@ -1,24 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import {
-  ArrowLeft,
+  AlertCircle,
+  AlertTriangle,
+  BookOpen,
   Briefcase,
   Building2,
-  TrendingUp,
-  BookOpen,
-  Users,
-  AlertCircle,
-  Clock,
-  Wallet,
-  Brain,
   CheckCircle2,
-  XCircle,
+  Clock,
   LogOut,
-  AlertTriangle,
+  TrendingUp,
+  Users,
+  Wallet,
+  XCircle,
 } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
 import {
@@ -42,6 +39,7 @@ import {
   unemploymentRunwayMonths,
   weeksUnemployed,
 } from "@fenix/domain";
+import { DecisionPanel, EmptyState, LifeShell } from "../components/shell";
 
 type CareerActionKind =
   | "CAREER_REQUEST_RAISE"
@@ -56,7 +54,7 @@ function cooldownDaysRemaining(tickCount: number, lastTick: number, cooldown: nu
 
 export default function CareerScreen() {
   const navigate = useNavigate();
-  const { world, applyAction } = useSimulation();
+  const { world, applyAction, formattedDate } = useSimulation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [applyFeedback, setApplyFeedback] = useState<string | null>(null);
   const [busyListingId, setBusyListingId] = useState<string | null>(null);
@@ -127,349 +125,280 @@ export default function CareerScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
-      <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate("/home")} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      dateLabel={formattedDate ?? undefined}
+      statusLine={employmentStatusLabel(career.status)}
+    >
+      <header className="mb-6">
+        <p className="text-sm text-muted-foreground">Jobs</p>
+        <h1 className="font-display text-3xl text-foreground tracking-tight">Career</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {isUnemployed
+            ? "Browse roles, track applications, manage your search."
+            : `${career.jobTitle} at ${career.employerName}`}
+        </p>
+      </header>
 
-        <div className="mb-6">
-          <h1 className="text-3xl text-[#1C2541] flex items-center gap-2">
-            <Briefcase className="w-8 h-8 text-[#2EC4B6]" />
-            Career
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {isUnemployed
-              ? "Browse open roles, track applications, and manage your search."
-              : "Manage your current role and grow your Human Capital."}
-          </p>
+      {actionError ? (
+        <p className="mb-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+          {actionError}
+        </p>
+      ) : null}
+      {applyFeedback ? (
+        <p className="mb-4 text-sm text-secondary bg-secondary/10 border border-secondary/30 rounded-lg p-3">
+          {applyFeedback}
+        </p>
+      ) : null}
+
+      <section className="mb-6 rounded-lg border border-border bg-surface-1 p-4">
+        <h2 className="font-display text-lg text-foreground mb-3">Status</h2>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge variant="outline">{employmentStatusLabel(career.status)}</Badge>
+          <Badge variant="outline">Performance {career.performanceScore}%</Badge>
+          <Badge variant="outline">{career.monthsInRole} months in role</Badge>
+          {!isUnemployed ? (
+            <Badge variant="outline">{formatMoney(career.monthlySalaryCents, currency)}/mo</Badge>
+          ) : null}
         </div>
+        <p className="text-sm text-muted-foreground">
+          {career.jobTitle}
+          {career.employerName ? ` · ${career.employerName}` : ""} · {career.yearsExperience} yrs experience
+        </p>
+      </section>
 
-        {actionError ? (
-          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
-        ) : null}
-        {applyFeedback ? (
-          <p className="mb-4 text-sm text-[#1C2541] bg-[#2EC4B6]/10 border border-[#2EC4B6]/30 rounded-lg p-3">{applyFeedback}</p>
-        ) : null}
-
-        <Card className="border-[#2EC4B6]/20 shadow-lg mb-6">
-          <CardHeader>
-            <CardTitle className="text-[#1C2541]">Current status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{employmentStatusLabel(career.status)}</Badge>
-              <Badge variant="outline">Performance {career.performanceScore}%</Badge>
-              <Badge variant="outline">{career.monthsInRole} months in role</Badge>
-              {!isUnemployed ? (
-                <Badge variant="outline">
-                  {formatMoney(career.monthlySalaryCents, currency)}/mo
-                </Badge>
-              ) : null}
-            </div>
-            <p className="text-sm text-gray-600">
-              {isUnemployed
-                ? `${career.jobTitle} · ${career.employerName}`
-                : `${career.jobTitle} at ${career.employerName}`}
+      {career.pipActive ? (
+        <section
+          className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 p-4 flex gap-3"
+          data-testid="pip-warning"
+          role="alert"
+        >
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" aria-hidden />
+          <div>
+            <p className="font-medium text-foreground">Performance Improvement Plan</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {career.pipDaysRemaining} days left · {career.warnings} warning
+              {career.warnings === 1 ? "" : "s"}. Raises and promotions blocked.
             </p>
-            <p className="text-xs text-gray-500">{career.yearsExperience} years experience</p>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
+      ) : career.warnings > 0 ? (
+        <section className="mb-6 rounded-lg border border-status-warn/40 bg-surface-crisis p-4 flex gap-3">
+          <AlertCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden />
+          <p className="text-sm text-foreground">
+            {career.warnings} performance warning{career.warnings === 1 ? "" : "s"} — improve before the next review.
+          </p>
+        </section>
+      ) : null}
 
-        {career.pipActive ? (
-          <Card className="border-red-200 shadow-lg mb-6 bg-red-50/40" data-testid="pip-warning">
-            <CardContent className="p-4 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-[#1C2541]">Performance Improvement Plan active</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  {career.pipDaysRemaining} days remaining · {career.warnings} warning
-                  {career.warnings === 1 ? "" : "s"} on file. Raises and promotions are blocked until the PIP clears.
+      {pendingApplications.length > 0 ? (
+        <section className="mb-6" data-testid="pending-applications">
+          <h2 className="font-display text-lg text-foreground mb-2">Pending applications</h2>
+          <ul className="divide-y divide-border rounded-lg border border-border bg-surface-1">
+            {pendingApplications.map((application) => (
+              <li key={application.id} className="px-4 py-3">
+                <p className="font-medium text-foreground">{application.listingTitle}</p>
+                <p className="text-sm text-muted-foreground">{application.employerName}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Applied {application.appliedDate}
+                  {application.resolveOnDate ? ` · Decision by ${application.resolveOnDate}` : ""}
+                  {" · "}Match {application.matchScore}%
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : career.warnings > 0 ? (
-          <Card className="border-orange-200 shadow-lg mb-6 bg-orange-50/30">
-            <CardContent className="p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-gray-700">
-                {career.warnings} performance warning{career.warnings === 1 ? "" : "s"} — improve delivery before the next review.
-              </p>
-            </CardContent>
-          </Card>
-        ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
-        {pendingApplications.length > 0 ? (
-          <Card className="border-[#2EC4B6]/20 shadow-lg mb-6" data-testid="pending-applications">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541]">Pending applications</CardTitle>
-              <p className="text-sm text-gray-600">
-                {pendingApplications.length} in pipeline — employers respond after a few days of game time.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {pendingApplications.map((application) => (
-                <div key={application.id} className="rounded-lg border border-gray-200 p-4 bg-white">
-                  <p className="text-[#1C2541] font-medium">{application.listingTitle}</p>
-                  <p className="text-sm text-gray-600">{application.employerName}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Applied {application.appliedDate}
-                    {application.resolveOnDate ? ` · Decision by ${application.resolveOnDate}` : ""}
-                    {" · "}Match {application.matchScore}%
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ) : null}
+      {isUnemployed && unemploymentStats ? (
+        <section className="mb-6 rounded-lg border border-border bg-surface-1 p-4" data-testid="unemployment-panel">
+          <h2 className="font-display text-lg text-foreground mb-3 flex items-center gap-2">
+            <Briefcase className="w-5 h-5 text-secondary" aria-hidden />
+            Job search
+          </h2>
+          <dl className="grid sm:grid-cols-2 gap-4 text-sm">
+            <div className="flex gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground mt-0.5" aria-hidden />
+              <div>
+                <dt className="text-muted-foreground">Duration</dt>
+                <dd className="font-medium">{unemploymentStats.weeks} weeks · {unemploymentStats.phase}</dd>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Wallet className="w-4 h-4 text-muted-foreground mt-0.5" aria-hidden />
+              <div>
+                <dt className="text-muted-foreground">Runway</dt>
+                <dd className="font-medium">{unemploymentStats.runwayMonths} months</dd>
+              </div>
+            </div>
+          </dl>
+        </section>
+      ) : null}
 
-        {isUnemployed && unemploymentStats ? (
-          <Card className="border-orange-200 shadow-lg mb-6 bg-orange-50/40" data-testid="unemployment-panel">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-orange-500" />
-                Unemployment dashboard
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-orange-500 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500">Duration</p>
-                  <p className="text-[#1C2541] font-medium">{unemploymentStats.weeks} weeks</p>
-                  <p className="text-xs text-gray-600">{unemploymentStats.phase}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Wallet className="w-5 h-5 text-[#2EC4B6] mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500">Runway</p>
-                  <p className="text-[#1C2541] font-medium">{unemploymentStats.runwayMonths} months</p>
-                  <p className="text-xs text-gray-600">Liquid cash ÷ monthly burn</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Briefcase className="w-5 h-5 text-[#1C2541] mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500">Applications</p>
-                  <p className="text-[#1C2541] font-medium">{applications.length} total</p>
-                  <p className="text-xs text-gray-600">{unemploymentStats.pending} pending review</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Brain className="w-5 h-5 text-orange-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500">Morale / stress</p>
-                  <p className="text-[#1C2541] font-medium">{unemploymentStats.stress}%</p>
-                  <p className="text-xs text-gray-600">Upskill or network to recover confidence</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {applications.length > 0 ? (
-          <Card className="border-[#1C2541]/20 shadow-lg mb-6" data-testid="application-history">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541]">Application history</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {applications.map((application) => (
-                <div
-                  key={application.id}
-                  className="rounded-lg border border-gray-200 p-4 bg-white flex flex-col sm:flex-row sm:items-center gap-3"
-                >
-                  <div className="flex-1">
-                    <p className="text-[#1C2541] font-medium">{application.listingTitle}</p>
-                    <p className="text-sm text-gray-600">{application.employerName}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Applied {application.appliedDate} · Match {application.matchScore}%
-                      {application.resolveOnDate && application.status === "pending"
-                        ? ` · Resolves ~${application.resolveOnDate}`
-                        : ""}
-                    </p>
-                    {application.rejectionReason ? (
-                      <p className="text-xs text-orange-700 mt-1">{application.rejectionReason}</p>
-                    ) : null}
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      application.status === "accepted"
-                        ? "bg-[#2EC4B6]/10 text-[#2EC4B6] border-[#2EC4B6]/30"
-                        : application.status === "rejected"
-                          ? "bg-red-50 text-red-700 border-red-200"
-                          : ""
-                    }
+      {isUnemployed ? (
+        <DecisionPanel
+          title="Open roles"
+          description={`Fee ${formatMoney(JOB_APPLICATION_FEE_CENTS, currency)} · ~${JOB_APPLICATION_RESOLVE_DAYS} days to decide`}
+        >
+          {listings.length === 0 ? (
+            <EmptyState
+              title="No listings match yet"
+              description="Improve through education, networking, or adolescence choices."
+              action={
+                <Button variant="outline" onClick={() => navigate("/education")}>
+                  <BookOpen className="w-4 h-4 mr-2" aria-hidden />
+                  Education
+                </Button>
+              }
+            />
+          ) : (
+            <ul className="space-y-3">
+              {listings.map((listing) => {
+                const match = jobListingMatchScore(listing, career.performanceScore, world.education);
+                return (
+                  <li
+                    key={listing.id}
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 border-b border-border pb-3 last:border-0"
+                    data-testid={`job-listing-${listing.id}`}
                   >
-                    {application.status === "accepted" ? (
-                      <span className="inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Hired
-                      </span>
-                    ) : application.status === "rejected" ? (
-                      <span className="inline-flex items-center gap-1">
-                        <XCircle className="w-3 h-3" /> Declined
-                      </span>
-                    ) : (
-                      "Pending"
-                    )}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {isUnemployed ? (
-          <Card className="border-[#F4B400]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-[#F4B400]" />
-                Job listings
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                Application fee: {formatMoney(JOB_APPLICATION_FEE_CENTS, currency)} per role · resolves in ~
-                {JOB_APPLICATION_RESOLVE_DAYS} days
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {listings.length === 0 ? (
-                <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 p-4">
-                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-[#1C2541] font-medium">No listings match yet</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Improve career performance through education, networking, or adolescence choices.
-                    </p>
-                    <Button variant="outline" className="mt-3" onClick={() => navigate("/education")}>
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Education & skills
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                listings.map((listing) => {
-                  const match = jobListingMatchScore(listing, career.performanceScore, world.education);
-                  return (
-                    <div
-                      key={listing.id}
-                      className="rounded-lg border border-[#2EC4B6]/20 p-4 bg-white flex flex-col sm:flex-row sm:items-center gap-4"
-                      data-testid={`job-listing-${listing.id}`}
-                    >
-                      <div className="flex-1">
-                        <p className="text-[#1C2541] font-medium">{listing.title}</p>
-                        <p className="text-sm text-gray-600">{listing.employerName}</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <Badge variant="outline">{listing.sector}</Badge>
-                          <Badge variant="outline">
-                            {formatJobSalary(listing.monthlySalaryCents, currency)}/mo
-                          </Badge>
-                          <Badge variant="outline">Match {match}%</Badge>
-                        </div>
-                      </div>
-                      <Button
-                        className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white shrink-0"
-                        disabled={busyListingId !== null}
-                        data-testid={`apply-job-${listing.id}`}
-                        onClick={() => handleApply(listing.id)}
-                      >
-                        {busyListingId === listing.id ? "Applying…" : "Apply"}
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground">{listing.title}</p>
+                      <p className="text-sm text-muted-foreground">{listing.employerName}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {listing.sector} · {formatJobSalary(listing.monthlySalaryCents, currency)}/mo · Match {match}%
+                      </p>
                     </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-[#F4B400]/20 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[#F4B400]" />
-                Career actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isEmployed ? (
-                <div className="text-xs text-gray-500 space-y-1">
-                  <p>
-                    Raise: need {RAISE_MIN_MONTHS}+ months (you have {career.monthsInRole}), performance ≥
-                    {RAISE_MIN_PERFORMANCE}%
-                    {cooldowns.raise > 0 ? ` · cooldown ${cooldowns.raise}d` : " · ready"}
+                    <Button
+                      className="bg-secondary text-secondary-foreground hover:opacity-90 shrink-0"
+                      disabled={busyListingId !== null}
+                      data-testid={`apply-job-${listing.id}`}
+                      onClick={() => handleApply(listing.id)}
+                    >
+                      {busyListingId === listing.id ? "Applying…" : "Apply"}
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </DecisionPanel>
+      ) : (
+        <DecisionPanel title="Career actions" description="Cooldowns and gates shown honestly.">
+          {isEmployed ? (
+            <div className="text-xs text-muted-foreground space-y-1 mb-4">
+              <p>
+                Raise: {RAISE_MIN_MONTHS}+ months (you have {career.monthsInRole}), performance ≥
+                {RAISE_MIN_PERFORMANCE}%
+                {cooldowns.raise > 0 ? ` · cooldown ${cooldowns.raise}d` : " · ready"}
+              </p>
+              <p>
+                Promotion: {PROMOTION_MIN_MONTHS}+ months, performance ≥{PROMOTION_MIN_PERFORMANCE}%
+                {cooldowns.promotion > 0 ? ` · cooldown ${cooldowns.promotion}d` : " · ready"}
+              </p>
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {isEmployed ? (
+              <>
+                <Button
+                  className="bg-secondary text-secondary-foreground hover:opacity-90"
+                  disabled={
+                    busyAction !== null ||
+                    career.pipActive ||
+                    cooldowns.raise > 0 ||
+                    career.monthsInRole < RAISE_MIN_MONTHS ||
+                    career.performanceScore < RAISE_MIN_PERFORMANCE
+                  }
+                  onClick={() => handleCareerAction("CAREER_REQUEST_RAISE")}
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" aria-hidden />
+                  Request raise
+                  {cooldowns.raise > 0 ? ` (${cooldowns.raise}d)` : ""}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={
+                    busyAction !== null ||
+                    career.pipActive ||
+                    cooldowns.promotion > 0 ||
+                    career.monthsInRole < PROMOTION_MIN_MONTHS ||
+                    career.performanceScore < PROMOTION_MIN_PERFORMANCE
+                  }
+                  onClick={() => handleCareerAction("CAREER_REQUEST_PROMOTION")}
+                >
+                  Request promotion
+                  {cooldowns.promotion > 0 ? ` (${cooldowns.promotion}d)` : ""}
+                </Button>
+              </>
+            ) : null}
+            <Button
+              variant="outline"
+              disabled={busyAction !== null || cooldowns.upskill > 0}
+              onClick={() => handleCareerAction("CAREER_UPSKILL")}
+            >
+              <BookOpen className="w-4 h-4 mr-2" aria-hidden />
+              Upskill{cooldowns.upskill > 0 ? ` · ${cooldowns.upskill}d` : ""}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={busyAction !== null || cooldowns.network > 0}
+              onClick={() => handleCareerAction("CAREER_NETWORK")}
+            >
+              <Users className="w-4 h-4 mr-2" aria-hidden />
+              Network{cooldowns.network > 0 ? ` · ${cooldowns.network}d` : ""}
+            </Button>
+            {isEmployed ? (
+              <Button
+                variant="outline"
+                className="text-destructive border-destructive/30"
+                disabled={busyAction !== null}
+                onClick={() => handleCareerAction("CAREER_QUIT")}
+              >
+                <LogOut className="w-4 h-4 mr-2" aria-hidden />
+                Resign
+              </Button>
+            ) : null}
+          </div>
+          <Button variant="link" className="mt-3 px-0" onClick={() => navigate("/education")}>
+            School & credentials →
+          </Button>
+        </DecisionPanel>
+      )}
+
+      {applications.length > 0 ? (
+        <section className="mt-8" data-testid="application-history">
+          <h2 className="font-display text-lg text-foreground mb-3">Application history</h2>
+          <ul className="divide-y divide-border rounded-lg border border-border bg-surface-1">
+            {applications.map((application) => (
+              <li key={application.id} className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground">{application.listingTitle}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {application.employerName} · Match {application.matchScore}% · {application.appliedDate}
                   </p>
-                  <p>
-                    Promotion: need {PROMOTION_MIN_MONTHS}+ months, performance ≥{PROMOTION_MIN_PERFORMANCE}%
-                    {cooldowns.promotion > 0 ? ` · cooldown ${cooldowns.promotion}d` : " · ready"}
-                  </p>
+                  {application.rejectionReason ? (
+                    <p className="text-xs text-destructive mt-1">{application.rejectionReason}</p>
+                  ) : null}
                 </div>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                {isEmployed ? (
-                  <>
-                    <Button
-                      className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
-                      disabled={
-                        busyAction !== null ||
-                        career.pipActive ||
-                        cooldowns.raise > 0 ||
-                        career.monthsInRole < RAISE_MIN_MONTHS ||
-                        career.performanceScore < RAISE_MIN_PERFORMANCE
-                      }
-                      onClick={() => handleCareerAction("CAREER_REQUEST_RAISE")}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Request Raise
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={
-                        busyAction !== null ||
-                        career.pipActive ||
-                        cooldowns.promotion > 0 ||
-                        career.monthsInRole < PROMOTION_MIN_MONTHS ||
-                        career.performanceScore < PROMOTION_MIN_PERFORMANCE
-                      }
-                      onClick={() => handleCareerAction("CAREER_REQUEST_PROMOTION")}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Request Promotion
-                    </Button>
-                  </>
-                ) : null}
-                <Button
-                  variant="outline"
-                  disabled={busyAction !== null || cooldowns.upskill > 0}
-                  onClick={() => handleCareerAction("CAREER_UPSKILL")}
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Upskill ($300){cooldowns.upskill > 0 ? ` · ${cooldowns.upskill}d` : ""}
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={busyAction !== null || cooldowns.network > 0}
-                  onClick={() => handleCareerAction("CAREER_NETWORK")}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Network ($150){cooldowns.network > 0 ? ` · ${cooldowns.network}d` : ""}
-                </Button>
-                {isEmployed ? (
-                  <Button
-                    variant="outline"
-                    className="text-orange-700 border-orange-200 hover:bg-orange-50"
-                    disabled={busyAction !== null}
-                    onClick={() => handleCareerAction("CAREER_QUIT")}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Resign
-                  </Button>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
+                <Badge variant="outline" className="shrink-0 w-fit">
+                  {application.status === "accepted" ? (
+                    <span className="inline-flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" aria-hidden /> Hired
+                    </span>
+                  ) : application.status === "rejected" ? (
+                    <span className="inline-flex items-center gap-1">
+                      <XCircle className="w-3 h-3" aria-hidden /> Declined
+                    </span>
+                  ) : (
+                    "Pending"
+                  )}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </LifeShell>
   );
 }

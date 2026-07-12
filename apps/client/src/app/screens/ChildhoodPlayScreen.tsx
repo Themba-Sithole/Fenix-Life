@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useSave } from "@/context/SaveContext";
@@ -96,35 +95,36 @@ export default function ChildhoodPlayScreen() {
 
   if (isLoading || !world) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
+      <div className="min-h-screen flex items-center justify-center bg-life-atmosphere text-foreground">
         Loading your teen years…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-8">
+    <main className="min-h-screen bg-life-atmosphere px-6 py-10">
       <div className="max-w-3xl mx-auto">
         <Button variant="outline" onClick={() => navigate("/")} className="mb-6" disabled={busy}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Menu
         </Button>
 
-        <Card className="border-[#2EC4B6]/20 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white rounded-t-lg">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-[#2EC4B6]" />
+        <section className="border-y border-border py-8">
+          <header>
+            <p className="text-xs font-medium tracking-[0.16em] text-fenix-gold">FORMATIVE YEARS</p>
+            <h1 className="mt-2 flex items-center gap-2 font-display text-3xl text-fenix-navy">
+              <Sparkles className="h-6 w-6 text-fenix-emerald" />
               Ages 13–17
-            </CardTitle>
-            <p className="text-gray-300 text-sm">
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
               Four guided choices shape your adolescence before adulthood begins.
             </p>
-            <p className="text-gray-400 text-xs">
+            <p className="mt-2 text-xs text-muted-foreground">
               Suggested path: {lifePathLabel(seed.lifePath)} — hints only, never a lock
             </p>
-          </CardHeader>
-          <CardContent className="p-8 space-y-6">
-            <div className="flex items-center justify-between text-sm text-gray-600">
+          </header>
+          <div className="mt-8 space-y-6">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Progress</span>
               <Badge variant="outline">
                 {completedCount} / {steps.length} years decided
@@ -133,10 +133,10 @@ export default function ChildhoodPlayScreen() {
 
             {currentStep ? (
               <>
-                <div className="rounded-lg border border-[#2EC4B6]/20 p-4 bg-white">
-                  <p className="text-xs text-gray-500 mb-1">Age {currentStep.age}</p>
-                  <h3 className="text-lg text-[#1C2541] font-medium mb-1">{currentStep.title}</h3>
-                  <p className="text-sm text-gray-600">{currentStep.prompt}</p>
+                <div className="border-l-2 border-fenix-gold bg-surface-1 px-5 py-4">
+                  <p className="mb-1 text-xs text-muted-foreground">Age {currentStep.age}</p>
+                  <h2 className="mb-1 font-display text-xl text-fenix-navy">{currentStep.title}</h2>
+                  <p className="text-sm text-muted-foreground">{currentStep.prompt}</p>
                 </div>
 
                 <div className="grid gap-3">
@@ -147,47 +147,47 @@ export default function ChildhoodPlayScreen() {
                       disabled={busy}
                       data-testid={`adolescence-choice-${choice.id}`}
                       onClick={() => handleChoice(choice.id)}
-                      className="text-left rounded-lg border border-[#2EC4B6]/20 p-4 bg-white hover:bg-[#2EC4B6]/5 hover:border-[#2EC4B6]/40 transition-colors disabled:opacity-50"
+                      className="group min-h-28 border border-border bg-surface-1 p-5 text-left transition-colors hover:border-fenix-emerald hover:bg-fenix-emerald/5 disabled:opacity-50"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-[#1C2541] font-medium">{choice.label}</p>
-                          <p className="text-sm text-gray-600 mt-1">{choice.description}</p>
-                          <p className="text-xs text-[#2EC4B6] mt-2">{choice.effectHint}</p>
+                          <p className="font-medium text-fenix-navy">{choice.label}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{choice.description}</p>
+                          <p className="mt-3 text-xs text-fenix-emerald">{choice.effectHint}</p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400 shrink-0 mt-1" />
+                        <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
                       </div>
                     </button>
                   ))}
                 </div>
               </>
             ) : (
-              <p className="text-sm text-gray-600">Finishing up…</p>
+              <p className="text-sm text-muted-foreground">Finishing up…</p>
             )}
 
             {error ? (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{error}</p>
+              <p role="alert" className="border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>
             ) : null}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-[#2EC4B6]/20">
+            <div className="flex flex-col gap-3 border-t border-border pt-2 sm:flex-row">
               <Button
                 variant="outline"
                 disabled={busy || completedCount > 0}
                 onClick={handleSkip}
                 data-testid="skip-adolescence-play"
-                className="flex-1 border-[#F4B400] text-[#B8860B] hover:bg-[#F4B400]/10"
+                className="flex-1 border-fenix-gold text-fenix-navy hover:bg-fenix-gold/10"
               >
                 Skip to summary (suggested path)
               </Button>
             </div>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-center text-xs text-muted-foreground">
               Skipping applies life-path defaults — you will review outcomes on the childhood summary screen.
             </p>
 
             {completedCount > 0 ? (
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-xs text-gray-500 mb-2">Decisions so far</p>
-                <ul className="text-sm text-gray-700 space-y-1">
+              <div className="border-l-2 border-fenix-emerald bg-fenix-emerald/5 px-5 py-4">
+                <p className="mb-2 text-xs text-muted-foreground">Decisions so far</p>
+                <ul className="space-y-1 text-sm text-muted-foreground">
                   {steps
                     .filter((step) => world.onboarding.adolescenceChoices[step.id])
                     .map((step) => {
@@ -202,9 +202,9 @@ export default function ChildhoodPlayScreen() {
                 </ul>
               </div>
             ) : null}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

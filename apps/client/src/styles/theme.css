@@ -2,46 +2,95 @@
 
 :root {
   --font-size: 16px;
-  
-  /* Fenix Life Color Palette */
-  --fenix-navy: #0B132B;
-  --fenix-blue: #1C2541;
-  --fenix-emerald: #2EC4B6;
-  --fenix-gold: #F4B400;
-  --fenix-light-gray: #F5F7FA;
-  
+
+  /* Fenix Life Color Palette (tokens only — never hardcode these hexes in JSX) */
+  --fenix-navy: #0b132b;
+  --fenix-blue: #1c2541;
+  --fenix-emerald: #2ec4b6;
+  --fenix-gold: #f4b400;
+  --fenix-light-gray: #f5f7fa;
+  --fenix-white: #ffffff;
+
   --background: var(--fenix-light-gray);
   --foreground: var(--fenix-navy);
-  --card: #ffffff;
+  --card: var(--fenix-white);
   --card-foreground: var(--fenix-navy);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover: var(--fenix-white);
+  --popover-foreground: var(--fenix-navy);
   --primary: var(--fenix-blue);
-  --primary-foreground: #ffffff;
+  --primary-foreground: var(--fenix-white);
   --secondary: var(--fenix-emerald);
-  --secondary-foreground: #ffffff;
+  --secondary-foreground: var(--fenix-white);
   --muted: #ececf0;
-  --muted-foreground: #717182;
+  --muted-foreground: #5c6370;
   --accent: var(--fenix-gold);
   --accent-foreground: var(--fenix-navy);
   --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
+  --destructive-foreground: var(--fenix-white);
+  --border: color-mix(in srgb, var(--fenix-navy) 12%, transparent);
   --input: transparent;
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
+  --ring: color-mix(in srgb, var(--fenix-emerald) 55%, var(--fenix-navy));
   --chart-1: var(--fenix-emerald);
   --chart-2: var(--fenix-gold);
   --chart-3: var(--fenix-blue);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
+  --chart-4: #7eb8da;
+  --chart-5: #e8a87c;
+  --radius: 0.5rem;
+
+  /* Status */
+  --status-success: var(--fenix-emerald);
+  --status-success-fg: var(--fenix-navy);
+  --status-warn: var(--fenix-gold);
+  --status-warn-fg: var(--fenix-navy);
+  --status-danger: var(--destructive);
+  --status-danger-fg: var(--fenix-white);
+  --status-info: var(--fenix-blue);
+  --status-info-fg: var(--fenix-white);
+
+  /* Surfaces (elevation 0–2 only) */
+  --surface-0: var(--background);
+  --surface-1: var(--fenix-white);
+  --surface-2: color-mix(in srgb, var(--fenix-white) 92%, var(--fenix-blue));
+  --surface-life: var(--fenix-light-gray);
+  --surface-life-ink: var(--fenix-navy);
+  --surface-tool: var(--fenix-white);
+  --surface-tool-ink: var(--fenix-navy);
+  --surface-brand: var(--fenix-navy);
+  --surface-brand-ink: var(--fenix-white);
+  --surface-crisis: color-mix(in srgb, var(--fenix-gold) 18%, var(--fenix-white));
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Motion */
+  --motion-fast: 150ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+
+  /* Layout */
+  --dock-height: 4.25rem;
+  --identity-height: 3.25rem;
+  --content-max: 72rem;
+  --content-tool-max: 64rem;
+
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
+  --sidebar-primary: var(--fenix-navy);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -51,29 +100,37 @@
 
 .dark {
   --background: var(--fenix-navy);
-  --foreground: #ffffff;
+  --foreground: var(--fenix-white);
   --card: var(--fenix-blue);
-  --card-foreground: #ffffff;
+  --card-foreground: var(--fenix-white);
   --popover: var(--fenix-blue);
-  --popover-foreground: #ffffff;
+  --popover-foreground: var(--fenix-white);
   --primary: var(--fenix-emerald);
   --primary-foreground: var(--fenix-navy);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --secondary: color-mix(in srgb, var(--fenix-emerald) 35%, var(--fenix-blue));
+  --secondary-foreground: var(--fenix-white);
+  --muted: color-mix(in srgb, var(--fenix-blue) 80%, black);
+  --muted-foreground: color-mix(in srgb, var(--fenix-white) 65%, transparent);
   --accent: var(--fenix-gold);
   --accent-foreground: var(--fenix-navy);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: var(--fenix-white);
+  --border: color-mix(in srgb, var(--fenix-white) 12%, transparent);
+  --input: color-mix(in srgb, var(--fenix-white) 8%, transparent);
+  --ring: var(--fenix-emerald);
+  --surface-0: var(--fenix-navy);
+  --surface-1: var(--fenix-blue);
+  --surface-2: color-mix(in srgb, var(--fenix-blue) 85%, var(--fenix-emerald));
+  --surface-life: var(--fenix-navy);
+  --surface-life-ink: var(--fenix-white);
+  --surface-tool: var(--fenix-blue);
+  --surface-tool-ink: var(--fenix-white);
+  --surface-brand: var(--fenix-navy);
+  --surface-brand-ink: var(--fenix-white);
+  --surface-crisis: color-mix(in srgb, var(--fenix-gold) 22%, var(--fenix-navy));
   --chart-1: var(--fenix-emerald);
   --chart-2: var(--fenix-gold);
-  --chart-3: var(--fenix-blue);
+  --chart-3: #7eb8da;
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
@@ -87,6 +144,10 @@
 }
 
 @theme inline {
+  --font-display: var(--fenix-font-display);
+  --font-ui: var(--fenix-font-ui);
+  --font-sans: var(--fenix-font-ui);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -113,6 +174,22 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-fenix-navy: var(--fenix-navy);
+  --color-fenix-blue: var(--fenix-blue);
+  --color-fenix-emerald: var(--fenix-emerald);
+  --color-fenix-gold: var(--fenix-gold);
+  --color-fenix-light-gray: var(--fenix-light-gray);
+  --color-status-success: var(--status-success);
+  --color-status-warn: var(--status-warn);
+  --color-status-danger: var(--status-danger);
+  --color-status-info: var(--status-info);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-life: var(--surface-life);
+  --color-surface-tool: var(--surface-tool);
+  --color-surface-brand: var(--surface-brand);
+  --color-surface-crisis: var(--surface-crisis);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -134,39 +211,38 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--fenix-font-ui);
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   html {
     font-size: var(--font-size);
   }
 
+  h1,
+  h2,
+  h3 {
+    font-family: var(--fenix-font-display);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
   h1 {
     font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
   }
 
   h2 {
     font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
   }
 
   h3 {
     font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
   }
 
   h4 {
+    font-family: var(--fenix-font-ui);
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
   label {
@@ -176,6 +252,7 @@
   }
 
   button {
+    font-family: var(--fenix-font-ui);
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
@@ -185,5 +262,84 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--fenix-font-display);
+  }
+
+  .font-ui {
+    font-family: var(--fenix-font-ui);
+  }
+
+  .bg-life-atmosphere {
+    background-color: var(--surface-life);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--fenix-emerald) 12%, transparent), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, color-mix(in srgb, var(--fenix-gold) 8%, transparent), transparent),
+      linear-gradient(180deg, color-mix(in srgb, var(--fenix-white) 40%, var(--fenix-light-gray)), var(--fenix-light-gray));
+  }
+
+  .bg-tool-atmosphere {
+    background-color: var(--surface-tool);
+    background-image:
+      linear-gradient(180deg, color-mix(in srgb, var(--fenix-blue) 4%, var(--fenix-white)), var(--fenix-light-gray));
+  }
+
+  .bg-brand-atmosphere {
+    background-color: var(--fenix-navy);
+    background-image:
+      radial-gradient(ellipse 70% 50% at 50% 0%, color-mix(in srgb, var(--fenix-blue) 80%, transparent), transparent),
+      linear-gradient(180deg, var(--fenix-navy), var(--fenix-blue) 55%, var(--fenix-navy));
+  }
+
+  .texture-grain {
+    position: relative;
+  }
+
+  .texture-grain::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    z-index: 0;
+  }
+
+  .motion-enter {
+    animation: fenix-fade-up var(--motion-base) var(--ease-out) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .motion-enter {
+      animation: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@keyframes fenix-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

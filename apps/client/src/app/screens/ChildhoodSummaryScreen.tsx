@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Calendar, FastForward, Sparkles } from "lucide-react";
 import { useSave } from "@/context/SaveContext";
@@ -13,10 +12,10 @@ import {
 } from "@fenix/domain";
 
 const CAPITAL_COLORS: Record<string, string> = {
-  human: "bg-[#F4B400]/10 text-[#B8860B] border-[#F4B400]/30",
-  social: "bg-[#1C2541]/10 text-[#1C2541] border-[#1C2541]/20",
-  financial: "bg-[#2EC4B6]/10 text-[#2EC4B6] border-[#2EC4B6]/30",
-  legacy: "bg-purple-50 text-purple-700 border-purple-200",
+  human: "bg-fenix-gold/10 text-fenix-navy border-fenix-gold/30",
+  social: "bg-fenix-blue/10 text-fenix-navy border-fenix-blue/20",
+  financial: "bg-fenix-emerald/10 text-fenix-navy border-fenix-emerald/30",
+  legacy: "bg-fenix-navy/10 text-fenix-navy border-fenix-navy/20",
 };
 
 export default function ChildhoodSummaryScreen() {
@@ -89,33 +88,34 @@ export default function ChildhoodSummaryScreen() {
 
   if (isLoading || !world) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
+      <div className="min-h-screen flex items-center justify-center bg-life-atmosphere text-foreground">
         Preparing your life story…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-8">
+    <main className="min-h-screen bg-life-atmosphere px-6 py-10">
       <div className="max-w-3xl mx-auto">
         <Button variant="outline" onClick={() => navigate("/")} className="mb-6" disabled={busy}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Menu
         </Button>
 
-        <Card className="border-[#2EC4B6]/20 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white rounded-t-lg">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-[#2EC4B6]" />
+        <section className="border-y border-border py-8">
+          <header>
+            <p className="text-xs font-medium tracking-[0.16em] text-fenix-gold">YOUR FIRST CHAPTER</p>
+            <h1 className="mt-2 flex items-center gap-2 font-display text-3xl text-fenix-navy">
+              <Sparkles className="w-6 h-6 text-fenix-emerald" />
               Childhood Summary
-            </CardTitle>
-            <p className="text-gray-300 text-sm">{summary.headline}</p>
-            <p className="text-gray-400 text-xs">
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">{summary.headline}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
               Suggested path: {lifePathLabel(seed.lifePath)} — hints only, never a lock
             </p>
-          </CardHeader>
-          <CardContent className="p-8 space-y-6">
-            <p className="text-gray-600 text-sm">
+          </header>
+          <div className="mt-8 space-y-6">
+            <p className="text-sm text-muted-foreground">
               Your early years shaped affinities and relationships. You now enter young adulthood at age 18
               with no job, no company, and no owned assets — the same rules as every other citizen.
             </p>
@@ -124,25 +124,25 @@ export default function ChildhoodSummaryScreen() {
               {summary.beats.map((beat) => (
                 <div
                   key={`${beat.ageRange}-${beat.title}`}
-                  className="rounded-lg border border-[#2EC4B6]/20 p-4 bg-white"
+                  className="border-l-2 border-fenix-emerald bg-surface-1 px-5 py-4"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
-                      <p className="text-xs text-gray-500">{beat.ageRange}</p>
-                      <h4 className="text-[#1C2541] font-medium">{beat.title}</h4>
+                      <p className="text-xs text-muted-foreground">{beat.ageRange}</p>
+                      <h4 className="font-medium text-fenix-navy">{beat.title}</h4>
                     </div>
                     <Badge variant="outline" className={CAPITAL_COLORS[beat.capital] ?? ""}>
                       {beat.capital}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600">{beat.description}</p>
+                  <p className="text-sm text-muted-foreground">{beat.description}</p>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-xs text-gray-500 mb-2">Background tradeoffs (not power)</p>
-              <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+            <div className="border-l-2 border-fenix-gold bg-fenix-gold/5 px-5 py-4">
+              <p className="mb-2 text-xs text-muted-foreground">Background tradeoffs (not power)</p>
+              <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
                 {summary.traitNotes.map((note) => (
                   <li key={note}>{note}</li>
                 ))}
@@ -150,15 +150,15 @@ export default function ChildhoodSummaryScreen() {
             </div>
 
             {error ? (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{error}</p>
+              <p role="alert" className="border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>
             ) : null}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#2EC4B6]/20">
+            <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row">
               <Button
                 onClick={() => handleContinue(false)}
                 disabled={busy}
                 data-testid="enter-adulthood"
-                className="flex-1 bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] hover:from-[#1C9B8F] hover:to-[#2EC4B6] text-white"
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 {busy ? "Continuing…" : "Enter Adulthood"}
@@ -167,18 +167,18 @@ export default function ChildhoodSummaryScreen() {
                 variant="outline"
                 onClick={() => handleContinue(true)}
                 disabled={busy}
-                className="flex-1 border-[#F4B400] text-[#B8860B] hover:bg-[#F4B400]/10"
+                className="flex-1 border-fenix-gold text-fenix-navy hover:bg-fenix-gold/10"
               >
                 <FastForward className="w-4 h-4 mr-2" />
                 Simulate First Year
               </Button>
             </div>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-center text-xs text-muted-foreground">
               Simulate First Year advances 365 in-game days — a gentle intro to time controls.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

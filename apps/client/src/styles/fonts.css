@@ -1,0 +1,30 @@
+@import '@fontsource/fraunces/400.css';
+@import '@fontsource/fraunces/600.css';
+@import '@fontsource/fraunces/700.css';
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+
+:root {
+  --fenix-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --fenix-font-ui: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+}
+
+html {
+  font-family: var(--fenix-font-ui);
+}
+
+body {
+  font-family: var(--fenix-font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--fenix-font-display);
+  font-optical-sizing: auto;
+}

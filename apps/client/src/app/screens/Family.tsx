@@ -1,19 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { ArrowLeft, Calendar, Gift, Heart } from "lucide-react";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { Calendar, Gift, Heart } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
 import { averageFamilyHappiness, familyDisplayName, formatMoney } from "@fenix/domain";
+import { DecisionPanel, EmptyState, LifeShell } from "../components/shell";
 
 export default function Family() {
-  const navigate = useNavigate();
-  const { world, isLoading, applyAction } = useSimulation();
+  const { world, applyAction, formattedDate } = useSimulation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
@@ -45,79 +40,50 @@ export default function Family() {
   const happiness = averageFamilyHappiness(family);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
-      <div className="relative h-48 overflow-hidden">
-        <ImageWithFallback
-          src="https://images.unsplash.com/photo-1603367563698-67012943fd67?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGZhbWlseSUyMGxpZmVzdHlsZXxlbnwxfHx8fDE3ODM3MDY3ODJ8MA&ixlib=rb-4.1.0&q=80&w=1080"
-          alt="Happy family"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0B132B]/80 to-[#1C2541]/60" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto px-6 w-full">
-            <Button variant="ghost" onClick={() => navigate("/home")} className="text-white hover:bg-white/10 mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-4xl text-white mb-2">Family</h1>
-              <p className="text-gray-300">{familyDisplayName(world.player.displayName)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-6">
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      dateLabel={formattedDate ?? undefined}
+      statusLine={familyDisplayName(world.player.displayName)}
+    >
+      <header className="mb-6">
+        <p className="text-sm text-muted-foreground">Relationships</p>
+        <h1 className="font-display text-3xl tracking-tight text-foreground">Family</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Care builds resilience across generations.</p>
+      </header>
         {actionError ? (
-          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+          <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{actionError}</p>
         ) : null}
-        <Card className="mb-6 border-[#2EC4B6]/20 shadow-lg bg-gradient-to-br from-[#1C2541] to-[#0B132B] text-white">
-          <CardContent className="p-8 grid md:grid-cols-3 gap-8">
-            <div>
-              <div className="text-sm text-gray-300 mb-2">Family Members</div>
-              <div className="text-4xl text-[#2EC4B6]">{family.members.length}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-300 mb-2">Family Happiness</div>
-              <div className="text-4xl text-[#F4B400]">{happiness}%</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-300 mb-2">Household Expenses</div>
-              <div className="text-4xl">{formatMoney(family.householdExpensesCents, currency)}</div>
-              <div className="text-sm text-gray-400">/month</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <dl className="mb-6 flex flex-wrap gap-x-8 gap-y-3 border-b border-border pb-5">
+          <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Members</dt><dd className="font-display text-xl text-foreground">{family.members.length}</dd></div>
+          <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Family happiness</dt><dd className="font-display text-xl text-foreground">{happiness}%</dd></div>
+          <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Household expenses</dt><dd className="font-display text-xl text-foreground">{formatMoney(family.householdExpensesCents, currency)}/mo</dd></div>
+        </dl>
+        {family.members.length === 0 ? (
+          <EmptyState title="No family members recorded" description="Relationships will appear as your life unfolds." />
+        ) : (
+          <ul className="divide-y divide-border">
           {family.members.map((member) => (
-            <Card key={member.id} className="border-[#2EC4B6]/20 shadow-lg">
-              <CardContent className="p-6">
+            <li key={member.id} className="py-5">
                 <div className="flex items-center gap-4">
-                  <Avatar className="w-16 h-16 border-2 border-[#2EC4B6]">
-                    <AvatarFallback className="bg-gradient-to-br from-[#2EC4B6] to-[#1C2541] text-white text-xl">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-lg font-display text-secondary-foreground">
                       {member.name
                         .split(/\s+/)
                         .map((part) => part[0])
                         .join("")
                         .slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+                  </span>
                   <div className="flex-1">
-                    <h3 className="text-xl text-[#1C2541]">{member.name}</h3>
-                    <Badge className="mt-1 bg-[#2EC4B6]/20 text-[#2EC4B6] border-[#2EC4B6]/30">
-                      {member.relationship}
-                    </Badge>
-                    <p className="text-sm text-gray-500 mt-2">Age {member.ageYears}</p>
+                    <h2 className="font-display text-xl text-foreground">{member.name}</h2>
+                    <p className="text-sm capitalize text-muted-foreground">{member.relationship} · Age {member.ageYears}</p>
                   </div>
-                  <div className="text-3xl">{member.emoji}</div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 max-w-md">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Happiness</span>
-                    <span>{member.happiness}%</span>
+                    <span className="text-muted-foreground">Relationship strength</span>
+                    <span className="text-foreground">{member.happiness}%</span>
                   </div>
-                  <Progress value={member.happiness} className="h-2 bg-[#F4B400]" />
+                  <Progress value={member.happiness} className="h-2 bg-fenix-gold" />
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button
@@ -139,12 +105,11 @@ export default function Family() {
                     Visit
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </li>
           ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
+          </ul>
+        )}
+        <DecisionPanel title="Make time together" description="A planned event costs $200 and affects the household." className="mt-6">
           <Button
             variant="outline"
             className="h-14"
@@ -152,10 +117,9 @@ export default function Family() {
             onClick={() => handleFamilyAction("FAMILY_PLAN_EVENT")}
           >
             <Heart className="w-4 h-4 mr-2" />
-            Plan Family Event ($200)
+            Plan family event
           </Button>
-        </div>
-      </div>
-    </div>
+        </DecisionPanel>
+    </LifeShell>
   );
 }

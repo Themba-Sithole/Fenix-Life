@@ -1,25 +1,55 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import { 
-  User, Heart, Zap, Brain, TrendingUp, DollarSign, Building2, 
-  Smartphone, Map, Users, Briefcase, Home, Calendar,
-  Bell, Sun, Menu, GraduationCap, Settings, Trophy
+import { motion } from "motion/react";
+import {
+  Briefcase,
+  Building2,
+  ChevronDown,
+  GraduationCap,
+  Heart,
+  Map,
+  SkipForward,
+  Smartphone,
 } from "lucide-react";
+import { Button } from "../components/ui/button";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { estimateCatchUpDays } from '@fenix/simulation-engine';
-import { isCatchUpApplied } from '@/lib/catch-up-session';
-import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, cyclePhaseLabel, getLifePathHintActions, lifePathHintTitle, deriveBlockingGates, hasHardBlockingGate, type TimeScale } from "@fenix/domain";
+import { estimateCatchUpDays } from "@fenix/simulation-engine";
+import { isCatchUpApplied } from "@/lib/catch-up-session";
+import {
+  deriveBlockingGates,
+  employmentStatusLabel,
+  formatMoney,
+  formatOriginLocation,
+  getLifePathHintActions,
+  hasHardBlockingGate,
+  lifePathHintTitle,
+  totalNetWorthCents,
+  type TimeScale,
+} from "@fenix/domain";
 import { FiveCapitalsStrip } from "../components/FiveCapitalsStrip";
-import { HomeNavSheet } from "../components/HomeNavSheet";
 import { LifeGateBanner } from "../components/LifeGateBanner";
-import { Pause, Play, SkipForward } from "lucide-react";
+import {
+  CrisisModal,
+  ErrorState,
+  LifeShell,
+  LoadingState,
+  fadeUp,
+  motionDurations,
+  preferReducedMotion,
+} from "../components/shell";
+import { cn } from "../components/ui/utils";
 
 const TIME_SCALES: TimeScale[] = [1, 2, 5];
+
+const DESTINATIONS = [
+  { label: "City", icon: Map, path: "/city" },
+  { label: "Career", icon: Briefcase, path: "/career" },
+  { label: "Education", icon: GraduationCap, path: "/education" },
+  { label: "Phone", icon: Smartphone, path: "/phone" },
+  { label: "Money", icon: Building2, path: "/banking" },
+  { label: "Family", icon: Heart, path: "/family" },
+] as const;
 
 export default function HomeScreen() {
   const navigate = useNavigate();
@@ -41,36 +71,35 @@ export default function HomeScreen() {
   } = useSimulation();
   const [advancing, setAdvancing] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
-  const [navOpen, setNavOpen] = useState(false);
+  const [financesOpen, setFinancesOpen] = useState(false);
+  const [capitalsOpen, setCapitalsOpen] = useState(false);
+  const [crisisDismissed, setCrisisDismissed] = useState(false);
+  const reduce = preferReducedMotion();
 
   useEffect(() => {
     if (!isLoading && !activeSave) {
-      navigate('/continue', { replace: true });
+      navigate("/continue", { replace: true });
     }
   }, [activeSave, isLoading, navigate]);
 
   useEffect(() => {
     if (!simLoading && world) {
       if (world.deathPending) {
-        navigate('/death', { replace: true });
+        navigate("/death", { replace: true });
         return;
       }
-      const hardGates = deriveBlockingGates(world).filter((gate) => gate.severity === 'hard');
-      if (hardGates.some((gate) => gate.kind === 'loan_default' || gate.kind === 'tuition_overdue' || gate.kind === 'tax_filing_overdue')) {
-        // Stay on home with banner — BitLife popup style; do not free-play past crisis
-      }
       if (!world.onboarding.adolescencePlayCompleted) {
-        navigate('/childhood-play', { replace: true });
+        navigate("/childhood-play", { replace: true });
       } else if (!world.onboarding.childhoodSummarySeen) {
-        navigate('/childhood-summary', { replace: true });
+        navigate("/childhood-summary", { replace: true });
       } else if (activeSave?.lastPlayedAt && !isCatchUpApplied(activeSave.id)) {
         const catchUpDays = estimateCatchUpDays(activeSave.lastPlayedAt);
         if (catchUpDays > 0) {
-          navigate('/while-away', { replace: true });
+          navigate("/while-away", { replace: true });
         }
       }
     }
-  }, [simLoading, world, navigate, activeSave?.lastPlayedAt]);
+  }, [simLoading, world, navigate, activeSave?.lastPlayedAt, activeSave?.id]);
 
   if (!isLoading && !activeSave) {
     return null;
@@ -78,33 +107,39 @@ export default function HomeScreen() {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F7FA] text-[#1C2541] p-6 gap-4">
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4 max-w-md text-center">{loadError}</p>
-        <Button onClick={() => reloadSimulation()} className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">Retry Loading</Button>
-        <Button variant="outline" onClick={() => navigate("/continue")}>Back to Saves</Button>
-      </div>
+      <ErrorState
+        message={loadError}
+        onRetry={() => reloadSimulation()}
+        secondaryAction={
+          <Button variant="outline" onClick={() => navigate("/continue")}>
+            Back to Saves
+          </Button>
+        }
+        className="min-h-screen"
+      />
     );
   }
 
   if (isLoading || simLoading || !world) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] text-[#1C2541]">
-        Loading your life…
-      </div>
-    );
+    return <LoadingState label="Loading your life…" className="min-h-screen" />;
   }
 
   const displayDate = formattedDate ?? (activeSave ? formatSaveDate(activeSave.lastPlayedAt) : "");
   const locationLabel = formatOriginLocation(world.origin);
-  const nationalityLabel = getCountryName(world.origin.nationalityCode);
   const currency = world.origin.currency;
-  const traits = world.player.traits;
-  const company = world.company;
   const career = world.career;
   const netWorth = totalNetWorthCents(world.banking);
-  const checking = world.banking.accounts.find((a) => a.id === 'checking');
-  const savings = world.banking.accounts.find((a) => a.id === 'savings');
-  const recentEvents = world.events.slice(0, 4);
+  const checking = world.banking.accounts.find((a) => a.id === "checking");
+  const lifePathHints = getLifePathHintActions(world.lifePath);
+  const showLifePathHints = !world.onboarding.lifePathHintsSeen;
+  const gates = deriveBlockingGates(world);
+  const hardGates = gates.filter((g) => g.severity === "hard");
+  const primaryGate = hardGates[0] ?? gates[0];
+  const showCrisisModal = Boolean(primaryGate && hardGates.length > 0 && !crisisDismissed);
+  const statusOneLiner =
+    career.status === "employed" && career.jobTitle
+      ? career.jobTitle
+      : employmentStatusLabel(career.status);
 
   async function handleAdvanceDay() {
     setSimError(null);
@@ -121,9 +156,7 @@ export default function HomeScreen() {
   async function handleTimeScale(scale: TimeScale) {
     setSimError(null);
     try {
-      if (isPaused) {
-        await setPaused(false);
-      }
+      if (isPaused) await setPaused(false);
       await setTimeScale(scale);
     } catch (error) {
       setSimError(error instanceof Error ? error.message : "Could not change time scale.");
@@ -139,29 +172,6 @@ export default function HomeScreen() {
     }
   }
 
-  const stats = [
-    { label: "Happiness", value: traits.happiness, icon: Heart, color: "text-[#2EC4B6]", bgColor: "bg-[#2EC4B6]" },
-    { label: "Health", value: traits.health, icon: Heart, color: "text-red-400", bgColor: "bg-red-400" },
-    { label: "Energy", value: traits.energy, icon: Zap, color: "text-[#F4B400]", bgColor: "bg-[#F4B400]" },
-    { label: "Stress", value: traits.stress, icon: Brain, color: "text-orange-400", bgColor: "bg-orange-400" },
-  ];
-
-  const quickActions = [
-    { label: "Phone", icon: Smartphone, path: "/phone", color: "bg-[#2EC4B6]" },
-    { label: "City", icon: Map, path: "/city", color: "bg-[#1C2541]" },
-    { label: "Family", icon: Users, path: "/family", color: "bg-[#F4B400]" },
-    { label: "Company", icon: Briefcase, path: "/company", color: "bg-[#2EC4B6]" },
-    { label: "Stocks", icon: TrendingUp, path: "/stocks", color: "bg-[#F4B400]" },
-    { label: "Property", icon: Home, path: "/real-estate", color: "bg-[#1C2541]" },
-    { label: "Education", icon: GraduationCap, path: "/education", color: "bg-[#2EC4B6]" },
-    { label: "Career", icon: Briefcase, path: "/career", color: "bg-[#1C2541]" },
-    { label: "Timeline", icon: Trophy, path: "/timeline", color: "bg-[#F4B400]" },
-  ];
-
-  const lifePathHints = getLifePathHintActions(world.lifePath);
-  const highlightedPaths = new Set(lifePathHints.map((hint) => hint.path));
-  const showLifePathHints = !world.onboarding.lifePathHintsSeen;
-
   async function handleDismissHints() {
     setSimError(null);
     try {
@@ -172,347 +182,221 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
-      <HomeNavSheet open={navOpen} onOpenChange={setNavOpen} />
-      <div className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white p-4 shadow-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => setNavOpen(true)}>
-              <Menu className="w-5 h-5" />
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      dateLabel={displayDate}
+      paused={isPaused}
+      statusLine={`${locationLabel} · Day ${tickCount + 1}${isSaving ? " · Saving…" : ""}${
+        hasHardBlockingGate(world) ? " · Crisis" : ""
+      }`}
+      onTogglePause={handleTogglePause}
+    >
+      <CrisisModal
+        open={showCrisisModal}
+        severity="hard"
+        title="Resolve this before time moves"
+        message={primaryGate?.message ?? ""}
+        primaryLabel={primaryGate?.route ? "Resolve" : undefined}
+        onPrimary={
+          primaryGate?.route
+            ? () => {
+                setCrisisDismissed(true);
+                navigate(primaryGate.route!);
+              }
+            : undefined
+        }
+        secondaryLabel="View details"
+        onSecondary={() => setCrisisDismissed(true)}
+      />
+
+      <motion.section
+        className="motion-enter"
+        initial={reduce ? false : fadeUp.initial}
+        animate={reduce ? undefined : fadeUp.animate}
+        transition={{ duration: motionDurations.base }}
+      >
+        <p className="text-sm text-muted-foreground">Your life today</p>
+        <h1 className="font-display mt-1 text-3xl sm:text-4xl text-foreground tracking-tight">
+          Age {world.player.ageYears}
+        </h1>
+        <p className="mt-2 max-w-xl text-base text-foreground/80">
+          {statusOneLiner}
+          {career.employerName ? ` at ${career.employerName}` : ""}. {displayDate}.
+        </p>
+      </motion.section>
+
+      {simError ? (
+        <p className="mt-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+          {simError}
+        </p>
+      ) : null}
+
+      <div className="mt-4">
+        <LifeGateBanner world={world} />
+      </div>
+
+      <section className="mt-6" aria-label="Time controls">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleTogglePause}
+            aria-pressed={isPaused}
+          >
+            {isPaused ? "Resume" : "Pause"}
+          </Button>
+          {TIME_SCALES.map((scale) => (
+            <Button
+              key={scale}
+              type="button"
+              variant={timeScale === scale && !isPaused ? "default" : "outline"}
+              size="sm"
+              className={
+                timeScale === scale && !isPaused
+                  ? "bg-secondary text-secondary-foreground hover:opacity-90"
+                  : ""
+              }
+              onClick={() => handleTimeScale(scale)}
+            >
+              {scale}x
             </Button>
+          ))}
+          <Button
+            type="button"
+            size="sm"
+            className="bg-secondary text-secondary-foreground hover:opacity-90"
+            onClick={handleAdvanceDay}
+            disabled={isPaused || advancing || isSaving || hasHardBlockingGate(world)}
+            data-testid="advance-day"
+          >
+            <SkipForward className="mr-1.5 h-4 w-4" aria-hidden />
+            {advancing ? "Advancing…" : "Advance 1 Day"}
+          </Button>
+        </div>
+      </section>
+
+      {showLifePathHints ? (
+        <section className="mt-8 border-t border-border pt-6">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h1 className="text-xl">{world.player.displayName}</h1>
-              <p className="text-sm text-gray-300">
-                {locationLabel} · Day {tickCount + 1} · {isPaused ? 'Paused' : `${timeScale}x`}
-                {isSaving ? ' · Saving…' : ''}
-                {hasHardBlockingGate(world) ? ' · Crisis locked' : ''}
+              <h2 className="font-display text-xl text-foreground">
+                {lifePathHintTitle(world.lifePath)}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                First steps — any path works from any background.
               </p>
             </div>
+            <Button variant="ghost" size="sm" onClick={handleDismissHints}>
+              Dismiss
+            </Button>
           </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#2EC4B6]" />
-              <span className="text-sm">{displayDate}</span>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {lifePathHints.map((hint) => (
+              <li key={hint.path}>
+                <button
+                  type="button"
+                  onClick={() => navigate(hint.path)}
+                  className="w-full rounded-lg border border-accent/30 bg-surface-1 px-4 py-3 text-left transition-colors hover:border-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <p className="font-medium text-foreground">{hint.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{hint.reason}</p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-8" aria-label="Go somewhere">
+        <h2 className="font-display text-xl text-foreground">Where to?</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Six doors into your day.</p>
+        <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3" data-testid="home-quick-actions">
+          {DESTINATIONS.map((dest, index) => (
+            <motion.li
+              key={dest.path}
+              initial={reduce ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: reduce ? 0 : 0.04 * index, duration: motionDurations.base }}
+            >
+              <button
+                type="button"
+                onClick={() => navigate(dest.path)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border border-border bg-surface-1 px-4 py-3.5 text-left",
+                  "transition-colors hover:border-secondary/50 hover:bg-surface-2",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                )}
+              >
+                <dest.icon className="h-5 w-5 text-secondary shrink-0" aria-hidden />
+                <span className="font-medium text-foreground">{dest.label}</span>
+              </button>
+            </motion.li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mt-8 border-t border-border pt-4">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          aria-expanded={financesOpen}
+          onClick={() => setFinancesOpen((v) => !v)}
+        >
+          <span className="font-display text-lg text-foreground">Finances</span>
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            {formatMoney(netWorth, currency)}
+            <ChevronDown
+              className={cn("h-4 w-4 transition-transform", financesOpen && "rotate-180")}
+              aria-hidden
+            />
+          </span>
+        </button>
+        {financesOpen ? (
+          <div className="mt-2 space-y-2 pb-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Checking</span>
+              <span className="tabular-nums">{formatMoney(checking?.balanceCents ?? 0, currency)}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-[#F4B400]" />
-              <span className="text-sm">
-                {cyclePhaseLabel(world.economy.cyclePhase)} · Tech {world.economy.techSectorIndex.toFixed(1)}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Monthly burn</span>
+              <span className="tabular-nums">
+                −{formatMoney(world.banking.monthlyExpensesCents, currency)}
               </span>
             </div>
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10" onClick={() => navigate('/settings')} title="Settings">
-              <Settings className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/10" onClick={() => navigate('/news')}>
-              <Bell className="w-5 h-5" />
-              {world.events.length > 0 && (
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-[#2EC4B6] text-xs">
-                  {Math.min(world.events.length, 9)}
-                </Badge>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 pt-4">
-        {simError ? (
-          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{simError}</p>
-        ) : null}
-        <Card className="border-[#2EC4B6]/20 shadow-sm">
-          <CardContent className="p-4 flex flex-wrap items-center gap-3">
-            <span className="text-sm text-[#1C2541] font-medium">Time Controls</span>
             <Button
+              type="button"
               variant="outline"
               size="sm"
-              onClick={handleTogglePause}
+              className="mt-2"
+              onClick={() => navigate("/banking")}
             >
-              {isPaused ? (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Resume
-                </>
-              ) : (
-                <>
-                  <Pause className="w-4 h-4 mr-2" />
-                  Pause
-                </>
-              )}
+              Open bank portal
             </Button>
-            {TIME_SCALES.map((scale) => (
-              <Button
-                key={scale}
-                variant={timeScale === scale && !isPaused ? 'default' : 'outline'}
-                size="sm"
-                className={timeScale === scale && !isPaused ? 'bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white' : ''}
-                onClick={() => handleTimeScale(scale)}
-              >
-                {scale}x
-              </Button>
-            ))}
-            <Button
-              size="sm"
-              className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
-              onClick={handleAdvanceDay}
-              disabled={isPaused || advancing || isSaving}
-              data-testid="advance-day"
-            >
-              <SkipForward className="w-4 h-4 mr-2" />
-              {advancing ? 'Advancing…' : 'Advance 1 Day'}
-            </Button>
-            <span className="text-sm text-gray-500 ml-auto">
-              Inflation {(world.economy.inflationRateAnnual * 100).toFixed(1)}% · {displayDate}
-            </span>
-          </CardContent>
-        </Card>
-
-        <div className="mt-4">
-          <FiveCapitalsStrip world={world} />
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto p-6">
-        <LifeGateBanner world={world} />
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="border-[#2EC4B6]/20 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-24 h-24 mb-4 rounded-full bg-gradient-to-br from-[#2EC4B6] to-[#1C9B8F] flex items-center justify-center border-4 border-[#2EC4B6] shadow-lg">
-                    <User className="w-12 h-12 text-white" />
-                  </div>
-                  <h2 className="text-2xl text-[#1C2541] mb-1">{world.player.displayName}</h2>
-                  <Badge className="mb-2 bg-[#F4B400] text-white">Age {world.player.ageYears}</Badge>
-                  <p className="text-xs text-gray-500 mb-4">
-                    Citizen of {nationalityLabel} · {employmentStatusLabel(career.status)}
-                  </p>
-                  
-                  <div className="w-full space-y-3 mb-4">
-                    {stats.map((stat) => (
-                      <div key={stat.label}>
-                        <div className="flex justify-between items-center mb-1">
-                          <div className="flex items-center gap-2">
-                            <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                            <span className="text-sm text-gray-600">{stat.label}</span>
-                          </div>
-                          <span className="text-sm text-[#1C2541]">{stat.value}%</span>
-                        </div>
-                        <Progress value={stat.value} className={`h-2 ${stat.bgColor}`} />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="w-full pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">Openness (CDPS)</span>
-                      <TrendingUp className="w-4 h-4 text-[#2EC4B6]" />
-                    </div>
-                    <Progress value={traits.openness} className="h-2 bg-[#2EC4B6]" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-[#F4B400]/20 shadow-lg bg-gradient-to-br from-[#1C2541] to-[#0B132B] text-white">
-              <CardContent className="p-6">
-                <h3 className="text-lg mb-4 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-[#F4B400]" />
-                  Financial Overview
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm text-gray-300 mb-1">Net Worth</div>
-                    <div className="text-3xl text-[#2EC4B6]">{formatMoney(netWorth, currency)}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                    <div>
-                      <div className="text-xs text-gray-400 mb-1">Checking</div>
-                      <div className="text-lg">{formatMoney(checking?.balanceCents ?? 0, currency)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-400 mb-1">Savings</div>
-                      <div className="text-lg">{formatMoney(savings?.balanceCents ?? 0, currency)}</div>
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t border-white/10">
-                    <div className="text-xs text-gray-400 mb-1">Monthly Expenses</div>
-                    <div className="text-lg text-orange-300">-{formatMoney(world.banking.monthlyExpensesCents, currency)}</div>
-                  </div>
-                  <Button 
-                    onClick={() => navigate("/banking")}
-                    className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
-                  >
-                    View Banking
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-[#2EC4B6]/20 shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-lg mb-4 flex items-center gap-2 text-[#1C2541]">
-                  <Building2 className="w-5 h-5 text-[#2EC4B6]" />
-                  {company ? company.name : "No Company Yet"}
-                </h3>
-                {company ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Stage</span>
-                    <span className="text-[#2EC4B6]">{companyStageLabel(company.stage)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Valuation</span>
-                    <span className="text-[#2EC4B6]">{formatMoney(company.valuationCents, currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Monthly Profit</span>
-                    <span className={companyMonthlyProfitCents(company) >= 0 ? "text-[#2EC4B6]" : "text-orange-500"}>
-                      {formatMoney(companyMonthlyProfitCents(company), currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Employees</span>
-                    <span className="text-[#1C2541]">{company.employeeCount}</span>
-                  </div>
-                  <Button 
-                    onClick={() => navigate("/employees")}
-                    variant="outline"
-                    className="w-full border-[#F4B400] text-[#F4B400] hover:bg-[#F4B400] hover:text-white mt-2"
-                  >
-                    Manage Employees
-                  </Button>
-                  <Button 
-                    onClick={() => navigate("/company")}
-                    variant="outline"
-                    className="w-full border-[#2EC4B6] text-[#2EC4B6] hover:bg-[#2EC4B6] hover:text-white mt-2"
-                  >
-                    Company Dashboard
-                  </Button>
-                </div>
-                ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-600">
-                    You start unemployed with no company. Explore career, education, or found a venture when you are ready.
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Career</span>
-                    <span className="text-[#1C2541]">{employmentStatusLabel(career.status)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Status</span>
-                    <span className="text-gray-700">{career.jobTitle}</span>
-                  </div>
-                  <Button 
-                    onClick={() => navigate("/company")}
-                    className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white mt-2"
-                  >
-                    Found a Company
-                  </Button>
-                </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
+        ) : null}
+      </section>
 
-          <div className="lg:col-span-2 space-y-6">
-            {showLifePathHints ? (
-            <Card className="border-[#F4B400]/40 shadow-lg bg-[#FFFBEB]/50">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <h3 className="text-xl text-[#1C2541]">{lifePathHintTitle(world.lifePath)}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Pinned suggestions for your first visit — any path works from any background.
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={handleDismissHints} className="text-gray-500 shrink-0">
-                    Dismiss
-                  </Button>
-                </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {lifePathHints.map((hint) => (
-                    <button
-                      key={hint.path}
-                      type="button"
-                      onClick={() => navigate(hint.path)}
-                      className="text-left rounded-lg border border-[#F4B400]/30 bg-white p-4 hover:border-[#2EC4B6] hover:shadow-md transition-all"
-                    >
-                      <p className="font-medium text-[#1C2541]">{hint.label}</p>
-                      <p className="text-xs text-gray-500 mt-1">{hint.reason}</p>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            ) : null}
-
-            <Card className="border-[#2EC4B6]/20 shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-xl text-[#1C2541] mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-4 gap-4" data-testid="home-quick-actions">
-                  {quickActions.map((action) => (
-                    <Button
-                      key={action.label}
-                      onClick={() => navigate(action.path)}
-                      className={`${action.color} h-24 flex flex-col items-center justify-center gap-2 text-white hover:opacity-90 transition-opacity relative ${
-                        showLifePathHints && highlightedPaths.has(action.path)
-                          ? "ring-2 ring-[#F4B400] ring-offset-2"
-                          : ""
-                      }`}
-                    >
-                      {showLifePathHints && highlightedPaths.has(action.path) ? (
-                        <Badge className="absolute -top-2 -right-2 bg-[#F4B400] text-[#1C2541] text-[10px]">
-                          Start
-                        </Badge>
-                      ) : null}
-                      <action.icon className="w-6 h-6" />
-                      <span className="text-xs">{action.label}</span>
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-[#2EC4B6]/20 shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-xl text-[#1C2541] mb-4">News & Activity</h3>
-                <div className="space-y-3">
-                  {recentEvents.length === 0 ? (
-                    <p className="text-sm text-gray-500">Advance time to generate headlines.</p>
-                  ) : (
-                    recentEvents.map((activity) => (
-                      <div
-                        key={activity.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => navigate("/news")}
-                        onKeyDown={(event) => event.key === "Enter" && navigate("/news")}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                      >
-                        <div className="text-xs text-gray-500 min-w-[80px]">{activity.date}</div>
-                        <div className="flex-1 text-sm text-gray-700">{activity.headline}</div>
-                        <Badge
-                          variant="outline"
-                          className={
-                            activity.tone === "success"
-                              ? "bg-[#2EC4B6]/10 text-[#2EC4B6] border-[#2EC4B6]/30"
-                              : activity.tone === "warning"
-                              ? "bg-orange-50 text-orange-600 border-orange-200"
-                              : "bg-blue-50 text-blue-600 border-blue-200"
-                          }
-                        >
-                          {activity.category}
-                        </Badge>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+      <section className="mt-4 border-t border-border pt-4">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          aria-expanded={capitalsOpen}
+          onClick={() => setCapitalsOpen((v) => !v)}
+        >
+          <span className="font-display text-lg text-foreground">Five Capitals</span>
+          <ChevronDown
+            className={cn("h-4 w-4 text-muted-foreground transition-transform", capitalsOpen && "rotate-180")}
+            aria-hidden
+          />
+        </button>
+        {capitalsOpen ? (
+          <div className="mt-2">
+            <FiveCapitalsStrip world={world} />
           </div>
-        </div>
-      </div>
-    </div>
+        ) : null}
+      </section>
+    </LifeShell>
   );
 }

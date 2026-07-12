@@ -91,27 +91,27 @@ export function HomeTourOverlay() {
       className="fixed inset-x-0 bottom-0 z-50 p-4 pointer-events-none"
       data-testid="home-tour-overlay"
     >
-      <Card className="max-w-2xl mx-auto border-[#2EC4B6]/30 shadow-2xl pointer-events-auto bg-white/95 backdrop-blur">
+      <Card className="max-w-2xl mx-auto border-accent/30 shadow-2xl pointer-events-auto bg-white/95 backdrop-blur">
         <CardContent className="p-5 space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <Badge variant="outline" className="mb-2">
                 Guided tour · {progressLabel}
               </Badge>
-              <h3 className="text-lg text-[#1C2541] font-medium">{step.title}</h3>
+              <h3 className="text-lg text-secondary font-medium">{step.title}</h3>
               <p className="text-sm text-gray-600 mt-1">{step.description}</p>
-              <p className="text-xs text-[#2EC4B6] mt-2">{step.teachingMoment}</p>
+              <p className="text-xs text-accent mt-2">{step.teachingMoment}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
             {needsNavigation && !isAdvanceStep ? (
               <Button
-                className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                className="bg-accent hover:bg-accent/80 text-white"
                 onClick={handleOpenTarget}
                 data-testid="home-tour-open-target"
               >
-                Open {step.targetPath.replace("/", "")}
+                Open {(step.targetPath ?? "").replace("/", "")}
               </Button>
             ) : null}
             {isAdvanceStep && !onHome ? (
@@ -121,7 +121,7 @@ export function HomeTourOverlay() {
             ) : null}
             {!needsNavigation || isAdvanceStep ? (
               <Button
-                className="bg-[#1C2541] hover:bg-[#0B132B] text-white"
+                className="bg-secondary hover:bg-primary text-white"
                 onClick={handleNext}
                 disabled={busy || (isAdvanceStep && tickCount === advanceBaselineRef.current && onHome)}
                 data-testid="home-tour-next"

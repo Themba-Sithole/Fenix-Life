@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { SaveProvider } from '@/context/SaveContext';
 import { SimulationProvider, useSimulation } from '@/context/SimulationContext';
 import { HomeTourOverlay } from '../components/HomeTourOverlay';
+import { Toaster } from '../components/ui/sonner';
 
 function OfflineSaveBanner() {
   const { isPlayingOffline, isSaving, syncNow } = useSimulation();
@@ -20,7 +21,7 @@ function OfflineSaveBanner() {
   }
 
   return (
-    <div className="sticky top-0 z-50 bg-amber-500 text-[#1C2541] text-center text-sm py-2 px-4 shadow-md flex flex-wrap items-center justify-center gap-3">
+    <div className="sticky top-0 z-50 bg-accent text-accent-foreground text-center text-sm py-2 px-4 shadow-md flex flex-wrap items-center justify-center gap-3">
       <span>
         Playing offline — progress is saved locally
         {syncError ? ` · ${syncError}` : ''}
@@ -45,6 +46,7 @@ function AppShell() {
       <OfflineSaveBanner />
       <Outlet />
       <HomeTourOverlay />
+      <Toaster />
     </>
   );
 }

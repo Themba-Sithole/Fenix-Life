@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { FenixLogo } from '../components/shell';
 
 export default function AuthScreen() {
   const navigate = useNavigate();
@@ -51,33 +51,34 @@ export default function AuthScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B] p-6">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen bg-brand-atmosphere px-6 py-10 text-white">
+      <div className="mx-auto w-full max-w-md">
         <Button
           variant="ghost"
-          className="mb-4 text-[#2EC4B6] hover:text-white hover:bg-white/10"
+          className="mb-10 text-white/70 hover:bg-white/10 hover:text-white"
           onClick={() => navigate('/')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Menu
         </Button>
 
-        <Card className="bg-[#1C2541]/90 border-[#2EC4B6]/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-white">Fenix Life Account</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+        <section className="border-y border-white/15 py-8">
+          <FenixLogo variant="wordmark" tone="light" className="justify-center" />
+          <div className="mt-8">
+            <p className="font-display text-2xl">Your life, saved securely.</p>
+            <p className="mt-2 text-sm text-white/65">Sign in to continue the stories you have built.</p>
+          </div>
+          <Tabs defaultValue="login" className="mt-8">
+              <TabsList className="grid w-full grid-cols-2 bg-white/10">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
 
-              {error && (
-                <div className="mb-4 rounded-md border border-red-400/40 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+              {error ? (
+                <div role="alert" className="mb-4 rounded-md border border-destructive/60 bg-destructive/15 px-3 py-2 text-sm text-white">
                   {error}
                 </div>
-              )}
+              ) : null}
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -90,7 +91,7 @@ export default function AuthScreen() {
                       required
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className="border-[#2EC4B6]/30 bg-[#0B132B]/50 text-white"
+                      className="border-white/25 bg-white/10 text-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -103,13 +104,13 @@ export default function AuthScreen() {
                       minLength={8}
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className="border-[#2EC4B6]/30 bg-[#0B132B]/50 text-white"
+                      className="border-white/25 bg-white/10 text-white"
                     />
                   </div>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-[#2EC4B6] to-[#1C9B8F] text-white"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {isSubmitting ? 'Signing in…' : 'Sign In'}
                   </Button>
@@ -126,7 +127,7 @@ export default function AuthScreen() {
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Optional"
-                      className="border-[#2EC4B6]/30 bg-[#0B132B]/50 text-white"
+                      className="border-white/25 bg-white/10 text-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -138,7 +139,7 @@ export default function AuthScreen() {
                       required
                       value={registerEmail}
                       onChange={(e) => setRegisterEmail(e.target.value)}
-                      className="border-[#2EC4B6]/30 bg-[#0B132B]/50 text-white"
+                      className="border-white/25 bg-white/10 text-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -151,22 +152,25 @@ export default function AuthScreen() {
                       minLength={8}
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
-                      className="border-[#2EC4B6]/30 bg-[#0B132B]/50 text-white"
+                      className="border-white/25 bg-white/10 text-white"
                     />
                   </div>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-[#F4B400] to-[#2EC4B6] text-[#0B132B]"
+                    className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
                   >
                     {isSubmitting ? 'Creating account…' : 'Create Account'}
                   </Button>
                 </form>
               </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+          </Tabs>
+          <div className="mt-8 flex items-center gap-3 border-t border-white/15 pt-5 text-xs text-white/55">
+            <ShieldCheck className="h-4 w-4 text-fenix-emerald" />
+            Your saved lives stay connected to this account.
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

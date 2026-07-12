@@ -1,11 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import {
-  ArrowLeft,
   GraduationCap,
   Award,
   BookOpen,
@@ -13,7 +11,6 @@ import {
   AlertTriangle,
   DollarSign,
 } from "lucide-react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
 import {
@@ -24,6 +21,7 @@ import {
   formatMoney,
   type EducationEffortLevel,
 } from "@fenix/domain";
+import { DecisionPanel, EmptyState, LifeShell } from "../components/shell";
 
 type EducationActionKind =
   | "EDUCATION_ENROLL"
@@ -38,20 +36,6 @@ export default function Education() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [tuitionPayment, setTuitionPayment] = useState("500");
-
-  const headerSubtitle = useMemo(() => {
-    if (!world) return "Choose a program to begin your education journey";
-    const edu = world.education;
-    const isGraduated =
-      educationCompleted(edu) || (!edu.enrolled && edu.credentials.length > 0);
-    if (edu.enrolled) {
-      return `${edu.programName} · ${edu.institution}`;
-    }
-    if (isGraduated) {
-      return `${edu.credentials.length} credential${edu.credentials.length === 1 ? "" : "s"} earned`;
-    }
-    return "Choose a program to begin your education journey";
-  }, [world]);
 
   const simulationGate = useSimulationGate("Loading education profile…");
   if (simulationGate) return simulationGate;
@@ -108,45 +92,29 @@ export default function Education() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
-      <div className="relative h-48 overflow-hidden">
-        <ImageWithFallback
-          src="https://images.unsplash.com/photo-1731349219592-60ca16964631?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwYnVpbGRpbmd8ZW58MXx8fHwxNzgzNjk2OTU3fDA&ixlib=rb-4.1.0&q=80&w=1080"
-          alt="University campus"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0B132B]/80 to-[#1C2541]/60" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto px-6 w-full">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/home")}
-              className="text-white hover:bg-white/10 mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-4xl text-white mb-2">Education</h1>
-              <p className="text-gray-300">{headerSubtitle}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-6">
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      statusLine={education.enrolled ? education.programName : "School and credentials"}
+    >
+      <header className="mb-6">
+        <p className="text-sm text-muted-foreground">Learning</p>
+        <h1 className="font-display text-3xl tracking-tight text-foreground">Education</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          School progress shapes the roles you can pursue.
+        </p>
+      </header>
         {actionError ? (
-          <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+          <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{actionError}</p>
         ) : null}
 
         {education.tuitionDueCents > 0 ? (
-          <Card className="mb-6 border-orange-200 bg-orange-50/50 shadow-lg">
-            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+          <DecisionPanel title="Outstanding tuition" description={`Due: ${formatMoney(education.tuitionDueCents, currency)}`} className="mb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex items-start gap-3 flex-1">
-                <DollarSign className="w-5 h-5 text-orange-600 mt-0.5" />
+                <DollarSign className="mt-0.5 h-5 w-5 text-accent" />
                 <div>
-                  <p className="text-sm font-medium text-[#1C2541]">Outstanding tuition</p>
-                  <p className="text-lg text-orange-700">{formatMoney(education.tuitionDueCents, currency)}</p>
+                  <p className="text-sm text-muted-foreground">Payments are applied directly to your balance.</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -156,7 +124,7 @@ export default function Education() {
                   step="100"
                   value={tuitionPayment}
                   onChange={(e) => setTuitionPayment(e.target.value)}
-                  className="h-9 w-28 rounded-md border border-orange-200 px-2 text-sm"
+                  className="h-9 w-28 rounded-md border border-input bg-background px-2 text-sm"
                   aria-label="Tuition payment amount"
                 />
                 <Button
@@ -167,31 +135,25 @@ export default function Education() {
                   Pay Tuition
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </DecisionPanel>
         ) : null}
 
         {notEnrolled ? (
-          <Card className="border-[#2EC4B6]/20 shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-[#2EC4B6]" />
-                Enroll in a Program
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                GPA {education.gpa.toFixed(2)} · {education.credentials.length} credential
-                {education.credentials.length === 1 ? "" : "s"} on record
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <DecisionPanel
+            title="Enroll in a program"
+            description={`GPA ${education.gpa.toFixed(2)} · ${education.credentials.length} credentials on record`}
+            className="mb-6"
+          >
+            <ul className="divide-y divide-border">
               {EDUCATION_PROGRAMS.map((program) => (
-                <div
+                <li
                   key={program.id}
-                  className="rounded-lg border border-[#2EC4B6]/20 p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                  className="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center"
                 >
                   <div className="flex-1">
-                    <p className="text-[#1C2541] font-medium">{program.programName}</p>
-                    <p className="text-sm text-gray-600">{program.institution}</p>
+                    <p className="font-medium text-foreground">{program.programName}</p>
+                    <p className="text-sm text-muted-foreground">{program.institution}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <Badge variant="outline">{program.creditsRequired} credits</Badge>
                       <Badge variant="outline">
@@ -201,34 +163,32 @@ export default function Education() {
                     </div>
                   </div>
                   <Button
-                    className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white shrink-0"
+                    className="bg-accent hover:bg-accent/80 text-white shrink-0"
                     disabled={busyAction !== null}
                     onClick={() => handleEducationAction("EDUCATION_ENROLL", { programId: program.id })}
                   >
                     Enroll
                   </Button>
-                </div>
+                </li>
               ))}
-            </CardContent>
-          </Card>
+            </ul>
+          </DecisionPanel>
         ) : null}
 
         {education.enrolled ? (
           <>
-            <Card className="border-[#2EC4B6]/20 shadow-lg mb-6">
-              <CardHeader>
-                <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-[#2EC4B6]" />
-                  {education.programName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <section className="mb-6 border-b border-border pb-6">
+              <h2 className="font-display flex items-center gap-2 text-xl text-foreground">
+                <BookOpen className="h-5 w-5 text-secondary" aria-hidden />
+                {education.programName}
+              </h2>
+              <div className="mt-3 space-y-4">
                 <div className="flex flex-wrap gap-2 text-sm">
                   <Badge variant="outline">{education.institution}</Badge>
                   <Badge variant="outline">GPA {education.gpa.toFixed(2)}</Badge>
                   <Badge variant="outline">Effort: {effortLevelLabel(education.effortLevel)}</Badge>
                   {education.probation ? (
-                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                    <Badge variant="outline" className="border-accent/30 bg-accent/10 text-accent">
                       <AlertTriangle className="w-3 h-3 mr-1" />
                       Academic probation
                     </Badge>
@@ -237,48 +197,45 @@ export default function Education() {
 
                 <div>
                   <div className="flex justify-between mb-1 text-sm">
-                    <span className="text-gray-600">Credits</span>
-                    <span className="text-[#1C2541]">
+                    <span className="text-muted-foreground">Credits</span>
+                    <span className="text-foreground">
                       {education.creditsCompleted}/{education.creditsRequired} ({programProgress}%)
                     </span>
                   </div>
-                  <Progress value={programProgress} className="h-2 bg-[#2EC4B6]" />
+                  <Progress value={programProgress} className="h-2 bg-accent" />
                 </div>
 
-                <div className="grid sm:grid-cols-3 gap-3 text-sm">
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <p className="text-gray-500">Attendance</p>
-                    <p className="text-[#1C2541] font-medium">{education.attendanceScore}%</p>
+                <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                  <div>
+                    <dt className="text-muted-foreground">Attendance</dt>
+                    <dd className="font-medium text-foreground">{education.attendanceScore}%</dd>
                   </div>
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <p className="text-gray-500">Study this week</p>
-                    <p className="text-[#1C2541] font-medium">{education.studyHoursThisWeek}h</p>
+                  <div>
+                    <dt className="text-muted-foreground">Study this week</dt>
+                    <dd className="font-medium text-foreground">{education.studyHoursThisWeek}h</dd>
                   </div>
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <p className="text-gray-500">Tuition due</p>
-                    <p className="text-[#1C2541] font-medium">
+                  <div>
+                    <dt className="text-muted-foreground">Tuition due</dt>
+                    <dd className="font-medium text-foreground">
                       {education.tuitionDueCents > 0
                         ? formatMoney(education.tuitionDueCents, currency)
                         : "Paid"}
-                    </p>
+                    </dd>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </dl>
+              </div>
+            </section>
 
-            <Card className="border-[#F4B400]/20 shadow-lg mb-6">
-              <CardHeader>
-                <CardTitle className="text-[#1C2541]">School Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <DecisionPanel title="School actions" description="Choose your effort level, then spend time studying." className="mb-6">
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Effort level</p>
+                  <p className="mb-2 text-sm text-muted-foreground">Effort level</p>
                   <div className="flex flex-wrap gap-2">
                     {effortLevels.map((level) => (
                       <Button
                         key={level}
                         variant={education.effortLevel === level ? "default" : "outline"}
-                        className={education.effortLevel === level ? "bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white" : ""}
+                        className={education.effortLevel === level ? "bg-accent hover:bg-accent/80 text-white" : ""}
                         disabled={busyAction !== null}
                         onClick={() => handleEducationAction("EDUCATION_SET_EFFORT", { effortLevel: level })}
                       >
@@ -289,7 +246,7 @@ export default function Education() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Button
-                    className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                    className="bg-accent hover:bg-accent/80 text-white"
                     disabled={busyAction !== null}
                     onClick={() => handleEducationAction("EDUCATION_STUDY_SESSION")}
                   >
@@ -304,57 +261,54 @@ export default function Education() {
                     Drop Out
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </DecisionPanel>
           </>
         ) : null}
 
         {graduated ? (
-          <Card className="border-[#2EC4B6]/20 shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle className="text-[#1C2541] flex items-center gap-2">
-                <Award className="w-5 h-5 text-[#F4B400]" />
+          <section className="mb-6 border-b border-border pb-6">
+              <h2 className="font-display flex items-center gap-2 text-xl text-foreground">
+                <Award className="w-5 h-5 text-fenix-gold" />
                 Graduated
-              </CardTitle>
-              <p className="text-sm text-gray-600">
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Program complete — credentials unlocked. Enroll again to pursue another degree.
               </p>
-            </CardHeader>
-          </Card>
+          </section>
         ) : null}
 
-        <Card className="border-[#F4B400]/20 shadow-lg mb-6">
-          <CardHeader>
-            <CardTitle className="text-[#1C2541] flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#F4B400]" />
+        <section className="mb-6">
+            <h2 className="font-display flex items-center gap-2 text-xl text-foreground">
+              <Award className="w-5 h-5 text-fenix-gold" />
               Credentials
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </h2>
+          <div className="mt-3">
             {education.credentials.length === 0 ? (
-              <p className="text-sm text-gray-500">Complete a program to earn credentials.</p>
+              <EmptyState title="No credentials yet" description="Complete a program to earn credentials." />
             ) : (
-              education.credentials.map((credential) => (
-                <div key={credential.id} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50">
-                  <div className="text-3xl">🎓</div>
+              <ul className="divide-y divide-border">
+              {education.credentials.map((credential) => (
+                <li key={credential.id} className="flex items-center gap-4 py-3">
+                  <Award className="h-5 w-5 shrink-0 text-secondary" aria-hidden />
                   <div className="flex-1">
-                    <div className="text-[#1C2541]">{credential.name}</div>
-                    <div className="text-sm text-gray-600">{credential.institution}</div>
+                    <div className="font-medium text-foreground">{credential.name}</div>
+                    <div className="text-sm text-muted-foreground">{credential.institution}</div>
                   </div>
                   <Badge variant="outline">GPA {credential.gpa.toFixed(2)}</Badge>
                   <Badge variant="outline">{credential.earnedDate}</Badge>
-                </div>
-              ))
+                </li>
+              ))}
+              </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="border-[#1C2541]/20 shadow-lg">
-          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-            <Briefcase className="w-8 h-8 text-[#F4B400] shrink-0" />
+        <section className="flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center">
+            <Briefcase className="w-8 h-8 text-fenix-gold shrink-0" />
             <div className="flex-1">
-              <div className="text-[#1C2541] font-medium">Career growth lives on the Career screen</div>
-              <div className="text-sm text-gray-600">
+              <div className="font-medium text-foreground">Career growth lives on the Career screen</div>
+              <div className="text-sm text-muted-foreground">
                 Raises, promotions, upskilling, and networking are managed separately from school.
               </div>
             </div>
@@ -365,9 +319,7 @@ export default function Education() {
               <Briefcase className="w-4 h-4 mr-2" />
               Go to Career
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        </section>
+    </LifeShell>
   );
 }

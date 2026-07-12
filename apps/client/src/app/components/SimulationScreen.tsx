@@ -13,7 +13,7 @@ export function SimulationScreen({
   className,
   children,
 }: SimulationScreenProps) {
-  const gate = useSimulationGate(loadingMessage, className);
+  const gate = useSimulationGate(loadingMessage);
   if (gate) {
     return gate;
   }

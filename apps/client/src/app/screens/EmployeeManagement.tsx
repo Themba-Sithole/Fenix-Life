@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -13,10 +12,11 @@ import {
   employeeInitials,
   formatMoney,
 } from "@fenix/domain";
+import { EmptyState, ToolShell } from "../components/shell";
 
 export default function EmployeeManagement() {
   const navigate = useNavigate();
-  const { world, isLoading, applyAction } = useSimulation();
+  const { world, applyAction, formattedDate } = useSimulation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
@@ -43,37 +43,28 @@ export default function EmployeeManagement() {
 
   if (!world.company) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
-        <div className="max-w-3xl mx-auto">
-          <Button variant="outline" onClick={() => navigate("/company")} className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Company
-          </Button>
-          <Card className="border-[#2EC4B6]/20 shadow-lg">
-            <CardContent className="p-8 text-center space-y-4">
-              <p className="text-gray-600">Found a company first to manage employees.</p>
-              <Button onClick={() => navigate("/company")} className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">
+      <ToolShell institution="Company HQ" subtitle={`${world.player.displayName} · Team`} lastUpdated={formattedDate ?? undefined} metrics={[]}>
+          <EmptyState title="No company yet" description="Found a company first to manage employees." action={
+              <Button onClick={() => navigate("/company")} className="bg-accent hover:bg-accent/80 text-white">
                 Go to Company Dashboard
               </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          } />
+      </ToolShell>
     );
   }
 
   const currency = world.origin.currency;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
-      <div className="max-w-7xl mx-auto">
+    <ToolShell institution="Company HQ" subtitle={`${world.company.name} · Employee management`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Employees", value: String(world.company.employeeCount) }]}>
+      <div>
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" onClick={() => navigate("/company")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Company
           </Button>
           <div>
-            <h1 className="text-3xl text-[#1C2541]">Employee Management</h1>
+            <h1 className="text-3xl text-secondary">Employee Management</h1>
             <p className="text-gray-600">
               {world.company.employeeCount} total employees at {world.company.name}
             </p>
@@ -85,31 +76,28 @@ export default function EmployeeManagement() {
         ) : null}
 
         {employees.length === 0 ? (
-          <Card className="border-[#2EC4B6]/20 shadow-lg">
-            <CardContent className="p-8 text-center space-y-4">
+          <section className="rounded-lg border border-border bg-surface-1 p-8 text-center space-y-4">
               <p className="text-gray-600">No employees on the roster yet.</p>
               <p className="text-sm text-gray-500">Hire staff from the Company Dashboard to build your team.</p>
-              <Button onClick={() => navigate("/company")} className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">
+              <Button onClick={() => navigate("/company")} className="bg-accent hover:bg-accent/80 text-white">
                 Go to Company Dashboard
               </Button>
-            </CardContent>
-          </Card>
+          </section>
         ) : (
         <div className="grid md:grid-cols-2 gap-6">
           {employees.map((employee) => (
-            <Card key={employee.id} className="border-[#2EC4B6]/20 shadow-lg">
-              <CardContent className="p-6">
+            <section key={employee.id} className="rounded-lg border border-border bg-surface-1 p-6">
                 <div className="flex items-start gap-4 mb-4">
-                  <Avatar className="w-16 h-16 border-2 border-[#2EC4B6]">
-                    <AvatarFallback className="bg-gradient-to-br from-[#2EC4B6] to-[#1C2541] text-white">
+                  <Avatar className="w-16 h-16 border-2 border-accent">
+                    <AvatarFallback className="bg-gradient-to-br from-accent to-secondary text-white">
                       {employeeInitials(employee)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h3 className="text-xl text-[#1C2541]">{employee.name}</h3>
+                    <h3 className="text-xl text-secondary">{employee.name}</h3>
                     <p className="text-gray-600">{employee.position}</p>
                     <div className="flex gap-2 mt-2">
-                      <Badge className="bg-[#2EC4B6]/20 text-[#2EC4B6] border-[#2EC4B6]/30">
+                      <Badge className="bg-accent/20 text-accent border-accent/30">
                         {employee.department}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
@@ -119,7 +107,7 @@ export default function EmployeeManagement() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-gray-600">Salary</div>
-                    <div className="text-xl text-[#2EC4B6]">
+                    <div className="text-xl text-accent">
                       {formatMoney(employee.salaryCents, currency)}
                     </div>
                   </div>
@@ -129,37 +117,37 @@ export default function EmployeeManagement() {
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm text-gray-600">Productivity</span>
-                      <span className="text-sm text-[#1C2541]">{employee.productivity}%</span>
+                      <span className="text-sm text-secondary">{employee.productivity}%</span>
                     </div>
-                    <Progress value={employee.productivity} className="h-2 bg-[#2EC4B6]" />
+                    <Progress value={employee.productivity} className="h-2 bg-accent" />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm text-gray-600">Creativity</span>
-                      <span className="text-sm text-[#1C2541]">{employee.creativity}%</span>
+                      <span className="text-sm text-secondary">{employee.creativity}%</span>
                     </div>
-                    <Progress value={employee.creativity} className="h-2 bg-[#F4B400]" />
+                    <Progress value={employee.creativity} className="h-2 bg-fenix-gold" />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm text-gray-600">Leadership</span>
-                      <span className="text-sm text-[#1C2541]">{employee.leadership}%</span>
+                      <span className="text-sm text-secondary">{employee.leadership}%</span>
                     </div>
-                    <Progress value={employee.leadership} className="h-2 bg-[#1C2541]" />
+                    <Progress value={employee.leadership} className="h-2 bg-secondary" />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm text-gray-600">Loyalty</span>
-                      <span className="text-sm text-[#1C2541]">{employee.loyalty}%</span>
+                      <span className="text-sm text-secondary">{employee.loyalty}%</span>
                     </div>
-                    <Progress value={employee.loyalty} className="h-2 bg-[#2EC4B6]" />
+                    <Progress value={employee.loyalty} className="h-2 bg-accent" />
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className="flex-1 bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                    className="flex-1 bg-accent hover:bg-accent/80 text-white"
                     disabled={busyKey !== null}
                     onClick={() => handleAction(employee.id, "EMPLOYEE_PROMOTE")}
                   >
@@ -187,12 +175,11 @@ export default function EmployeeManagement() {
                     Train
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </section>
           ))}
         </div>
         )}
       </div>
-    </div>
+    </ToolShell>
   );
 }

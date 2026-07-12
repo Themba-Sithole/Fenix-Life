@@ -1,10 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
 import {
-  ArrowLeft,
   Briefcase,
   Building2,
   Calendar,
@@ -19,108 +15,118 @@ import {
   Trophy,
   X,
 } from "lucide-react";
-import { useSimulation } from "@/context/SimulationContext";
-import { formatGameDate } from "@/context/SimulationContext";
+import { Button } from "../components/ui/button";
+import { useSimulation, formatGameDate } from "@/context/SimulationContext";
 import { formatMoney, totalNetWorthCents } from "@fenix/domain";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
+import { LifeShell } from "../components/shell";
+import { cn } from "../components/ui/utils";
+
+const APP_TONES = [
+  "bg-primary text-primary-foreground",
+  "bg-secondary text-secondary-foreground",
+  "bg-accent text-accent-foreground",
+  "bg-fenix-blue text-white",
+  "bg-fenix-navy text-white",
+  "bg-fenix-gold text-fenix-navy",
+] as const;
 
 export default function Smartphone() {
   const navigate = useNavigate();
   const { world, formattedDate, tickCount } = useSimulation();
-  const simulationGate = useSimulationGate("Loading phone…", "bg-[#0B132B] text-white");
+  const simulationGate = useSimulationGate("Loading phone…");
 
   const stats = useMemo(() => {
-    if (!world) {
-      return null;
-    }
-
-    const netWorth = totalNetWorthCents(world.banking);
-    const unreadNews = world.events.filter((event) => event.category === 'news').length;
-
+    if (!world) return null;
     return {
-      netWorth,
+      netWorth: totalNetWorthCents(world.banking),
       currency: world.origin.currency,
-      unreadNews,
-      company: world.company?.name ?? 'No company',
+      unreadNews: world.events.filter((event) => event.category === "news").length,
+      company: world.company?.name ?? "No company",
+      familyCount: world.family.members.length,
     };
   }, [world]);
 
+  if (simulationGate) return simulationGate;
+  if (!world || !stats) return null;
+
   const apps = [
-    { id: "news", name: "News", icon: Newspaper, color: "bg-orange-500", action: () => navigate("/news"), badge: stats && stats.unreadNews > 0 ? `${stats.unreadNews}` : undefined },
-    { id: "banking", name: "Banking", icon: Building2, color: "bg-[#2EC4B6]", action: () => navigate("/banking"), badge: stats ? formatMoney(stats.netWorth, stats.currency) : undefined },
-    { id: "timeline", name: "Timeline", icon: Calendar, color: "bg-red-500", action: () => navigate("/timeline"), badge: formattedDate ?? undefined },
-    { id: "family", name: "Family", icon: Heart, color: "bg-pink-500", action: () => navigate("/family"), badge: stats ? `${world?.family.members.length ?? 0}` : undefined },
-    { id: "maps", name: "City Map", icon: Map, color: "bg-blue-400", action: () => navigate("/city") },
-    { id: "company", name: "Business", icon: Building2, color: "bg-[#1C2541]", action: () => navigate("/company"), badge: stats?.company.slice(0, 8) },
-    { id: "education", name: "University", icon: GraduationCap, color: "bg-purple-500", action: () => navigate("/education") },
-    { id: "career", name: "Careers", icon: Briefcase, color: "bg-emerald-600", action: () => navigate("/career") },
-    { id: "properties", name: "Properties", icon: HomeIcon, color: "bg-indigo-500", action: () => navigate("/real-estate") },
-    { id: "vehicles", name: "Vehicles", icon: Car, color: "bg-gray-700", action: () => navigate("/vehicles") },
-    { id: "stocks", name: "Stocks", icon: TrendingUp, color: "bg-[#F4B400]", action: () => navigate("/stocks") },
-    { id: "achievements", name: "Legacy", icon: Trophy, color: "bg-amber-500", action: () => navigate("/timeline") },
-    { id: "settings", name: "Settings", icon: Settings, color: "bg-gray-500", action: () => navigate("/settings") },
-  ];
-
-  if (simulationGate) {
-    return simulationGate;
-  }
-
-  if (!world) {
-    return null;
-  }
+    { id: "news", name: "News", icon: Newspaper, path: "/news", badge: stats.unreadNews > 0 ? String(stats.unreadNews) : undefined },
+    { id: "banking", name: "Bank", icon: Building2, path: "/banking", badge: formatMoney(stats.netWorth, stats.currency) },
+    { id: "timeline", name: "Story", icon: Calendar, path: "/timeline" },
+    { id: "family", name: "Family", icon: Heart, path: "/family", badge: String(stats.familyCount) },
+    { id: "maps", name: "City", icon: Map, path: "/city" },
+    { id: "company", name: "Biz", icon: Building2, path: "/company" },
+    { id: "education", name: "School", icon: GraduationCap, path: "/education" },
+    { id: "career", name: "Jobs", icon: Briefcase, path: "/career" },
+    { id: "properties", name: "Home", icon: HomeIcon, path: "/real-estate" },
+    { id: "vehicles", name: "Cars", icon: Car, path: "/vehicles" },
+    { id: "stocks", name: "Broker", icon: TrendingUp, path: "/stocks" },
+    { id: "legacy", name: "Legacy", icon: Trophy, path: "/timeline" },
+    { id: "settings", name: "Settings", icon: Settings, path: "/settings" },
+  ] as const;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0B132B] via-[#1C2541] to-[#0B132B] flex items-center justify-center p-6">
-      <div className="relative">
-        <div className="w-[380px] h-[780px] bg-black rounded-[3rem] shadow-2xl p-3 relative">
-          <div className="w-full h-full bg-gradient-to-br from-[#F5F7FA] to-white rounded-[2.5rem] overflow-hidden">
-            <div className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white px-6 py-3 flex items-center justify-between">
-              <span className="text-sm">{formattedDate ?? formatGameDate(world.currentDate)}</span>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#2EC4B6]" />
-                <div className="text-sm">Day {tickCount + 1}</div>
-              </div>
+    <LifeShell
+      playerName={world.player.displayName}
+      ageYears={world.player.ageYears}
+      dateLabel={formattedDate ?? undefined}
+      statusLine="Phone"
+    >
+      <div className="flex justify-center">
+        <div className="w-full max-w-[380px] rounded-[2rem] border border-border bg-fenix-navy p-2 shadow-lg">
+          <div className="overflow-hidden rounded-[1.6rem] bg-surface-1 min-h-[70vh] flex flex-col">
+            <div className="flex items-center justify-between bg-primary px-4 py-2.5 text-primary-foreground text-sm">
+              <span>{formattedDate ?? formatGameDate(world.currentDate)}</span>
+              <span className="opacity-80">Day {tickCount + 1}</span>
             </div>
 
-            <div className="p-6 h-full overflow-y-auto">
-              <div className="flex justify-end mb-4">
-                <Button size="sm" variant="outline" onClick={() => navigate("/home")} className="rounded-full">
-                  <X className="w-4 h-4" />
-                </Button>
+            <div className="flex items-center justify-between px-4 pt-3">
+              <div>
+                <p className="font-display text-lg text-foreground">{world.player.displayName}</p>
+                <p className="text-xs text-muted-foreground">{world.career.jobTitle}</p>
               </div>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label="Close phone"
+                onClick={() => navigate("/home")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
 
-              <h2 className="text-2xl text-[#1C2541] mb-2 text-center">{world.player.displayName}</h2>
-              <p className="text-xs text-center text-gray-500 mb-6">{world.career.jobTitle}</p>
-
-              <div className="grid grid-cols-4 gap-4">
-                {apps.map((app) => (
-                  <button
-                    key={app.id}
-                    onClick={app.action}
-                    className="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-gray-100 transition-colors relative"
+            <div className="grid grid-cols-4 gap-3 p-4 pb-8 flex-1 content-start">
+              {apps.map((app, index) => (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => navigate(app.path)}
+                  className="relative flex flex-col items-center gap-1.5 rounded-lg p-1.5 transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <span
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-xl",
+                      APP_TONES[index % APP_TONES.length],
+                    )}
                   >
-                    <div className={`${app.color} w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg`}>
-                      <app.icon className="w-7 h-7 text-white" />
-                    </div>
-                    <span className="text-xs text-[#1C2541] text-center">{app.name}</span>
-                    {app.badge ? (
-                      <Badge className="absolute -top-1 -right-1 text-[10px] px-1 py-0 bg-[#1C2541]">
-                        {app.badge}
-                      </Badge>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
+                    <app.icon className="h-6 w-6" aria-hidden />
+                  </span>
+                  <span className="text-[10px] text-foreground text-center leading-tight">{app.name}</span>
+                  {"badge" in app && app.badge ? (
+                    <span className="absolute -top-0.5 right-0 max-w-[3.5rem] truncate rounded bg-secondary px-1 text-[9px] text-secondary-foreground">
+                      {app.badge}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
             </div>
-          </div>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-300 rounded-full" />
-        </div>
 
-        <Button variant="ghost" className="absolute -left-16 top-4 text-white" onClick={() => navigate("/home")}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Home
-        </Button>
+            <div className="mx-auto mb-3 h-1 w-24 rounded-full bg-muted" aria-hidden />
+          </div>
+        </div>
       </div>
-    </div>
+    </LifeShell>
   );
 }
