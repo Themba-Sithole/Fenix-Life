@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "./ui/button";
-import { deriveBlockingGates, type LifeGate } from "@fenix/domain";
-import type { WorldInstance } from "@fenix/domain";
+import { Button } from "../ui/button";
+import { deriveBlockingGates, type LifeGate, type WorldInstance } from "@fenix/domain";
 
 interface LifeGateBannerProps {
   readonly world: WorldInstance;
@@ -21,7 +20,7 @@ export function LifeGateBanner({ world }: LifeGateBannerProps) {
 
   return (
     <div
-      className={`rounded-xl border p-4 mb-4 ${
+      className={`mb-4 rounded-[var(--radius-home)] border p-4 ${
         hard.length > 0
           ? "border-destructive/30 bg-destructive/10 text-foreground"
           : "border-accent/30 bg-accent/10 text-foreground"
@@ -29,14 +28,14 @@ export function LifeGateBanner({ world }: LifeGateBannerProps) {
       role="alert"
     >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
         <div className="flex-1 space-y-2">
           <p className="font-medium">
             {hard.length > 0 ? "Resolve this before time moves" : "Life pressure"}
           </p>
           <p className="text-sm">{primary.message}</p>
           {gates.length > 1 ? (
-            <ul className="text-xs space-y-1 opacity-90">
+            <ul className="space-y-1 text-xs opacity-90">
               {gates.slice(1, 4).map((gate) => (
                 <li key={gate.kind}>• {gate.message}</li>
               ))}

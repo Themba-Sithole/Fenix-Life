@@ -1,18 +1,18 @@
-import { Progress } from "./ui/progress";
 import { computeFiveCapitals, FIVE_CAPITALS, type WorldInstance } from "@fenix/domain";
 
 interface FiveCapitalsStripProps {
   world: WorldInstance;
 }
 
-const SCORE_COLORS: Record<(typeof FIVE_CAPITALS)[number]["key"], string> = {
-  financial: "bg-secondary",
-  human: "bg-accent",
-  social: "bg-fenix-gold",
-  business: "bg-secondary",
-  legacy: "bg-accent",
+const FILL_VAR: Record<(typeof FIVE_CAPITALS)[number]["key"], string> = {
+  human: "var(--capital-human)",
+  social: "var(--capital-social)",
+  financial: "var(--capital-financial)",
+  business: "var(--capital-business)",
+  legacy: "var(--capital-legacy)",
 };
 
+/** Detailed capital strip with labels — prefer CapitalStatGrid on Home. */
 export function FiveCapitalsStrip({ world }: FiveCapitalsStripProps) {
   const capitals = computeFiveCapitals({
     player: world.player,
@@ -41,14 +41,22 @@ export function FiveCapitalsStrip({ world }: FiveCapitalsStripProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {FIVE_CAPITALS.map((capital) => (
           <div key={capital.key} className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-foreground">{capital.label}</span>
-              <span className="text-xs text-muted-foreground tabular-nums">{scores[capital.key]}%</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{scores[capital.key]}%</span>
             </div>
-            <Progress value={scores[capital.key]} className={`h-1.5 ${SCORE_COLORS[capital.key]}`} />
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-2" role="presentation">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${scores[capital.key]}%`,
+                  backgroundColor: FILL_VAR[capital.key],
+                }}
+              />
+            </div>
             <p className="text-[11px] leading-snug text-muted-foreground">{labels[capital.key]}</p>
           </div>
         ))}

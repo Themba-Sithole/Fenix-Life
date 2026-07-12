@@ -8,3 +8,7 @@ export type { FeedCapitalTag, LifeFeedAction } from "./LifeFeedCard";
 export { TodaysDecisionPanel } from "./TodaysDecisionPanel";
 export type { DecisionAction, DecisionMetric } from "./TodaysDecisionPanel";
 export { DayAdvanceFab } from "./DayAdvanceFab";
+export { FiveCapitalsStrip } from "./FiveCapitalsStrip";
+export { LifeGateBanner } from "./LifeGateBanner";
+export { HomeTourOverlay } from "./HomeTourOverlay";
+export { HomeNavSheet } from "./HomeNavSheet";

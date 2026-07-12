@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
-import { MORE_ITEMS } from "./shell/LifeDock";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
-import { cn } from "./ui/utils";
+import { MORE_ITEMS } from "../shell/LifeDock";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import { cn } from "../ui/utils";
 
 interface HomeNavSheetProps {
   open: boolean;
@@ -19,7 +19,7 @@ export function HomeNavSheet({ open, onOpenChange }: HomeNavSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh]">
+      <SheetContent side="bottom" className="max-h-[70vh] rounded-t-2xl">
         <SheetHeader>
           <SheetTitle className="font-display text-foreground">More</SheetTitle>
         </SheetHeader>

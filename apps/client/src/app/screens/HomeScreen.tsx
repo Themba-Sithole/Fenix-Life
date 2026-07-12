@@ -640,16 +640,16 @@ export default function HomeScreen() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-3.5 min-[900px]:grid-cols-[1.15fr_0.85fr]">
-        <div>
-          <div className="mb-2.5 flex items-center justify-between px-0.5">
+        <div className="order-2 min-[900px]:order-1">
+          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
             <h2 className="font-display text-[14.5px] font-semibold text-foreground">Go to</h2>
-            <span className="text-[11px] text-muted-foreground">quick destinations</span>
+            <span className="shrink-0 text-[11px] text-muted-foreground">quick destinations</span>
           </div>
           <QuickDestinationList items={destinations} />
 
-          <div className="mb-2.5 flex items-center justify-between px-0.5">
+          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
             <h2 className="font-display text-[14.5px] font-semibold text-foreground">Your Life</h2>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="min-w-0 truncate text-right text-[11px] text-muted-foreground">
               {displayDate}
               {displayDate ? " — today" : ""}
             </span>
@@ -697,7 +697,7 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        <aside className="space-y-3.5">
+        <aside className="order-1 space-y-3.5 min-[900px]:order-2">
           <div className="px-0.5">
             <h2 className="mb-2.5 font-display text-[14.5px] font-semibold text-foreground">
               Today&apos;s Decision

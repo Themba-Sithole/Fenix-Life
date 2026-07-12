@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
 import { HOME_TOUR_STEPS } from "@fenix/domain";
 import { useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
@@ -88,26 +88,26 @@ export function HomeTourOverlay() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 p-4 pointer-events-none"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-4 pb-[calc(var(--dock-height)+1rem)] md:pb-4"
       data-testid="home-tour-overlay"
     >
-      <Card className="max-w-2xl mx-auto border-accent/30 shadow-2xl pointer-events-auto bg-white/95 backdrop-blur">
-        <CardContent className="p-5 space-y-4">
+      <Card className="pointer-events-auto mx-auto max-w-2xl border-accent/30 bg-surface-1/95 shadow-[var(--home-shadow)] backdrop-blur">
+        <CardContent className="space-y-4 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <Badge variant="outline" className="mb-2">
                 Guided tour · {progressLabel}
               </Badge>
-              <h3 className="text-lg text-secondary font-medium">{step.title}</h3>
-              <p className="text-sm text-gray-600 mt-1">{step.description}</p>
-              <p className="text-xs text-accent mt-2">{step.teachingMoment}</p>
+              <h3 className="font-display text-lg font-medium text-foreground">{step.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+              <p className="mt-2 text-xs text-accent">{step.teachingMoment}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
             {needsNavigation && !isAdvanceStep ? (
               <Button
-                className="bg-accent hover:bg-accent/80 text-white"
+                className="bg-accent text-accent-foreground hover:opacity-90"
                 onClick={handleOpenTarget}
                 data-testid="home-tour-open-target"
               >
@@ -121,7 +121,7 @@ export function HomeTourOverlay() {
             ) : null}
             {!needsNavigation || isAdvanceStep ? (
               <Button
-                className="bg-secondary hover:bg-primary text-white"
+                className="bg-secondary text-secondary-foreground hover:opacity-90"
                 onClick={handleNext}
                 disabled={busy || (isAdvanceStep && tickCount === advanceBaselineRef.current && onHome)}
                 data-testid="home-tour-next"
@@ -134,8 +134,9 @@ export function HomeTourOverlay() {
             </Button>
           </div>
           {isAdvanceStep && onHome ? (
-            <p className="text-xs text-gray-500">
-              Tap <strong>Advance 1 Day</strong> on Home to continue the tour.
+            <p className="text-xs text-muted-foreground">
+              Tap the gold <strong className="text-foreground">+ DAY</strong> button on Home to continue
+              the tour.
             </p>
           ) : null}
         </CardContent>

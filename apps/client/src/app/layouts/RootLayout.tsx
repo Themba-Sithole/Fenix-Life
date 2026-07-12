@@ -3,7 +3,7 @@ import { Outlet } from 'react-router';
 import { AuthProvider } from '@/context/AuthContext';
 import { SaveProvider } from '@/context/SaveContext';
 import { SimulationProvider, useSimulation } from '@/context/SimulationContext';
-import { HomeTourOverlay } from '../components/HomeTourOverlay';
+import { HomeTourOverlay } from '../components/home';
 import { Toaster } from '../components/ui/sonner';
 
 function OfflineSaveBanner() {

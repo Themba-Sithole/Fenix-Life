@@ -24,7 +24,7 @@ export function CapitalStatBar({ capitalKey, label, value, className }: CapitalS
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-home)] border border-border bg-surface-1 px-3.5 py-3 shadow-[var(--home-shadow)]",
+        "rounded-[var(--radius-home)] border border-border bg-surface-1 px-2.5 py-2.5 shadow-[var(--home-shadow)] sm:px-3.5 sm:py-3",
         className,
       )}
       data-testid={`capital-stat-${capitalKey}`}
@@ -80,7 +80,7 @@ export function CapitalStatGrid({ world, className }: CapitalStatGridProps) {
   return (
     <div
       className={cn(
-        "mb-3.5 grid grid-cols-3 gap-2.5 sm:grid-cols-5",
+        "mb-3 grid grid-cols-3 gap-2 sm:mb-3.5 sm:grid-cols-5 sm:gap-2.5",
         className,
       )}
       aria-label="Five Capitals"

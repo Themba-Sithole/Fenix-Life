@@ -19,6 +19,7 @@ import {
   type GraphicsQuality,
   type PlayerSettings,
 } from "@/lib/player-settings";
+import { ThemeToggle } from "../components/home";
 import { LifeShell } from "../components/shell";
 
 export default function Settings() {
@@ -193,6 +194,16 @@ export default function Settings() {
                 Graphics
               </h2>
             <div className="mt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-secondary">Appearance</div>
+                  <div className="text-sm text-muted-foreground">
+                    Light or dark theme — applies immediately
+                  </div>
+                </div>
+                <ThemeToggle />
+              </div>
+
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Quality</div>
