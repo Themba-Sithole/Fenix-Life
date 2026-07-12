@@ -77,6 +77,17 @@ export function createDefaultQuotes(): StockQuote[] {
   }));
 }
 
+export function createEmptyPortfolio(): PortfolioState {
+  const quotes = createDefaultQuotes();
+  return {
+    holdings: [],
+    quotes,
+    dividendsYtdCents: 0,
+    costBasisCents: 0,
+    history: [{ tickCount: 0, valueCents: 0 }],
+  };
+}
+
 export function createDefaultPortfolio(input?: {
   companyStage?: CompanyStage;
 }): PortfolioState {

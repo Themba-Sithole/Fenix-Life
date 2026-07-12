@@ -54,7 +54,9 @@ export function buildCityDistricts(world: WorldInstance): CityDistrict[] {
     {
       id: 'tech',
       name: 'Tech District',
-      description: `${world.company.name} sector activity`,
+      description: world.company
+        ? `${world.company.name} sector activity`
+        : 'Startup and tech sector activity',
       activityLevel: clamp(60 + economyBoost, 20, 99),
       route: '/company',
     },

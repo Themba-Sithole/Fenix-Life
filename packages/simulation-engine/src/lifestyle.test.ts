@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildLifeTimeline,
   computeLegacySnapshot,
+  createDefaultHousing,
   createSaveId,
   createWorldInstance,
   housingTotalValueCents,
@@ -11,29 +12,26 @@ import { applyDailyHousingTick } from './lifestyle-engine.js';
 import { createDefaultEconomy } from '@fenix/domain';
 
 describe('lifestyle simulation', () => {
-  it('creates owned properties for established backgrounds', () => {
+  it('fresh start has no owned property or vehicles regardless of background', () => {
     const world = createWorldInstance({
       saveId: createSaveId('save-lifestyle'),
       background: 'wealthy',
       playerName: 'Alex Chen',
     });
 
-    expect(ownedProperties(world.housing).length).toBeGreaterThan(0);
-    expect(housingTotalValueCents(world.housing)).toBeGreaterThan(0);
+    expect(ownedProperties(world.housing).length).toBe(0);
+    expect(housingTotalValueCents(world.housing)).toBe(0);
     expect(world.family.members.length).toBeGreaterThan(0);
-    expect(world.transportation.vehicles.some((vehicle) => vehicle.owned)).toBe(true);
+    expect(world.transportation.vehicles.some((vehicle) => vehicle.owned)).toBe(false);
   });
 
   it('drifts owned property values over time', () => {
-    const world = createWorldInstance({
-      saveId: createSaveId('save-housing'),
-      background: 'middle-class',
-    });
-    const before = housingTotalValueCents(world.housing);
-    const nextHousing = applyDailyHousingTick(world.housing, createDefaultEconomy());
+    const housing = createDefaultHousing('Metro', 'middle-class', 'startup');
+    const before = housingTotalValueCents(housing);
+    const nextHousing = applyDailyHousingTick(housing, createDefaultEconomy());
 
     expect(housingTotalValueCents(nextHousing)).toBeTypeOf('number');
-    expect(nextHousing.properties.length).toBe(world.housing.properties.length);
+    expect(nextHousing.properties.length).toBe(housing.properties.length);
     expect(housingTotalValueCents(nextHousing)).not.toBeLessThan(before * 0.8);
   });
 

@@ -1,3 +1,5 @@
+import type { LifePath } from './life-path.js';
+
 export interface EducationState {
   readonly programName: string;
   readonly institution: string;
@@ -5,6 +7,54 @@ export interface EducationState {
   readonly creditsCompleted: number;
   readonly creditsRequired: number;
   readonly enrolled: boolean;
+}
+
+export function createFreshStartEducation(
+  background = 'middle-class',
+  lifePath: LifePath = 'undecided',
+): EducationState {
+  if (lifePath === 'corporate-ladder') {
+    return {
+      programName: 'Undergraduate Degree',
+      institution: 'City University',
+      gpa: 0,
+      creditsCompleted: 0,
+      creditsRequired: 120,
+      enrolled: true,
+    };
+  }
+
+  switch (background) {
+    case 'wealthy':
+    case 'entrepreneur-family':
+      return {
+        programName: 'High School Graduate',
+        institution: 'Private Academy',
+        gpa: 3.6,
+        creditsCompleted: 0,
+        creditsRequired: 0,
+        enrolled: false,
+      };
+    case 'working-class':
+    case 'orphan':
+      return {
+        programName: 'High School Graduate',
+        institution: 'Public School',
+        gpa: 3.0,
+        creditsCompleted: 0,
+        creditsRequired: 0,
+        enrolled: false,
+      };
+    default:
+      return {
+        programName: 'High School Graduate',
+        institution: 'Public School',
+        gpa: 3.3,
+        creditsCompleted: 0,
+        creditsRequired: 0,
+        enrolled: false,
+      };
+  }
 }
 
 export function createDefaultEducation(background = 'middle-class'): EducationState {

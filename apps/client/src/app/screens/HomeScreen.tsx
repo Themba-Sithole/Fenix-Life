@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, cyclePhaseLabel, type TimeScale } from "@fenix/domain";
+import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, cyclePhaseLabel, getLifePathHintActions, lifePathHintTitle, type TimeScale } from "@fenix/domain";
 import { FiveCapitalsStrip } from "../components/FiveCapitalsStrip";
 import { HomeNavSheet } from "../components/HomeNavSheet";
 import { Pause, Play, SkipForward } from "lucide-react";
@@ -33,6 +33,7 @@ export default function HomeScreen() {
     advanceDay,
     setPaused,
     setTimeScale,
+    dismissLifePathHints,
     tickCount,
   } = useSimulation();
   const [advancing, setAdvancing] = useState(false);
@@ -44,6 +45,16 @@ export default function HomeScreen() {
       navigate('/continue', { replace: true });
     }
   }, [activeSave, isLoading, navigate]);
+
+  useEffect(() => {
+    if (!simLoading && world) {
+      if (!world.onboarding.adolescencePlayCompleted) {
+        navigate('/childhood-play', { replace: true });
+      } else if (!world.onboarding.childhoodSummarySeen) {
+        navigate('/childhood-summary', { replace: true });
+      }
+    }
+  }, [simLoading, world, navigate]);
 
   if (!isLoading && !activeSave) {
     return null;
@@ -127,8 +138,22 @@ export default function HomeScreen() {
     { label: "Stocks", icon: TrendingUp, path: "/stocks", color: "bg-[#F4B400]" },
     { label: "Property", icon: Home, path: "/real-estate", color: "bg-[#1C2541]" },
     { label: "Education", icon: GraduationCap, path: "/education", color: "bg-[#2EC4B6]" },
+    { label: "Career", icon: Briefcase, path: "/career", color: "bg-[#1C2541]" },
     { label: "Timeline", icon: Trophy, path: "/timeline", color: "bg-[#F4B400]" },
   ];
+
+  const lifePathHints = getLifePathHintActions(world.lifePath);
+  const highlightedPaths = new Set(lifePathHints.map((hint) => hint.path));
+  const showLifePathHints = !world.onboarding.lifePathHintsSeen;
+
+  async function handleDismissHints() {
+    setSimError(null);
+    try {
+      await dismissLifePathHints();
+    } catch (error) {
+      setSimError(error instanceof Error ? error.message : "Could not dismiss hints.");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA]">
@@ -214,6 +239,7 @@ export default function HomeScreen() {
               className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
               onClick={handleAdvanceDay}
               disabled={isPaused || advancing || isSaving}
+              data-testid="advance-day"
             >
               <SkipForward className="w-4 h-4 mr-2" />
               {advancing ? 'Advancing…' : 'Advance 1 Day'}
@@ -309,8 +335,9 @@ export default function HomeScreen() {
               <CardContent className="p-6">
                 <h3 className="text-lg mb-4 flex items-center gap-2 text-[#1C2541]">
                   <Building2 className="w-5 h-5 text-[#2EC4B6]" />
-                  {company.name}
+                  {company ? company.name : "No Company Yet"}
                 </h3>
+                {company ? (
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Stage</span>
@@ -345,21 +372,82 @@ export default function HomeScreen() {
                     Company Dashboard
                   </Button>
                 </div>
+                ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    You start unemployed with no company. Explore career, education, or found a venture when you are ready.
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Career</span>
+                    <span className="text-[#1C2541]">{employmentStatusLabel(career.status)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Status</span>
+                    <span className="text-gray-700">{career.jobTitle}</span>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/company")}
+                    className="w-full bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white mt-2"
+                  >
+                    Found a Company
+                  </Button>
+                </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           <div className="lg:col-span-2 space-y-6">
+            {showLifePathHints ? (
+            <Card className="border-[#F4B400]/40 shadow-lg bg-[#FFFBEB]/50">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h3 className="text-xl text-[#1C2541]">{lifePathHintTitle(world.lifePath)}</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Pinned suggestions for your first visit — any path works from any background.
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={handleDismissHints} className="text-gray-500 shrink-0">
+                    Dismiss
+                  </Button>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {lifePathHints.map((hint) => (
+                    <button
+                      key={hint.path}
+                      type="button"
+                      onClick={() => navigate(hint.path)}
+                      className="text-left rounded-lg border border-[#F4B400]/30 bg-white p-4 hover:border-[#2EC4B6] hover:shadow-md transition-all"
+                    >
+                      <p className="font-medium text-[#1C2541]">{hint.label}</p>
+                      <p className="text-xs text-gray-500 mt-1">{hint.reason}</p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            ) : null}
+
             <Card className="border-[#2EC4B6]/20 shadow-lg">
               <CardContent className="p-6">
                 <h3 className="text-xl text-[#1C2541] mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-4" data-testid="home-quick-actions">
                   {quickActions.map((action) => (
                     <Button
                       key={action.label}
                       onClick={() => navigate(action.path)}
-                      className={`${action.color} h-24 flex flex-col items-center justify-center gap-2 text-white hover:opacity-90 transition-opacity`}
+                      className={`${action.color} h-24 flex flex-col items-center justify-center gap-2 text-white hover:opacity-90 transition-opacity relative ${
+                        showLifePathHints && highlightedPaths.has(action.path)
+                          ? "ring-2 ring-[#F4B400] ring-offset-2"
+                          : ""
+                      }`}
                     >
+                      {showLifePathHints && highlightedPaths.has(action.path) ? (
+                        <Badge className="absolute -top-2 -right-2 bg-[#F4B400] text-[#1C2541] text-[10px]">
+                          Start
+                        </Badge>
+                      ) : null}
                       <action.icon className="w-6 h-6" />
                       <span className="text-xs">{action.label}</span>
                     </Button>

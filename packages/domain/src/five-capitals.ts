@@ -23,7 +23,7 @@ function clamp(value: number, min: number, max: number): number {
 export function computeFiveCapitals(input: {
   player: Citizen;
   banking: BankingState;
-  company: CompanyState;
+  company: CompanyState | null;
   career: CareerState;
   tickCount: number;
   currency: string;
@@ -49,15 +49,23 @@ export function computeFiveCapitals(input: {
     100,
   );
 
-  const profit = companyMonthlyProfitCents(input.company);
+  const profit = input.company ? companyMonthlyProfitCents(input.company) : 0;
   const businessScore = clamp(
-    Math.round(input.company.marketSharePct * 6 + (profit > 0 ? 15 : 0) + input.career.performanceScore * 0.2),
+    Math.round(
+      (input.company?.marketSharePct ?? 0) * 6 +
+        (profit > 0 ? 15 : 0) +
+        input.career.performanceScore * 0.2,
+    ),
     0,
     100,
   );
 
   const legacyScore = clamp(
-    Math.round(input.player.ageYears * 1.5 + input.tickCount / 40 + input.company.valuationCents / 500_000_00),
+    Math.round(
+      input.player.ageYears * 1.5 +
+        input.tickCount / 40 +
+        (input.company?.valuationCents ?? 0) / 500_000_00,
+    ),
     0,
     100,
   );
@@ -71,9 +79,10 @@ export function computeFiveCapitals(input: {
     financialLabel: formatMoneyLabel(netWorth, input.currency),
     humanLabel: `Health ${traits.health}% · Energy ${traits.energy}%`,
     socialLabel: `Openness ${traits.openness}% · Stress ${traits.stress}%`,
-    businessLabel: input.career.status === 'founder'
-      ? `${input.company.name} · ${input.company.marketSharePct.toFixed(1)}% share`
-      : `${input.career.jobTitle} · ${input.career.performanceScore}% perf`,
+    businessLabel:
+      input.career.status === 'founder' && input.company
+        ? `${input.company.name} · ${input.company.marketSharePct.toFixed(1)}% share`
+        : `${input.career.jobTitle} · ${input.career.performanceScore}% perf`,
     legacyLabel: `Age ${input.player.ageYears} · Day ${input.tickCount + 1}`,
   };
 }

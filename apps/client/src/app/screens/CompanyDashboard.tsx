@@ -3,7 +3,9 @@ import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, TrendingUp, TrendingDown, Users, DollarSign, Package, BarChart3 } from "lucide-react";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { ArrowLeft, TrendingUp, TrendingDown, Users, DollarSign, Package, BarChart3, Rocket } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useSimulation } from "@/context/SimulationContext";
@@ -12,6 +14,8 @@ import {
   companyMonthlyProfitCents,
   companyStageLabel,
   formatMoney,
+  INCORPORATION_FEE_CENTS,
+  suggestedCompanyName,
 } from "@fenix/domain";
 
 export default function CompanyDashboard() {
@@ -19,6 +23,19 @@ export default function CompanyDashboard() {
   const { world, isLoading, applyAction } = useSimulation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("");
+
+  async function handleFoundCompany() {
+    setActionError(null);
+    setBusyAction("FOUND_COMPANY");
+    try {
+      await applyAction({ kind: "FOUND_COMPANY", name: companyName });
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not incorporate.");
+    } finally {
+      setBusyAction(null);
+    }
+  }
 
   async function handleCompanyAction(kind: "COMPANY_HIRE" | "COMPANY_LAUNCH_PRODUCT") {
     setActionError(null);
@@ -35,6 +52,82 @@ export default function CompanyDashboard() {
   const simulationGate = useSimulationGate("Loading company data…");
   if (simulationGate) return simulationGate;
   if (!world) return null;
+
+  if (!world.company) {
+    const currency = world.origin.currency;
+    const defaultName = suggestedCompanyName(world.player.displayName);
+    const checking = world.banking.accounts.find((a) => a.id === "checking")?.balanceCents ?? 0;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
+        <div className="max-w-3xl mx-auto">
+          <Button variant="outline" onClick={() => navigate("/home")} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          <Card className="border-[#2EC4B6]/20 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-2xl text-[#1C2541] flex items-center gap-2">
+                <Rocket className="w-6 h-6 text-[#2EC4B6]" />
+                Found a Company
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5 text-gray-600">
+              <p>
+                Incorporate a new venture at the idea stage — zero employees, zero revenue. Same rules as AI founders.
+              </p>
+              <p className="text-sm text-gray-500">
+                Suggested path: {world.lifePath.replace(/-/g, " ")} — hints only, never a lock.
+              </p>
+
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company name</Label>
+                <Input
+                  id="companyName"
+                  placeholder={defaultName}
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="border-[#2EC4B6]/30"
+                />
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-4 text-sm space-y-1">
+                <p>
+                  Incorporation fee:{" "}
+                  <span className="font-medium text-[#1C2541]">
+                    {formatMoney(INCORPORATION_FEE_CENTS, currency)}
+                  </span>
+                </p>
+                <p>
+                  Checking balance:{" "}
+                  <span className={checking >= INCORPORATION_FEE_CENTS ? "text-[#2EC4B6]" : "text-orange-600"}>
+                    {formatMoney(checking, currency)}
+                  </span>
+                </p>
+              </div>
+
+              {actionError ? (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={handleFoundCompany}
+                  disabled={busyAction === "FOUND_COMPANY" || checking < INCORPORATION_FEE_CENTS}
+                  className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                >
+                  {busyAction === "FOUND_COMPANY" ? "Incorporating…" : "Incorporate Company"}
+                </Button>
+                <Button variant="outline" onClick={() => navigate("/banking")}>
+                  Review Finances
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const { company } = world;
   const currency = world.origin.currency;

@@ -13,16 +13,20 @@ import {
   COUNTRIES,
   CURRENCIES,
   createBankingForBackground,
+  encodeWorldSeed,
   formatMoney,
   getCitiesForCountry,
   getDefaultCurrencyForCountry,
+  lifePathLabel,
   totalNetWorthCents,
+  type LifePath,
 } from "@fenix/domain";
 
 export default function CharacterCreation() {
   const navigate = useNavigate();
   const { createNewSave } = useSave();
   const [selectedBackground, setSelectedBackground] = useState("middle-class");
+  const [selectedLifePath, setSelectedLifePath] = useState<LifePath>("undecided");
   const [selectedAvatar, setSelectedAvatar] = useState("professional");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -31,7 +35,7 @@ export default function CharacterCreation() {
   const [cityId, setCityId] = useState("us-washington-d-c");
   const [currency, setCurrency] = useState("USD");
   const [gender, setGender] = useState("male");
-  const [birthday, setBirthday] = useState("1990-01-01");
+  const [birthday, setBirthday] = useState("1982-06-15");
   const [skinTone, setSkinTone] = useState("medium");
   const [hairstyle, setHairstyle] = useState("medium");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,8 +68,8 @@ export default function CharacterCreation() {
       connections: "High Society",
       advantages: ["Trust Fund", "Business Contacts", "Premium Education"],
       disadvantages: ["High Expectations", "Pressure"],
-      difficulty: "Easy",
-      difficultyColor: "text-[#2EC4B6]",
+      difficulty: "Standard",
+      difficultyColor: "text-[#F4B400]",
     },
     {
       id: "middle-class",
@@ -131,6 +135,34 @@ export default function CharacterCreation() {
     [currency],
   );
 
+  const lifePaths = useMemo(
+    () =>
+      ([
+        "undecided",
+        "business-founder",
+        "corporate-ladder",
+        "market-wizard",
+        "family-first",
+        "free-spirit",
+      ] as LifePath[]).map((path) => ({
+        id: path,
+        label: lifePathLabel(path),
+        hint:
+          path === "business-founder"
+            ? "Highlights company founding and banking"
+            : path === "corporate-ladder"
+              ? "Highlights education and career paths"
+              : path === "market-wizard"
+                ? "Highlights stocks and investing"
+                : path === "family-first"
+                  ? "Highlights family and legacy systems"
+                  : path === "free-spirit"
+                    ? "Highlights city exploration and news"
+                    : "No suggested focus — choose your own way",
+      })),
+    [],
+  );
+
   async function handleStartJourney() {
     const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ') || 'My Life';
     if (!cityId) {
@@ -143,9 +175,21 @@ export default function CharacterCreation() {
     try {
       await createNewSave({
         name,
-        worldSeed: `${selectedBackground}:${selectedAvatar}:${nationality}:${residenceCountry}:${cityId}:${currency}:${gender}:${birthday}:${skinTone}:${hairstyle}`,
+        worldSeed: encodeWorldSeed({
+          background: selectedBackground,
+          avatar: selectedAvatar,
+          nationalityCode: nationality,
+          countryCode: residenceCountry,
+          cityId,
+          currency,
+          gender,
+          birthday,
+          skinTone,
+          hairstyle,
+          lifePath: selectedLifePath,
+        }),
       });
-      navigate('/home');
+      navigate('/childhood-play');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create save');
     } finally {
@@ -168,7 +212,7 @@ export default function CharacterCreation() {
         <Card className="border-[#2EC4B6]/20 shadow-xl">
           <CardHeader className="bg-gradient-to-r from-[#1C2541] to-[#0B132B] text-white rounded-t-lg">
             <CardTitle className="text-3xl text-center">Create Your Character</CardTitle>
-            <p className="text-center text-gray-300">Begin your journey to success</p>
+            <p className="text-center text-gray-300">Begin at 18 — build your life from zero</p>
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid md:grid-cols-2 gap-8">
@@ -396,6 +440,31 @@ export default function CharacterCreation() {
                     </Card>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-[#2EC4B6]/20">
+              <h3 className="text-xl text-[#1C2541] mb-2">Suggested Path (Optional)</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                UX hints only — any path is achievable from any background (GDD §6.3).
+              </p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {lifePaths.map((path) => (
+                  <Card
+                    key={path.id}
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      selectedLifePath === path.id
+                        ? "border-[#2EC4B6] bg-[#2EC4B6]/5 shadow-md"
+                        : "border-gray-200 hover:border-[#2EC4B6]/50"
+                    }`}
+                    onClick={() => setSelectedLifePath(path.id)}
+                  >
+                    <CardContent className="p-4">
+                      <h4 className="text-[#1C2541] font-medium mb-1">{path.label}</h4>
+                      <p className="text-xs text-gray-500">{path.hint}</p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
 

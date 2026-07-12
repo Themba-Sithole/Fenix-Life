@@ -1,5 +1,6 @@
 import type { CharacterOrigin } from './locations.js';
 import { createDefaultOrigin } from './locations.js';
+import { isLifePath, type LifePath } from './life-path.js';
 
 export interface ParsedWorldSeed {
   background: string;
@@ -9,6 +10,35 @@ export interface ParsedWorldSeed {
   birthday?: string;
   skinTone?: string;
   hairstyle?: string;
+  lifePath: LifePath;
+}
+
+export function encodeWorldSeed(input: {
+  background: string;
+  avatar: string;
+  nationalityCode: string;
+  countryCode: string;
+  cityId: string;
+  currency: string;
+  gender?: string;
+  birthday?: string;
+  skinTone?: string;
+  hairstyle?: string;
+  lifePath?: LifePath;
+}): string {
+  return [
+    input.background,
+    input.avatar,
+    input.nationalityCode,
+    input.countryCode,
+    input.cityId,
+    input.currency,
+    input.gender ?? '',
+    input.birthday ?? '',
+    input.skinTone ?? '',
+    input.hairstyle ?? '',
+    input.lifePath ?? 'undecided',
+  ].join(':');
 }
 
 /** Parse character-creation world seed. */
@@ -27,16 +57,20 @@ export function parseWorldSeed(worldSeed: string | null | undefined): ParsedWorl
       birthday,
       skinTone,
       hairstyle,
+      lifePathRaw,
     ] = parts;
+
+    const lifePath = lifePathRaw && isLifePath(lifePathRaw) ? lifePathRaw : 'undecided';
 
     return {
       background,
       avatar,
       origin: createDefaultOrigin({ nationalityCode, countryCode, cityId, currency }),
-      gender,
-      birthday,
-      skinTone,
-      hairstyle,
+      gender: gender || undefined,
+      birthday: birthday || undefined,
+      skinTone: skinTone || undefined,
+      hairstyle: hairstyle || undefined,
+      lifePath,
     };
   }
 
@@ -51,5 +85,6 @@ export function parseWorldSeed(worldSeed: string | null | undefined): ParsedWorl
       cityId,
       currency,
     }),
+    lifePath: 'undecided',
   };
 }

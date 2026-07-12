@@ -41,6 +41,27 @@ export default function EmployeeManagement() {
   if (simulationGate) return simulationGate;
   if (!world) return null;
 
+  if (!world.company) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F7FA] via-white to-[#F5F7FA] p-6">
+        <div className="max-w-3xl mx-auto">
+          <Button variant="outline" onClick={() => navigate("/company")} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Company
+          </Button>
+          <Card className="border-[#2EC4B6]/20 shadow-lg">
+            <CardContent className="p-8 text-center space-y-4">
+              <p className="text-gray-600">Found a company first to manage employees.</p>
+              <Button onClick={() => navigate("/company")} className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white">
+                Go to Company Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const currency = world.origin.currency;
 
   return (

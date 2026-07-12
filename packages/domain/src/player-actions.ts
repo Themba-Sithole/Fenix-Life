@@ -1,7 +1,19 @@
 import { debitFromBestAccount } from './banking-actions.js';
 import type { BankingState, BankTransaction } from './banking.js';
-import type { CompanyState } from './company.js';
+import { createFoundedCompany, INCORPORATION_FEE_CENTS, suggestedCompanyName, type CompanyState } from './company.js';
 import type { CareerState } from './career.js';
+import { applyAdolescenceChoice, skipAdolescencePlay } from './adolescence-play.js';
+import {
+  appendJobApplication,
+  createJobApplication,
+} from './job-applications.js';
+import {
+  getAvailableJobListings,
+  getJobListingById,
+  JOB_APPLICATION_FEE_CENTS,
+  jobListingMatchScore,
+} from './job-market.js';
+import { completeChildhoodOnboarding, dismissLifePathHints, dismissHomeTour } from './onboarding.js';
 import type { PortfolioState } from './portfolio.js';
 import type { WorldInstance } from './world-instance.js';
 import {
@@ -60,8 +72,14 @@ export type PlayerAction =
   | { kind: 'CAREER_UPSKILL' }
   | { kind: 'CAREER_NETWORK' }
   | { kind: 'PAY_LOAN' }
-  | { kind: 'CAREER_APPLY_JOB' }
-  | { kind: 'VISIT_DISTRICT'; districtId: string };
+  | { kind: 'CAREER_APPLY_JOB'; listingId: string }
+  | { kind: 'APPLY_ADOLESCENCE_CHOICE'; stepId: string; choiceId: string }
+  | { kind: 'SKIP_ADOLESCENCE_PLAY' }
+  | { kind: 'DISMISS_HOME_TOUR' }
+  | { kind: 'VISIT_DISTRICT'; districtId: string }
+  | { kind: 'FOUND_COMPANY'; name: string }
+  | { kind: 'COMPLETE_CHILDHOOD_ONBOARDING'; simulateFirstYear?: boolean }
+  | { kind: 'DISMISS_LIFE_PATH_HINTS' };
 
 export function applyPlayerAction(world: WorldInstance, action: PlayerAction): WorldInstance {
   switch (action.kind) {
@@ -104,9 +122,23 @@ export function applyPlayerAction(world: WorldInstance, action: PlayerAction): W
     case 'PAY_LOAN':
       return payLoan(world);
     case 'CAREER_APPLY_JOB':
-      return applyForJob(world);
+      return applyForJob(world, action.listingId);
+    case 'APPLY_ADOLESCENCE_CHOICE':
+      return applyAdolescenceChoice(world, action.stepId, action.choiceId);
+    case 'SKIP_ADOLESCENCE_PLAY':
+      return skipAdolescencePlay(world);
+    case 'DISMISS_HOME_TOUR':
+      return dismissHomeTour(world);
     case 'VISIT_DISTRICT':
       return visitDistrict(world, action.districtId);
+    case 'FOUND_COMPANY':
+      return foundCompany(world, action.name);
+    case 'COMPLETE_CHILDHOOD_ONBOARDING':
+      return completeChildhoodOnboarding(world, {
+        simulateFirstYear: action.simulateFirstYear,
+      });
+    case 'DISMISS_LIFE_PATH_HINTS':
+      return dismissLifePathHints(world);
     default: {
       const _exhaustive: never = action;
       return _exhaustive;
@@ -341,53 +373,112 @@ function applyLoan(world: WorldInstance, amountCents: number): WorldInstance {
   };
 }
 
+function requireCompany(world: WorldInstance): CompanyState {
+  if (!world.company) {
+    throw new Error('You have not founded a company yet');
+  }
+  return world.company;
+}
+
+function foundCompany(world: WorldInstance, name: string): WorldInstance {
+  if (world.company) {
+    throw new Error('You already have an incorporated company');
+  }
+
+  const trimmed = name.trim() || suggestedCompanyName(world.player.displayName);
+  if (trimmed.length < 2) {
+    throw new Error('Company name must be at least 2 characters');
+  }
+
+  const banking = debitFromBestAccount(
+    world.banking,
+    INCORPORATION_FEE_CENTS,
+    world.currentDate,
+    `Incorporation — ${trimmed}`,
+  );
+
+  const company = createFoundedCompany(trimmed, world.player.displayName);
+  const career: CareerState = {
+    ...world.career,
+    status: 'founder',
+    jobTitle: 'Founder',
+    employerName: company.name,
+    monthlySalaryCents: 0,
+    performanceScore: Math.max(world.career.performanceScore, 60),
+  };
+
+  const events = [
+    {
+      id: `evt-founded-${world.clock.tickCount}`,
+      tickCount: world.clock.tickCount,
+      date: world.currentDate,
+      category: 'career' as const,
+      headline: `${world.player.displayName} incorporated ${company.name}`,
+      tone: 'success' as const,
+    },
+    ...world.events,
+  ].slice(0, 50);
+
+  return {
+    ...world,
+    banking: { ...banking, monthlySalaryCents: 0 },
+    company,
+    career,
+    employees: [],
+    events,
+  };
+}
+
 function hireEmployee(world: WorldInstance): WorldInstance {
+  const company = requireCompany(world);
   const hireCostCents = 5_000_00;
   const banking = debitFromBestAccount(
     world.banking,
     hireCostCents,
     world.currentDate,
-    `Hiring budget — ${world.company.name}`,
+    `Hiring budget — ${company.name}`,
   );
 
-  const company: CompanyState = {
-    ...world.company,
-    employeeCount: world.company.employeeCount + 1,
-    monthlyExpensesCents: world.company.monthlyExpensesCents + 4_500_00,
+  const nextCompany: CompanyState = {
+    ...company,
+    employeeCount: company.employeeCount + 1,
+    monthlyExpensesCents: company.monthlyExpensesCents + 4_500_00,
   };
 
   const employees =
     world.employees.length < 8
       ? [
           ...world.employees,
-          createHiredEmployee(company, String(world.saveId), world.employees.length),
+          createHiredEmployee(nextCompany, String(world.saveId), world.employees.length),
         ]
       : world.employees;
 
-  return { ...world, banking, company, employees };
+  return { ...world, banking, company: nextCompany, employees };
 }
 
 function launchProduct(world: WorldInstance): WorldInstance {
+  const company = requireCompany(world);
   const launchCostCents = 12_000_00;
   const banking = debitFromBestAccount(
     world.banking,
     launchCostCents,
     world.currentDate,
-    `Product launch — ${world.company.name}`,
+    `Product launch — ${company.name}`,
   );
 
-  const company: CompanyState = {
-    ...world.company,
-    productCount: world.company.productCount + 1,
-    monthlyRevenueCents: world.company.monthlyRevenueCents + 8_000_00,
-    valuationCents: world.company.valuationCents + 150_000_00,
-    marketSharePct: Math.min(25, world.company.marketSharePct + 0.2),
+  const nextCompany: CompanyState = {
+    ...company,
+    productCount: company.productCount + 1,
+    monthlyRevenueCents: company.monthlyRevenueCents + 8_000_00,
+    valuationCents: company.valuationCents + 150_000_00,
+    marketSharePct: Math.min(25, company.marketSharePct + 0.2),
   };
 
-  return { ...world, banking, company };
+  return { ...world, banking, company: nextCompany };
 }
 
 function promoteEmployee(world: WorldInstance, employeeId: string): WorldInstance {
+  const company = requireCompany(world);
   const employee = findEmployee(world, employeeId);
   const costCents = 2_500_00;
   const banking = debitFromBestAccount(
@@ -415,13 +506,14 @@ function promoteEmployee(world: WorldInstance, employeeId: string): WorldInstanc
     banking,
     employees,
     company: {
-      ...world.company,
-      monthlyExpensesCents: world.company.monthlyExpensesCents + salaryDelta,
+      ...company,
+      monthlyExpensesCents: company.monthlyExpensesCents + salaryDelta,
     },
   };
 }
 
 function raiseEmployee(world: WorldInstance, employeeId: string): WorldInstance {
+  const company = requireCompany(world);
   const employee = findEmployee(world, employeeId);
   const costCents = 1_500_00;
   const banking = debitFromBestAccount(
@@ -447,8 +539,8 @@ function raiseEmployee(world: WorldInstance, employeeId: string): WorldInstance 
     banking,
     employees,
     company: {
-      ...world.company,
-      monthlyExpensesCents: world.company.monthlyExpensesCents + salaryDelta,
+      ...company,
+      monthlyExpensesCents: company.monthlyExpensesCents + salaryDelta,
     },
   };
 }
@@ -634,36 +726,60 @@ function payLoan(world: WorldInstance): WorldInstance {
   };
 }
 
-const JOB_LISTINGS = [
-  { title: 'Operations Associate', employer: 'Metro Logistics Co.', salaryCents: 3_400_00 },
-  { title: 'Junior Analyst', employer: 'Regional Services Ltd.', salaryCents: 4_800_00 },
-  { title: 'Product Specialist', employer: 'Horizon Digital', salaryCents: 6_200_00 },
-  { title: 'Customer Success Lead', employer: 'Northwind Partners', salaryCents: 5_500_00 },
-] as const;
-
-function applyForJob(world: WorldInstance): WorldInstance {
+function applyForJob(world: WorldInstance, listingId: string): WorldInstance {
   if (world.career.status !== 'unemployed') {
     throw new Error('You are already employed');
   }
 
-  const applicationFeeCents = 50_00;
+  const listing = getJobListingById(listingId);
+  if (!listing) {
+    throw new Error('Job listing not found');
+  }
+
+  const available = getAvailableJobListings({
+    career: world.career,
+    education: world.education,
+  });
+  if (!available.some((item) => item.id === listingId)) {
+    throw new Error('You do not meet the requirements for this job');
+  }
+
   let nextWorld: WorldInstance = {
     ...world,
     banking: debitFromBestAccount(
       world.banking,
-      applicationFeeCents,
+      JOB_APPLICATION_FEE_CENTS,
       world.currentDate,
-      'Job application fee',
+      `Application — ${listing.title}`,
     ),
   };
 
+  const matchScore = jobListingMatchScore(listing, world.career.performanceScore);
   const success =
-    world.career.performanceScore >= 55 ||
-    world.clock.tickCount % 3 !== 0;
+    matchScore >= 55 ||
+    (world.clock.tickCount + listingId.length) % 3 !== 0;
+
+  const applications = world.career.applications ?? [];
 
   if (!success) {
+    const rejectedApplication = createJobApplication({
+      listing,
+      appliedDate: world.currentDate,
+      matchScore,
+      status: 'rejected',
+      rejectionReason:
+        matchScore < 55
+          ? 'Match score below the hiring threshold'
+          : 'Employer chose stronger candidates this cycle',
+      idSuffix: world.clock.tickCount,
+    });
+
     return {
       ...nextWorld,
+      career: {
+        ...world.career,
+        applications: appendJobApplication(applications, rejectedApplication),
+      },
       player: {
         ...nextWorld.player,
         traits: {
@@ -671,20 +787,54 @@ function applyForJob(world: WorldInstance): WorldInstance {
           stress: clampEmployeeStat(nextWorld.player.traits.stress + 3),
         },
       },
+      events: [
+        {
+          id: `evt-job-reject-${world.clock.tickCount}`,
+          tickCount: world.clock.tickCount,
+          date: world.currentDate,
+          category: 'career' as const,
+          headline: `Application declined — ${listing.title} at ${listing.employerName}`,
+          tone: 'warning' as const,
+        },
+        ...nextWorld.events,
+      ].slice(0, 50),
     };
   }
 
-  const listing = JOB_LISTINGS[world.clock.tickCount % JOB_LISTINGS.length]!;
+  const acceptedApplication = createJobApplication({
+    listing,
+    appliedDate: world.currentDate,
+    matchScore,
+    status: 'accepted',
+    idSuffix: world.clock.tickCount,
+  });
+
   const career: CareerState = {
     ...world.career,
     status: 'employed',
     jobTitle: listing.title,
-    employerName: listing.employer,
-    monthlySalaryCents: listing.salaryCents,
+    employerName: listing.employerName,
+    monthlySalaryCents: listing.monthlySalaryCents,
     performanceScore: clampEmployeeStat(world.career.performanceScore + 5),
+    yearsExperience: world.career.yearsExperience,
+    unemployedSinceDate: null,
+    applications: appendJobApplication(applications, acceptedApplication),
   };
 
-  return syncCareerSalary(nextWorld, career);
+  return {
+    ...syncCareerSalary(nextWorld, career),
+    events: [
+      {
+        id: `evt-job-offer-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'career' as const,
+        headline: `Hired as ${listing.title} at ${listing.employerName}`,
+        tone: 'success' as const,
+      },
+      ...nextWorld.events,
+    ].slice(0, 50),
+  };
 }
 
 function visitDistrict(world: WorldInstance, districtId: string): WorldInstance {

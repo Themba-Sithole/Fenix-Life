@@ -5,6 +5,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
   ArrowLeft,
+  Briefcase,
   Building2,
   Calendar,
   Car,
@@ -40,7 +41,7 @@ export default function Smartphone() {
       netWorth,
       currency: world.origin.currency,
       unreadNews,
-      company: world.company.name,
+      company: world.company?.name ?? 'No company',
     };
   }, [world]);
 
@@ -52,6 +53,7 @@ export default function Smartphone() {
     { id: "maps", name: "City Map", icon: Map, color: "bg-blue-400", action: () => navigate("/city") },
     { id: "company", name: "Business", icon: Building2, color: "bg-[#1C2541]", action: () => navigate("/company"), badge: stats?.company.slice(0, 8) },
     { id: "education", name: "University", icon: GraduationCap, color: "bg-purple-500", action: () => navigate("/education") },
+    { id: "career", name: "Careers", icon: Briefcase, color: "bg-emerald-600", action: () => navigate("/career") },
     { id: "properties", name: "Properties", icon: HomeIcon, color: "bg-indigo-500", action: () => navigate("/real-estate") },
     { id: "vehicles", name: "Vehicles", icon: Car, color: "bg-gray-700", action: () => navigate("/vehicles") },
     { id: "stocks", name: "Stocks", icon: TrendingUp, color: "bg-[#F4B400]", action: () => navigate("/stocks") },

@@ -10,8 +10,10 @@ import {
 } from 'react';
 import {
   createSaveId,
-  createWorldInstance,
+  createFreshStartWorld,
+  deriveYoungAdultStartDate,
   ensureWorldV2,
+  ONBOARDING_FIRST_YEAR_DAYS,
   parseWorldSeed,
   type TimeScale,
   type WorldInstance,
@@ -57,6 +59,9 @@ interface SimulationContextValue {
     amountCents: number;
   }) => Promise<void>;
   applyAction: (action: PlayerAction) => Promise<void>;
+  completeChildhoodOnboarding: (simulateFirstYear: boolean) => Promise<void>;
+  dismissLifePathHints: () => Promise<void>;
+  dismissHomeTour: () => Promise<void>;
 }
 
 const SimulationContext = createContext<SimulationContextValue | null>(null);
@@ -215,7 +220,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         const rawBlob = await downloadSaveBlob(activeSave.id);
         const parsed = parseSaveBlobV1(rawBlob);
         const seed = parseWorldSeed(activeSave.worldSeed);
-        let migrated = ensureWorldV2(parsed.world, activeSave.name, seed.background);
+        let migrated = ensureWorldV2(parsed.world, activeSave.name, seed.background, seed.lifePath);
         const catchUpDays = estimateCatchUpDays(parsed.savedAt);
         if (catchUpDays > 0) {
           migrated = runCatchUpTicks(migrated, catchUpDays);
@@ -224,15 +229,17 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
           const seed = parseWorldSeed(activeSave.worldSeed);
-          initialWorld = createWorldInstance({
+          const birthday = seed.birthday ?? '1982-06-15';
+          initialWorld = createFreshStartWorld({
             saveId: createSaveId(activeSave.id),
-            currentDate: '2000-01-01',
+            currentDate: deriveYoungAdultStartDate(birthday),
             playerName: activeSave.name,
             background: seed.background,
+            lifePath: seed.lifePath,
             origin: seed.origin,
             avatarId: seed.avatar,
             gender: seed.gender,
-            birthday: seed.birthday,
+            birthday,
             skinTone: seed.skinTone,
             hairstyle: seed.hairstyle,
           });
@@ -337,6 +344,47 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     [persistWorld],
   );
 
+  const catchUpDays = useCallback(
+    async (days: number) => {
+      const worker = workerRef.current;
+      if (!worker) {
+        throw new Error('Simulation is not ready yet');
+      }
+
+      const response = await postAndWait(worker, { type: 'CATCH_UP', days });
+      if (response.type === 'ERROR') {
+        throw new Error(response.message);
+      }
+      if (response.type !== 'STATE') return;
+
+      worldRef.current = response.world;
+      setWorld(response.world);
+      await persistWorld(response.world);
+    },
+    [persistWorld],
+  );
+
+  const completeChildhoodOnboarding = useCallback(
+    async (simulateFirstYear: boolean) => {
+      if (simulateFirstYear) {
+        await catchUpDays(ONBOARDING_FIRST_YEAR_DAYS);
+      }
+      await applyAction({
+        kind: 'COMPLETE_CHILDHOOD_ONBOARDING',
+        simulateFirstYear,
+      });
+    },
+    [applyAction, catchUpDays],
+  );
+
+  const dismissLifePathHints = useCallback(async () => {
+    await applyAction({ kind: 'DISMISS_LIFE_PATH_HINTS' });
+  }, [applyAction]);
+
+  const dismissHomeTour = useCallback(async () => {
+    await applyAction({ kind: 'DISMISS_HOME_TOUR' });
+  }, [applyAction]);
+
   const reloadSimulation = useCallback(async () => {
     await loadSimulation();
   }, [loadSimulation]);
@@ -363,8 +411,11 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       reloadSimulation,
       transferFunds,
       applyAction,
+      completeChildhoodOnboarding,
+      dismissLifePathHints,
+      dismissHomeTour,
     }),
-    [world, isLoading, isSaving, loadError, advanceDay, setPaused, setTimeScale, persistWorld, reloadSimulation, transferFunds, applyAction],
+    [world, isLoading, isSaving, loadError, advanceDay, setPaused, setTimeScale, persistWorld, reloadSimulation, transferFunds, applyAction, completeChildhoodOnboarding, dismissLifePathHints, dismissHomeTour],
   );
 
   return (

@@ -1,26 +1,20 @@
-import { createBankingForBackground } from './banking.js';
-import { createDefaultCitizen } from './citizen.js';
-import { createCitizenId } from './citizen-id.js';
-import { createDefaultCompany, type CompanyState } from './company.js';
-import { createDefaultCareer, type CareerState } from './career.js';
-import { createDefaultEconomy } from './economy.js';
-import { createDefaultOrigin, type CharacterOrigin } from './locations.js';
-import { createDefaultPortfolio, type PortfolioState } from './portfolio.js';
-import { createDefaultHousing, type HousingState } from './housing.js';
-import { createDefaultTransportation, type TransportationState } from './transportation.js';
-import { createDefaultFamily, type FamilyState } from './family.js';
-import { createDefaultEducation, type EducationState } from './education.js';
-import {
-  ensureCompanyEmployees,
-  generateCompanyEmployees,
-  type EmployeeRecord,
-} from './employees.js';
-import { formatOriginLocation } from './location-helpers.js';
+import type { CompanyState } from './company.js';
+import type { LifePath, LifeStage } from './life-path.js';
 import type { BankingState } from './banking.js';
 import type { Citizen } from './citizen.js';
 import type { EconomyState } from './economy.js';
 import type { SimEvent } from './sim-event.js';
 import type { SaveId } from './save-id.js';
+import type { CareerState } from './career.js';
+import type { PortfolioState } from './portfolio.js';
+import type { HousingState } from './housing.js';
+import type { TransportationState } from './transportation.js';
+import type { FamilyState } from './family.js';
+import type { EducationState } from './education.js';
+import type { EmployeeRecord } from './employees.js';
+import type { CharacterOrigin } from './locations.js';
+import type { OnboardingState } from './onboarding.js';
+import { createFreshStartWorld } from './fresh-start.js';
 
 /** Game clock speed multiplier (Doc 17). */
 export type TimeScale = 0 | 1 | 2 | 5;
@@ -38,7 +32,8 @@ export interface WorldInstance {
   player: Citizen;
   banking: BankingState;
   economy: EconomyState;
-  company: CompanyState;
+  /** Null until the player incorporates a company (fresh-start onboarding). */
+  company: CompanyState | null;
   career: CareerState;
   portfolio: PortfolioState;
   housing: HousingState;
@@ -48,14 +43,19 @@ export interface WorldInstance {
   employees: EmployeeRecord[];
   events: SimEvent[];
   origin: CharacterOrigin;
+  lifePath: LifePath;
+  lifeStage: LifeStage;
+  onboarding: OnboardingState;
 }
 
+/** @deprecated Use createFreshStartWorld for new saves. Kept as alias for compatibility. */
 export function createWorldInstance(params: {
   saveId: SaveId;
   schemaVersion?: number;
   currentDate?: string;
   playerName?: string;
   background?: string;
+  lifePath?: LifePath;
   origin?: Partial<CharacterOrigin>;
   avatarId?: string;
   gender?: string;
@@ -63,52 +63,5 @@ export function createWorldInstance(params: {
   skinTone?: string;
   hairstyle?: string;
 }): WorldInstance {
-  const citizenId = createCitizenId(String(params.saveId));
-  const playerName = params.playerName ?? 'Citizen';
-  const currentDate = params.currentDate ?? '2000-01-01';
-  const origin = createDefaultOrigin(params.origin);
-  const company = createDefaultCompany(playerName, params.background);
-  const career = createDefaultCareer(playerName, params.background, company.name);
-  const portfolio = createDefaultPortfolio({ companyStage: company.stage });
-  const cityLabel = formatOriginLocation(origin);
-  const housing = createDefaultHousing(cityLabel, params.background, company.stage);
-  const transportation = createDefaultTransportation(params.background);
-  const family = createDefaultFamily(playerName, params.background);
-  const education = createDefaultEducation(params.background);
-  const employees = generateCompanyEmployees(company, String(params.saveId), 8);
-  const banking = {
-    ...createBankingForBackground(params.background),
-    monthlySalaryCents: career.monthlySalaryCents,
-  };
-
-  return {
-    saveId: params.saveId,
-    schemaVersion: params.schemaVersion ?? 9,
-    currentDate,
-    clock: {
-      timeScale: 1,
-      paused: false,
-      tickCount: 0,
-    },
-    player: createDefaultCitizen(citizenId, playerName, {
-      asOfDate: currentDate,
-      birthday: params.birthday,
-      avatarId: params.avatarId,
-      gender: params.gender,
-      skinTone: params.skinTone,
-      hairstyle: params.hairstyle,
-    }),
-    banking,
-    economy: createDefaultEconomy(),
-    company,
-    career,
-    portfolio,
-    housing,
-    transportation,
-    family,
-    education,
-    employees,
-    events: [],
-    origin,
-  };
+  return createFreshStartWorld(params);
 }

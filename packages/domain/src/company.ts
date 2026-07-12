@@ -12,6 +12,31 @@ export interface CompanyState {
   readonly marketSharePct: number;
 }
 
+/** State filing fee to incorporate (EA baseline). */
+export const INCORPORATION_FEE_CENTS = 750_00;
+
+export function suggestedCompanyName(playerName: string): string {
+  const firstName = playerName.trim().split(/\s+/)[0] || 'Fenix';
+  return `${firstName} Ventures`;
+}
+
+/** Player-founded company at idea stage — zero revenue, zero employees. */
+export function createFoundedCompany(companyName: string, playerName: string): CompanyState {
+  const name = companyName.trim() || suggestedCompanyName(playerName);
+
+  return {
+    id: 'company-1',
+    name,
+    stage: 'idea',
+    monthlyRevenueCents: 0,
+    monthlyExpensesCents: 0,
+    employeeCount: 0,
+    productCount: 0,
+    valuationCents: 0,
+    marketSharePct: 0.01,
+  };
+}
+
 export function createDefaultCompany(playerName: string, background = 'middle-class'): CompanyState {
   const firstName = playerName.trim().split(/\s+/)[0] || 'Fenix';
   const baseName = `${firstName} Ventures`;

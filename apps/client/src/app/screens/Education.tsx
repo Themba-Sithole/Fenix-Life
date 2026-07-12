@@ -22,7 +22,7 @@ export default function Education() {
   const [busyAction, setBusyAction] = useState<string | null>(null);
 
   async function handleCareerAction(
-    kind: "CAREER_REQUEST_RAISE" | "CAREER_UPSKILL" | "CAREER_NETWORK" | "CAREER_APPLY_JOB",
+    kind: "CAREER_REQUEST_RAISE" | "CAREER_UPSKILL" | "CAREER_NETWORK",
   ) {
     setActionError(null);
     setBusyAction(kind);
@@ -207,11 +207,10 @@ export default function Education() {
               {world.career.status === "unemployed" ? (
                 <Button
                   className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
-                  disabled={busyAction !== null}
-                  onClick={() => handleCareerAction("CAREER_APPLY_JOB")}
+                  onClick={() => navigate("/career")}
                 >
                   <Briefcase className="w-4 h-4 mr-2" />
-                  Apply for Job ($50 fee)
+                  Browse job listings
                 </Button>
               ) : (
                 <>

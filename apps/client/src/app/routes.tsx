@@ -6,6 +6,9 @@ import MainMenu from "./screens/MainMenu";
 import AuthScreen from "./screens/AuthScreen";
 import ContinueScreen from "./screens/ContinueScreen";
 import CharacterCreation from "./screens/CharacterCreation";
+import ChildhoodSummaryScreen from "./screens/ChildhoodSummaryScreen";
+import ChildhoodPlayScreen from "./screens/ChildhoodPlayScreen";
+import CareerScreen from "./screens/CareerScreen";
 import HomeScreen from "./screens/HomeScreen";
 import CityMap from "./screens/CityMap";
 import Smartphone from "./screens/Smartphone";
@@ -56,6 +59,14 @@ export const router = createBrowserRouter([
     Component: protect(CharacterCreation),
   },
   {
+    path: "/childhood-play",
+    Component: protect(ChildhoodPlayScreen),
+  },
+  {
+    path: "/childhood-summary",
+    Component: protect(ChildhoodSummaryScreen),
+  },
+  {
     path: "/home",
     Component: protect(HomeScreen),
   },
@@ -94,6 +105,10 @@ export const router = createBrowserRouter([
   {
     path: "/education",
     Component: protect(Education),
+  },
+  {
+    path: "/career",
+    Component: protect(CareerScreen),
   },
   {
     path: "/family",

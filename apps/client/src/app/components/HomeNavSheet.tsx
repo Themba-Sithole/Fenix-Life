@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { label: "Real Estate", icon: HomeIcon, path: "/real-estate" },
   { label: "Vehicles", icon: Car, path: "/vehicles" },
   { label: "Education", icon: GraduationCap, path: "/education" },
+  { label: "Career", icon: Briefcase, path: "/career" },
   { label: "Family", icon: Heart, path: "/family" },
   { label: "Timeline", icon: Trophy, path: "/timeline" },
   { label: "News", icon: Newspaper, path: "/news" },

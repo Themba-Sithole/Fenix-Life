@@ -4,6 +4,13 @@ export { createCitizenId } from './citizen-id.js';
 export type { SaveId } from './save-id.js';
 export { createSaveId } from './save-id.js';
 export { createWorldInstance, type WorldInstance, type TimeScale } from './world-instance.js';
+export {
+  createFreshStartWorld,
+  deriveYoungAdultStartDate,
+  FRESH_START_SCHEMA_VERSION,
+} from './fresh-start.js';
+export type { LifePath, LifeStage } from './life-path.js';
+export { isLifePath, lifePathLabel, lifeStageForAge } from './life-path.js';
 export { ensureWorldV2 } from './migrate-world.js';
 export type { Citizen, CitizenTraits } from './citizen.js';
 export { createDefaultCitizen } from './citizen.js';
@@ -42,12 +49,16 @@ export type { City, CharacterOrigin } from './locations.js';
 export { createDefaultOrigin } from './locations.js';
 export type { CompanyState, CompanyStage } from './company.js';
 export {
+  createFoundedCompany,
   companyMonthlyProfitCents,
   companyStageLabel,
   createDefaultCompany,
+  INCORPORATION_FEE_CENTS,
+  suggestedCompanyName,
 } from './company.js';
 export type { CareerState, EmploymentStatus } from './career.js';
 export {
+  createFreshStartCareer,
   createDefaultCareer,
   employmentStatusLabel,
 } from './career.js';
@@ -68,6 +79,7 @@ export type {
 } from './portfolio.js';
 export {
   appendPortfolioHistory,
+  createEmptyPortfolio,
   createDefaultPortfolio,
   createDefaultQuotes,
   getTrendingQuotes,
@@ -83,6 +95,7 @@ export type { MarketTickerItem } from './market-ticker.js';
 export { buildMarketTickerItems } from './market-ticker.js';
 export type { PropertyRecord, HousingState } from './housing.js';
 export {
+  createFreshStartHousing,
   createDefaultHousing,
   housingMonthlyRentalIncomeCents,
   housingTotalAppreciationCents,
@@ -91,6 +104,7 @@ export {
 } from './housing.js';
 export type { MaintenanceLevel, VehicleRecord, TransportationState } from './transportation.js';
 export {
+  createFreshStartTransportation,
   createDefaultTransportation,
   ownedVehicles,
   transportationTotalValueCents,
@@ -121,9 +135,59 @@ export {
   getCitiesForCountry,
   getDefaultCurrencyForCountry,
 } from './country-profiles.js';
-export { parseWorldSeed } from './world-seed.js';
+export { parseWorldSeed, encodeWorldSeed } from './world-seed.js';
+export type { OnboardingState, ChildhoodSummary, ChildhoodSummaryBeat, LifePathHintAction } from './onboarding.js';
+export {
+  buildChildhoodSummary,
+  completeChildhoodOnboarding,
+  createDefaultOnboarding,
+  dismissLifePathHints,
+  dismissHomeTour,
+  getLifePathHintActions,
+  lifePathHintTitle,
+  ONBOARDING_FIRST_YEAR_DAYS,
+} from './onboarding.js';
+export type {
+  AdolescenceChoiceOption,
+  AdolescenceStep,
+  AdolescenceStepId,
+} from './adolescence-play.js';
+export {
+  ADOLESCENCE_STEP_IDS,
+  applyAdolescenceChoice,
+  buildSuggestedAdolescenceChoices,
+  describeAdolescenceChoices,
+  getAdolescenceSteps,
+  getNextAdolescenceStep,
+  isAdolescencePlayComplete,
+  isAdolescenceStepId,
+  skipAdolescencePlay,
+} from './adolescence-play.js';
+export type { HomeTourStep, HomeTourStepId } from './home-tour.js';
+export { HOME_TOUR_STEPS } from './home-tour.js';
+export type { JobApplicationRecord, JobApplicationStatus } from './job-applications.js';
+export {
+  activeJobApplications,
+  appendJobApplication,
+  createJobApplication,
+  MAX_JOB_APPLICATIONS,
+  normalizeCareerJobSearch,
+  unemploymentPhaseLabel,
+  unemploymentRunwayMonths,
+  weeksUnemployed,
+} from './job-applications.js';
+export type { JobListing } from './job-market.js';
+export {
+  formatJobSalary,
+  getAvailableJobListings,
+  getJobListingById,
+  JOB_APPLICATION_FEE_CENTS,
+  JOB_LISTINGS,
+  jobListingMatchScore,
+} from './job-market.js';
 export type { EducationState } from './education.js';
 export {
+  createFreshStartEducation,
   createDefaultEducation,
   educationCompleted,
   educationProgressPercent,

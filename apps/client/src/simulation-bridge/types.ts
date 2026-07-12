@@ -12,7 +12,8 @@ export type SimulationWorkerRequest =
       toAccountId: string;
       amountCents: number;
     }
-  | { type: 'APPLY_ACTION'; action: PlayerAction };
+  | { type: 'APPLY_ACTION'; action: PlayerAction }
+  | { type: 'CATCH_UP'; days: number };
 
 export type SimulationWorkerResponse =
   | { type: 'READY'; world: WorldInstance }

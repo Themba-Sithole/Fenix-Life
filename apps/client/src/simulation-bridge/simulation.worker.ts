@@ -1,6 +1,6 @@
 import type { TimeScale, WorldInstance, PlayerAction } from '@fenix/domain';
 import { applyPlayerAction, transferBetweenAccounts } from '@fenix/domain';
-import { runDailyTick } from '@fenix/simulation-engine';
+import { runDailyTick, runCatchUpTicks } from '@fenix/simulation-engine';
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from './types';
 
 let world: WorldInstance | null = null;
@@ -69,6 +69,13 @@ self.onmessage = (event: MessageEvent<SimulationWorkerRequest>) => {
           throw new Error('Simulation not initialized');
         }
         world = applyPlayerAction(world, event.data.action);
+        reply({ type: 'STATE', world });
+        break;
+      case 'CATCH_UP':
+        if (!world) {
+          throw new Error('Simulation not initialized');
+        }
+        world = runCatchUpTicks(world, event.data.days, event.data.days);
         reply({ type: 'STATE', world });
         break;
       default: {

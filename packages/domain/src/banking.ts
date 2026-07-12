@@ -24,15 +24,17 @@ export interface BankingState {
   monthlyExpensesCents: number;
   creditScore: number;
   activeLoan: LoanRecord | null;
+  /** Undrawn family credit line — wealthy background only (GDD §8.2). */
+  familyCreditLineLimitCents?: number | null;
 }
 
 const BACKGROUND_STARTING_CASH_CENTS: Record<string, number> = {
-  wealthy: 500_000_00,
-  'middle-class': 25_000_00,
-  'working-class': 5_000_00,
+  wealthy: 25_000_00,
+  'middle-class': 2_500_00,
+  'working-class': 1_500_00,
   orphan: 500_00,
   immigrant: 2_000_00,
-  'entrepreneur-family': 100_000_00,
+  'entrepreneur-family': 10_000_00,
 };
 
 const BACKGROUND_CREDIT_SCORE: Record<string, number> = {
@@ -98,10 +100,11 @@ export function createBankingForBackground(background = 'middle-class'): Banking
       { id: 'investment', name: 'Investment Account', type: 'investment', balanceCents: split.investment },
     ],
     transactions: [],
-    monthlySalaryCents: 8_500_00,
-    monthlyExpensesCents: 3_500_00,
+    monthlySalaryCents: 0,
+    monthlyExpensesCents: 0,
     creditScore,
     activeLoan: null,
+    familyCreditLineLimitCents: null,
   };
 }
 

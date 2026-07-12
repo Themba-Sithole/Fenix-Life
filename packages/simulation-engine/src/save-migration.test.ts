@@ -40,7 +40,7 @@ describe('save migration', () => {
 
     const migrated = ensureWorldV2(legacyWorld as never, 'Legacy Citizen');
 
-    expect(migrated.schemaVersion).toBeGreaterThanOrEqual(9);
+    expect(migrated.schemaVersion).toBeGreaterThanOrEqual(11);
     expect(migrated.portfolio).toBeDefined();
     expect(migrated.housing).toBeDefined();
     expect(migrated.transportation).toBeDefined();
@@ -50,6 +50,84 @@ describe('save migration', () => {
     expect(migrated.economy.cyclePhase).toBeDefined();
     expect(migrated.banking.creditScore).toBeGreaterThan(0);
     expect(migrated.banking.activeLoan).toBeNull();
+    expect(migrated.onboarding.adolescencePlayCompleted).toBe(true);
+    expect(migrated.onboarding.adolescenceChoices).toEqual({});
+    expect(migrated.onboarding.homeTourCompleted).toBe(true);
+    expect(migrated.career.applications).toEqual([]);
+  });
+
+  it('migrates schema v10 fresh-start world without injecting a company', () => {
+    const freshWorld = {
+      saveId: createSaveId('fresh-v10'),
+      schemaVersion: 10,
+      currentDate: '2000-06-15',
+      clock: { timeScale: 1 as const, paused: false, tickCount: 0 },
+      player: {
+        id: createCitizenId('fresh-v10'),
+        displayName: 'Fresh Citizen',
+        ageYears: 18,
+        traits: {
+          conscientiousness: 60,
+          openness: 55,
+          happiness: 75,
+          health: 85,
+          energy: 70,
+          stress: 25,
+        },
+      },
+      banking: createDefaultBanking(),
+      economy: { inflationRateAnnual: 0.03, techSectorIndex: 100 },
+      company: null,
+      career: {
+        status: 'unemployed' as const,
+        jobTitle: 'Seeking work',
+        employerName: '—',
+        monthlySalaryCents: 0,
+        performanceScore: 58,
+        yearsExperience: 0,
+      },
+      portfolio: { holdings: [], quotes: [], dividendsYtdCents: 0, costBasisCents: 0, history: [] },
+      housing: { properties: [], monthlyMortgageCents: 0 },
+      transportation: { vehicles: [], monthlyTransportCostCents: 0 },
+      family: { members: [] },
+      education: {
+        programName: 'High School Graduate',
+        institution: 'Public School',
+        gpa: 3.3,
+        creditsCompleted: 0,
+        creditsRequired: 0,
+        enrolled: false,
+      },
+      employees: [],
+      events: [],
+      origin: {
+        nationalityCode: 'US',
+        countryCode: 'US',
+        cityId: 'us-washington-d-c',
+        currency: 'USD',
+      },
+      lifePath: 'undecided' as const,
+      lifeStage: 'young-adult' as const,
+      onboarding: {
+        childhoodSummarySeen: false,
+        lifePathHintsSeen: false,
+        firstYearSimulated: false,
+        adolescencePlayCompleted: false,
+        adolescenceChoices: {},
+        homeTourCompleted: false,
+      },
+    };
+
+    const migrated = ensureWorldV2(freshWorld as never, 'Fresh Citizen', 'middle-class');
+
+    expect(migrated.company).toBeNull();
+    expect(migrated.lifePath).toBe('undecided');
+    expect(migrated.lifeStage).toBe('young-adult');
+    expect(migrated.onboarding.childhoodSummarySeen).toBe(false);
+    expect(migrated.onboarding.adolescencePlayCompleted).toBe(false);
+    expect(migrated.onboarding.adolescenceChoices).toEqual({});
+    expect(migrated.onboarding.homeTourCompleted).toBe(false);
+    expect(migrated.career.applications).toEqual([]);
   });
 });
 

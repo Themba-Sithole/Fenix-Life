@@ -154,7 +154,7 @@ function maybeBirthday(world: WorldInstance): WorldInstance {
 }
 
 function maybeCompanyNews(world: WorldInstance): WorldInstance {
-  if (world.clock.tickCount % 14 !== 0) {
+  if (!world.company || world.clock.tickCount % 14 !== 0) {
     return world;
   }
 
@@ -172,7 +172,7 @@ function maybeCompanyNews(world: WorldInstance): WorldInstance {
 
 function applyMonthlyCompanySettlement(world: WorldInstance): WorldInstance {
   const { day } = parseGameDate(world.currentDate);
-  if (day !== 1) {
+  if (day !== 1 || !world.company) {
     return world;
   }
 

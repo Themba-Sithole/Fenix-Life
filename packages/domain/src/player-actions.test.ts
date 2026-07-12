@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { createDefaultCompany } from './company.js';
+import { generateCompanyEmployees } from './employees.js';
 import { createSaveId } from './save-id.js';
 import { createWorldInstance } from './world-instance.js';
 import { applyPlayerAction } from './player-actions.js';
+import { getAvailableJobListings } from './job-market.js';
 import { totalNetWorthCents } from './banking.js';
 
 describe('player actions', () => {
@@ -66,20 +69,39 @@ describe('player actions', () => {
   });
 
   it('hires an employee and increases headcount', () => {
-    const world = createWorldInstance({
+    const base = createWorldInstance({
       saveId: createSaveId('action-test-hire'),
       playerName: 'Tester',
     });
-    const before = world.company.employeeCount;
+    const company = createDefaultCompany('Tester', 'middle-class');
+    const world = {
+      ...base,
+      company,
+      employees: generateCompanyEmployees(company, 'action-test-hire', 4),
+      banking: {
+        ...base.banking,
+        accounts: base.banking.accounts.map((account) =>
+          account.id === 'checking'
+            ? { ...account, balanceCents: 20_000_00 }
+            : account,
+        ),
+      },
+    };
+    const before = world.company!.employeeCount;
     const next = applyPlayerAction(world, { kind: 'COMPANY_HIRE' });
-    expect(next.company.employeeCount).toBe(before + 1);
+    expect(next.company!.employeeCount).toBe(before + 1);
   });
 
   it('promotes an employee and increases salary', () => {
-    const world = createWorldInstance({
-      saveId: createSaveId('action-test-promote'),
-      playerName: 'Tester',
-    });
+    const company = createDefaultCompany('Tester', 'middle-class');
+    const world = {
+      ...createWorldInstance({
+        saveId: createSaveId('action-test-promote'),
+        playerName: 'Tester',
+      }),
+      company,
+      employees: generateCompanyEmployees(company, 'action-test-promote', 4),
+    };
     const employee = world.employees[0]!;
     const next = applyPlayerAction(world, { kind: 'EMPLOYEE_PROMOTE', employeeId: employee.id });
     const updated = next.employees.find((item) => item.id === employee.id)!;
@@ -97,10 +119,22 @@ describe('player actions', () => {
   });
 
   it('grants a raise when performance is sufficient', () => {
-    const world = createWorldInstance({
+    const base = createWorldInstance({
       saveId: createSaveId('action-test-raise'),
       playerName: 'Tester',
     });
+    const world = {
+      ...base,
+      career: {
+        ...base.career,
+        status: 'employed' as const,
+        jobTitle: 'Product Specialist',
+        employerName: 'Horizon Digital',
+        monthlySalaryCents: 6_500_00,
+        performanceScore: 74,
+      },
+      banking: { ...base.banking, monthlySalaryCents: 6_500_00 },
+    };
     const before = world.career.monthlySalaryCents;
     const next = applyPlayerAction(world, { kind: 'CAREER_REQUEST_RAISE' });
     expect(next.career.monthlySalaryCents).toBeGreaterThan(before);
@@ -178,7 +212,16 @@ describe('player actions', () => {
       clock: { ...world.clock, tickCount: 2 },
     };
 
-    const next = applyPlayerAction(world, { kind: 'CAREER_APPLY_JOB' });
+    const listings = getAvailableJobListings({
+      career: world.career,
+      education: world.education,
+    });
+    expect(listings.length).toBeGreaterThan(0);
+
+    const next = applyPlayerAction(world, {
+      kind: 'CAREER_APPLY_JOB',
+      listingId: listings[0]!.id,
+    });
     expect(next.career.status).toBe('employed');
     expect(next.career.monthlySalaryCents).toBeGreaterThan(0);
   });

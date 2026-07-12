@@ -7,6 +7,10 @@ function clamp(value: number, min: number, max: number): number {
 
 /** Company Engine v0 — Doc 19 simplified daily revenue drift. */
 export function applyDailyCompanyTick(world: WorldInstance): WorldInstance {
+  if (!world.company) {
+    return world;
+  }
+
   const sectorBoost = (world.economy.techSectorIndex - 100) / 500;
   const revenueDelta = Math.round(world.company.monthlyRevenueCents * 0.002 * (1 + sectorBoost));
   const expenseDelta = Math.round(world.company.monthlyExpensesCents * 0.0015);

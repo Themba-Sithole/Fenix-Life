@@ -63,7 +63,7 @@ export function buildLifeTimeline(world: WorldInstance): TimelineEntry[] {
     },
   ];
 
-  if (world.career.status === 'founder') {
+  if (world.career.status === 'founder' && world.company) {
     milestones.push({
       id: 'tl-founded',
       gameDate: `${birthYear + 24}-01-01`,
@@ -114,12 +114,12 @@ export function computeLegacySnapshot(world: WorldInstance): LegacySnapshot {
     housingTotalValueCents(world.housing) +
     transportationTotalValueCents(world.transportation);
 
-  const profit = companyMonthlyProfitCents(world.company);
+  const profit = world.company ? companyMonthlyProfitCents(world.company) : 0;
   const achievementCount = world.events.length;
   const rawScore =
     world.player.ageYears * 0.08 +
     Math.log10(Math.max(netWorth / 100, 1)) * 1.4 +
-    world.company.marketSharePct * 0.12 +
+    (world.company?.marketSharePct ?? 0) * 0.12 +
     (profit > 0 ? 0.8 : 0) +
     achievementCount * 0.05;
 

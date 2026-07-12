@@ -26,6 +26,75 @@ function property(
   };
 }
 
+export function createFreshStartHousing(cityLabel: string): HousingState {
+  const district = cityLabel.split(',')[0]?.trim() || 'Metro';
+
+  const listings: PropertyRecord[] = [
+    property({
+      id: 'prop-mansion',
+      type: 'Luxury Residence',
+      location: `${district} Heights`,
+      priceCents: 250_000_000,
+      monthlyRentCents: 850_000,
+      rating: 5,
+      emoji: '🏛️',
+      owned: false,
+    }),
+    property({
+      id: 'prop-penthouse',
+      type: 'Downtown Penthouse',
+      location: `${district} Financial District`,
+      priceCents: 120_000_000,
+      monthlyRentCents: 0,
+      rating: 5,
+      emoji: '🏢',
+      owned: false,
+    }),
+    property({
+      id: 'prop-home',
+      type: 'Family Home',
+      location: `${district} Suburbs`,
+      priceCents: 65_000_000,
+      monthlyRentCents: 320_000,
+      rating: 4,
+      emoji: '🏡',
+      owned: false,
+    }),
+    property({
+      id: 'prop-office',
+      type: 'Commercial Office',
+      location: `${district} Tech District`,
+      priceCents: 180_000_000,
+      monthlyRentCents: 1_200_000,
+      rating: 4,
+      emoji: '🏬',
+      owned: false,
+    }),
+    property({
+      id: 'prop-condo',
+      type: 'Waterfront Condo',
+      location: `${district} Bayfront`,
+      priceCents: 95_000_000,
+      monthlyRentCents: 450_000,
+      rating: 5,
+      emoji: '🏖️',
+      owned: false,
+    }),
+    property({
+      id: 'prop-studio',
+      type: 'City Studio',
+      location: `${district} Central`,
+      priceCents: 28_000_000,
+      monthlyRentCents: 0,
+      rating: 3,
+      emoji: '🏠',
+      owned: false,
+    }),
+  ];
+
+  return { properties: listings, monthlyMortgageCents: 0 };
+}
+
 export function createDefaultHousing(
   cityLabel: string,
   background = 'middle-class',

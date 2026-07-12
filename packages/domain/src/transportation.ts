@@ -97,6 +97,13 @@ const BASE_INVENTORY: Omit<VehicleRecord, 'owned' | 'valueCents'>[] = [
   },
 ];
 
+export function createFreshStartTransportation(): TransportationState {
+  const vehicles = BASE_INVENTORY.map((item) =>
+    vehicle({ ...item, owned: false }),
+  );
+  return { vehicles, monthlyTransportCostCents: 0 };
+}
+
 export function createDefaultTransportation(background = 'middle-class'): TransportationState {
   const vehicles = BASE_INVENTORY.map((item) =>
     vehicle({ ...item, owned: false }),

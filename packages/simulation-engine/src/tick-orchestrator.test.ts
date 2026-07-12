@@ -34,11 +34,24 @@ describe('runDailyTick', () => {
       currentDate: '2000-01-31',
     });
 
+    world = {
+      ...world,
+      career: {
+        ...world.career,
+        status: 'employed',
+        jobTitle: 'Analyst',
+        employerName: 'Acme Corp',
+        monthlySalaryCents: 6_500_00,
+      },
+      banking: { ...world.banking, monthlySalaryCents: 6_500_00 },
+    };
+
+    const checkingBefore = world.banking.accounts.find((a) => a.id === 'checking')!.balanceCents;
     world = runDailyTick(world);
 
     expect(world.currentDate).toBe('2000-02-01');
     const checking = world.banking.accounts.find((a) => a.id === 'checking');
-    expect(checking?.balanceCents).toBeGreaterThan(12_500_00);
+    expect(checking?.balanceCents).toBeGreaterThan(checkingBefore);
     expect(world.events.some((e) => e.headline.includes('Salary deposited'))).toBe(true);
   });
 
