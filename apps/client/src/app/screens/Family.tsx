@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "../components/ui/button";
-import { Progress } from "../components/ui/progress";
 import { Calendar, Gift, Heart } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
@@ -51,48 +50,72 @@ export default function Family() {
         <h1 className="font-display text-3xl tracking-tight text-foreground">Family</h1>
         <p className="mt-1 text-sm text-muted-foreground">Care builds resilience across generations.</p>
       </header>
-        {actionError ? (
-          <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{actionError}</p>
-        ) : null}
-        <dl className="mb-6 flex flex-wrap gap-x-8 gap-y-3 border-b border-border pb-5">
-          <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Members</dt><dd className="font-display text-xl text-foreground">{family.members.length}</dd></div>
-          <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Family happiness</dt><dd className="font-display text-xl text-foreground">{happiness}%</dd></div>
-          <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Household expenses</dt><dd className="font-display text-xl text-foreground">{formatMoney(family.householdExpensesCents, currency)}/mo</dd></div>
-        </dl>
-        {family.members.length === 0 ? (
-          <EmptyState title="No family members recorded" description="Relationships will appear as your life unfolds." />
-        ) : (
-          <ul className="divide-y divide-border">
+      {actionError ? (
+        <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          {actionError}
+        </p>
+      ) : null}
+      <dl className="mb-6 flex flex-wrap gap-x-8 gap-y-3 border-b border-border pb-5">
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">Members</dt>
+          <dd className="font-display text-xl text-foreground">{family.members.length}</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">Family happiness</dt>
+          <dd className="font-display text-xl text-foreground">{happiness}%</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">Household expenses</dt>
+          <dd className="font-display text-xl text-foreground">
+            {formatMoney(family.householdExpensesCents, currency)}/mo
+          </dd>
+        </div>
+      </dl>
+      {family.members.length === 0 ? (
+        <EmptyState
+          title="No family members recorded"
+          description="Relationships will appear as your life unfolds."
+        />
+      ) : (
+        <ul className="surface-panel mb-6 overflow-hidden">
           {family.members.map((member) => (
-            <li key={member.id} className="py-5">
-                <div className="flex items-center gap-4">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-lg font-display text-secondary-foreground">
-                      {member.name
-                        .split(/\s+/)
-                        .map((part) => part[0])
-                        .join("")
-                        .slice(0, 2)}
-                  </span>
-                  <div className="flex-1">
-                    <h2 className="font-display text-xl text-foreground">{member.name}</h2>
-                    <p className="text-sm capitalize text-muted-foreground">{member.relationship} · Age {member.ageYears}</p>
-                  </div>
+            <li key={member.id} className="surface-row !flex-col !items-stretch sm:!flex-row sm:!items-center">
+              <div className="flex w-full items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-surface-2 font-display text-sm text-foreground">
+                  {member.name
+                    .split(/\s+/)
+                    .map((part) => part[0])
+                    .join("")
+                    .slice(0, 2)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13.5px] font-semibold text-foreground">{member.name}</p>
+                  <p className="text-[11.5px] capitalize text-muted-foreground">
+                    {member.relationship} · Age {member.ageYears}
+                  </p>
                 </div>
-                <div className="mt-4 max-w-md">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Relationship strength</span>
-                    <span className="text-foreground">{member.happiness}%</span>
-                  </div>
-                  <Progress value={member.happiness} className="h-2 bg-fenix-gold" />
+                <span className="shrink-0 font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                  {member.happiness}%
+                </span>
+              </div>
+              <div className="mt-3 w-full sm:mt-0 sm:w-auto sm:shrink-0">
+                <div className="mb-2 h-2 overflow-hidden rounded-full bg-surface-2 sm:hidden" role="presentation">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${member.happiness}%`,
+                      backgroundColor: "var(--capital-social)",
+                    }}
+                  />
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={busyKey !== null}
                     onClick={() => handleFamilyAction("FAMILY_SEND_GIFT", member.id)}
                   >
-                    <Gift className="w-4 h-4 mr-1" />
+                    <Gift className="mr-1 h-4 w-4" aria-hidden />
                     Gift
                   </Button>
                   <Button
@@ -101,25 +124,29 @@ export default function Family() {
                     disabled={busyKey !== null}
                     onClick={() => handleFamilyAction("FAMILY_SCHEDULE_VISIT", member.id)}
                   >
-                    <Calendar className="w-4 h-4 mr-1" />
+                    <Calendar className="mr-1 h-4 w-4" aria-hidden />
                     Visit
                   </Button>
                 </div>
+              </div>
             </li>
           ))}
-          </ul>
-        )}
-        <DecisionPanel title="Make time together" description="A planned event costs $200 and affects the household." className="mt-6">
-          <Button
-            variant="outline"
-            className="h-14"
-            disabled={busyKey !== null}
-            onClick={() => handleFamilyAction("FAMILY_PLAN_EVENT")}
-          >
-            <Heart className="w-4 h-4 mr-2" />
-            Plan family event
-          </Button>
-        </DecisionPanel>
+        </ul>
+      )}
+      <DecisionPanel
+        title="Make time together"
+        description="A planned event costs $200 and affects the household."
+      >
+        <Button
+          variant="outline"
+          className="h-14"
+          disabled={busyKey !== null}
+          onClick={() => handleFamilyAction("FAMILY_PLAN_EVENT")}
+        >
+          <Heart className="mr-2 h-4 w-4" aria-hidden />
+          Plan family event
+        </Button>
+      </DecisionPanel>
     </LifeShell>
   );
 }

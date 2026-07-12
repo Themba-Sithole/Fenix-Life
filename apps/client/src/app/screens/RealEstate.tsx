@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Building2, DollarSign, MapPin } from "lucide-react";
@@ -43,7 +43,7 @@ export default function RealEstate() {
     }
   }
 
-  const simulationGate = useSimulationGate("Loading property portfolio…");
+  const simulationGate = useSimulationGate("Loading property portfolioâ€¦");
   if (simulationGate) return simulationGate;
   if (!world) return null;
 
@@ -55,26 +55,26 @@ export default function RealEstate() {
   const appreciation = housingTotalAppreciationCents(world.housing);
 
   return (
-    <ToolShell institution="Fenix Property Exchange" subtitle={`${world.player.displayName} · ${formatOriginLocation(world.origin)}`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Portfolio", value: formatMoney(totalValue, currency) }, { label: "Owned", value: String(ownedCount) }, { label: "Rent / mo", value: formatMoney(rentalIncome, currency) }]}>
+    <ToolShell institution="Fenix Property Exchange" subtitle={`${world.player.displayName} Â· ${formatOriginLocation(world.origin)}`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Portfolio", value: formatMoney(totalValue, currency) }, { label: "Owned", value: String(ownedCount) }, { label: "Rent / mo", value: formatMoney(rentalIncome, currency) }]}>
       <div>
         {actionError ? (
           <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
         ) : null}
         <section className="mb-6 grid gap-5 border-y border-border py-5 text-sm md:grid-cols-4">
               <div>
-                <div className="text-sm text-gray-300 mb-2">Total Value</div>
+                <div className="text-sm text-muted-foreground mb-2">Total Value</div>
                 <div className="text-3xl">{formatMoney(totalValue, currency)}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-300 mb-2">Properties Owned</div>
+                <div className="text-sm text-muted-foreground mb-2">Properties Owned</div>
                 <div className="text-3xl text-accent">{ownedCount}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-300 mb-2">Monthly Rental Income</div>
+                <div className="text-sm text-muted-foreground mb-2">Monthly Rental Income</div>
                 <div className="text-3xl text-fenix-gold">{formatMoney(rentalIncome, currency)}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-300 mb-2">Total Appreciation</div>
+                <div className="text-sm text-muted-foreground mb-2">Total Appreciation</div>
                 <div className="text-3xl text-accent">
                   {appreciation >= 0 ? "+" : ""}
                   {formatMoney(appreciation, currency)}
@@ -95,27 +95,27 @@ export default function RealEstate() {
 
                 <h3 className="text-xl text-secondary mb-2">{property.type}</h3>
 
-                <div className="flex items-center gap-2 mb-4 text-gray-600">
+                <div className="flex items-center gap-2 mb-4 text-muted-foreground">
                   <MapPin className="w-4 h-4" />
                   <span className="text-sm">{property.location}</span>
                 </div>
 
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{property.owned ? "Purchase Price" : "Price"}</span>
+                    <span className="text-sm text-muted-foreground">{property.owned ? "Purchase Price" : "Price"}</span>
                     <span className="text-secondary">{formatMoney(property.priceCents, currency)}</span>
                   </div>
 
                   {property.owned ? (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Current Value</span>
+                      <span className="text-sm text-muted-foreground">Current Value</span>
                       <span className="text-accent">{formatMoney(property.valueCents, currency)}</span>
                     </div>
                   ) : null}
 
                   {property.monthlyRentCents > 0 ? (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Monthly Rental</span>
+                      <span className="text-sm text-muted-foreground">Monthly Rental</span>
                       <span className="text-fenix-gold">+{formatMoney(property.monthlyRentCents, currency)}</span>
                     </div>
                   ) : null}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -37,13 +37,13 @@ export default function EmployeeManagement() {
     }
   }
 
-  const simulationGate = useSimulationGate("Loading employee roster…");
+  const simulationGate = useSimulationGate("Loading employee rosterâ€¦");
   if (simulationGate) return simulationGate;
   if (!world) return null;
 
   if (!world.company) {
     return (
-      <ToolShell institution="Company HQ" subtitle={`${world.player.displayName} · Team`} lastUpdated={formattedDate ?? undefined} metrics={[]}>
+      <ToolShell institution="Company HQ" subtitle={`${world.player.displayName} Â· Team`} lastUpdated={formattedDate ?? undefined} metrics={[]}>
           <EmptyState title="No company yet" description="Found a company first to manage employees." action={
               <Button onClick={() => navigate("/company")} className="bg-accent hover:bg-accent/80 text-white">
                 Go to Company Dashboard
@@ -56,7 +56,7 @@ export default function EmployeeManagement() {
   const currency = world.origin.currency;
 
   return (
-    <ToolShell institution="Company HQ" subtitle={`${world.company.name} · Employee management`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Employees", value: String(world.company.employeeCount) }]}>
+    <ToolShell institution="Company HQ" subtitle={`${world.company.name} Â· Employee management`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Employees", value: String(world.company.employeeCount) }]}>
       <div>
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" onClick={() => navigate("/company")}>
@@ -65,7 +65,7 @@ export default function EmployeeManagement() {
           </Button>
           <div>
             <h1 className="text-3xl text-secondary">Employee Management</h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               {world.company.employeeCount} total employees at {world.company.name}
             </p>
           </div>
@@ -77,8 +77,8 @@ export default function EmployeeManagement() {
 
         {employees.length === 0 ? (
           <section className="rounded-lg border border-border bg-surface-1 p-8 text-center space-y-4">
-              <p className="text-gray-600">No employees on the roster yet.</p>
-              <p className="text-sm text-gray-500">Hire staff from the Company Dashboard to build your team.</p>
+              <p className="text-muted-foreground">No employees on the roster yet.</p>
+              <p className="text-sm text-muted-foreground">Hire staff from the Company Dashboard to build your team.</p>
               <Button onClick={() => navigate("/company")} className="bg-accent hover:bg-accent/80 text-white">
                 Go to Company Dashboard
               </Button>
@@ -95,7 +95,7 @@ export default function EmployeeManagement() {
                   </Avatar>
                   <div className="flex-1">
                     <h3 className="text-xl text-secondary">{employee.name}</h3>
-                    <p className="text-gray-600">{employee.position}</p>
+                    <p className="text-muted-foreground">{employee.position}</p>
                     <div className="flex gap-2 mt-2">
                       <Badge className="bg-accent/20 text-accent border-accent/30">
                         {employee.department}
@@ -106,7 +106,7 @@ export default function EmployeeManagement() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-gray-600">Salary</div>
+                    <div className="text-sm text-muted-foreground">Salary</div>
                     <div className="text-xl text-accent">
                       {formatMoney(employee.salaryCents, currency)}
                     </div>
@@ -116,28 +116,28 @@ export default function EmployeeManagement() {
                 <div className="space-y-3 mb-4">
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Productivity</span>
+                      <span className="text-sm text-muted-foreground">Productivity</span>
                       <span className="text-sm text-secondary">{employee.productivity}%</span>
                     </div>
                     <Progress value={employee.productivity} className="h-2 bg-accent" />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Creativity</span>
+                      <span className="text-sm text-muted-foreground">Creativity</span>
                       <span className="text-sm text-secondary">{employee.creativity}%</span>
                     </div>
                     <Progress value={employee.creativity} className="h-2 bg-fenix-gold" />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Leadership</span>
+                      <span className="text-sm text-muted-foreground">Leadership</span>
                       <span className="text-sm text-secondary">{employee.leadership}%</span>
                     </div>
                     <Progress value={employee.leadership} className="h-2 bg-secondary" />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Loyalty</span>
+                      <span className="text-sm text-muted-foreground">Loyalty</span>
                       <span className="text-sm text-secondary">{employee.loyalty}%</span>
                     </div>
                     <Progress value={employee.loyalty} className="h-2 bg-accent" />

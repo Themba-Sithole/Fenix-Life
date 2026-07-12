@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -112,7 +112,7 @@ export default function AuthScreen() {
                     disabled={isSubmitting}
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    {isSubmitting ? 'Signing in…' : 'Sign In'}
+                    {isSubmitting ? 'Signing inâ€¦' : 'Sign In'}
                   </Button>
                 </form>
               </TabsContent>
@@ -160,7 +160,7 @@ export default function AuthScreen() {
                     disabled={isSubmitting}
                     className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
                   >
-                    {isSubmitting ? 'Creating account…' : 'Create Account'}
+                    {isSubmitting ? 'Creating accountâ€¦' : 'Create Account'}
                   </Button>
                 </form>
               </TabsContent>

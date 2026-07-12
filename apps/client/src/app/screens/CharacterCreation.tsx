@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -160,7 +160,7 @@ export default function CharacterCreation() {
                   ? "Highlights family and legacy systems"
                   : path === "free-spirit"
                     ? "Highlights city exploration and news"
-                    : "No suggested focus — choose your own way",
+                    : "No suggested focus â€” choose your own way",
       })),
     [],
   );
@@ -217,7 +217,7 @@ export default function CharacterCreation() {
             <h1 className="mt-2 font-display text-3xl text-fenix-navy">Create your character</h1>
             <p className="mt-2 text-muted-foreground">Choose who you were born as. Your story begins at 18.</p>
             <p className="mt-4 border-l-2 border-fenix-emerald bg-fenix-emerald/5 px-4 py-3 text-sm text-fenix-navy">
-              Born {birthday} → start {youngAdultStartDate} at age 18
+              Born {birthday} â†’ start {youngAdultStartDate} at age 18
             </p>
           </header>
           <div>
@@ -266,7 +266,7 @@ export default function CharacterCreation() {
                     <Label htmlFor="birthday">Birthday</Label>
                     <Input id="birthday" type="date" className="border-accent/30" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
                     <p className="text-xs text-fenix-emerald">
-                      Born {birthday} → start {youngAdultStartDate} at age 18
+                      Born {birthday} â†’ start {youngAdultStartDate} at age 18
                     </p>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export default function CharacterCreation() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Your starting city and default currency follow the country you live in.
                   </p>
                 </div>
@@ -332,12 +332,12 @@ export default function CharacterCreation() {
                     <SelectContent className="max-h-[280px]">
                       {CURRENCIES.map((item) => (
                         <SelectItem key={item.code} value={item.code}>
-                          {item.code} — {item.name} ({item.symbol})
+                          {item.code} â€” {item.name} ({item.symbol})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Defaults to {getDefaultCurrencyForCountry(residenceCountry)} for your residence country. You can change it.
                   </p>
                 </div>
@@ -402,27 +402,27 @@ export default function CharacterCreation() {
                         <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                           <div className="flex items-center gap-1">
                             <DollarSign className="w-3 h-3 text-accent" />
-                            <span className="text-gray-600">Cash:</span>
+                            <span className="text-muted-foreground">Cash:</span>
                             <span className="text-accent">{bg.startingCash}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <GraduationCap className="w-3 h-3 text-fenix-gold" />
-                            <span className="text-gray-600">{bg.education}</span>
+                            <span className="text-muted-foreground">{bg.education}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Users className="w-3 h-3 text-accent" />
-                            <span className="text-gray-600">{bg.relationships}</span>
+                            <span className="text-muted-foreground">{bg.relationships}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Briefcase className="w-3 h-3 text-fenix-gold" />
-                            <span className="text-gray-600">{bg.connections}</span>
+                            <span className="text-muted-foreground">{bg.connections}</span>
                           </div>
                         </div>
 
                         {selectedBackground === bg.id && (
                           <div className="pt-3 border-t border-accent/20">
                             <div className="mb-2">
-                              <div className="text-xs text-gray-500 mb-1">Advantages:</div>
+                              <div className="text-xs text-muted-foreground mb-1">Advantages:</div>
                               <div className="flex flex-wrap gap-1">
                                 {bg.advantages.map((adv, i) => (
                                   <Badge key={i} variant="outline" className="text-xs bg-accent/10 text-accent border-accent/30">
@@ -433,7 +433,7 @@ export default function CharacterCreation() {
                               </div>
                             </div>
                             <div>
-                              <div className="text-xs text-gray-500 mb-1">Disadvantages:</div>
+                              <div className="text-xs text-muted-foreground mb-1">Disadvantages:</div>
                               <div className="flex flex-wrap gap-1">
                                 {bg.disadvantages.map((dis, i) => (
                                   <Badge key={i} variant="outline" className="text-xs bg-orange-50 text-orange-600 border-orange-200">
@@ -454,8 +454,8 @@ export default function CharacterCreation() {
 
             <div className="mt-8 pt-6 border-t border-accent/20">
               <h3 className="text-xl text-secondary mb-2">Suggested Path (Optional)</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                UX hints only — any path is achievable from any background (GDD §6.3).
+              <p className="text-sm text-muted-foreground mb-4">
+                UX hints only â€” any path is achievable from any background (GDD Â§6.3).
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {lifePaths.map((path) => (
@@ -470,7 +470,7 @@ export default function CharacterCreation() {
                   >
                     <CardContent className="p-4">
                       <h4 className="text-secondary font-medium mb-1">{path.label}</h4>
-                      <p className="text-xs text-gray-500">{path.hint}</p>
+                      <p className="text-xs text-muted-foreground">{path.hint}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -489,7 +489,7 @@ export default function CharacterCreation() {
                 disabled={isSubmitting || !cityId}
                 className="bg-primary px-8 text-primary-foreground hover:bg-primary/90"
               >
-                {isSubmitting ? 'Creating save…' : 'Start Your Journey'}
+                {isSubmitting ? 'Creating saveâ€¦' : 'Start Your Journey'}
               </Button>
             </div>
           </div>

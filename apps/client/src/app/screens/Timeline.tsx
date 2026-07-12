@@ -15,11 +15,11 @@ const CATEGORY_ICONS: Record<TimelineCategory, typeof Users> = {
 };
 
 const CATEGORY_COLORS: Record<TimelineCategory, string> = {
-  life: "bg-primary",
-  finance: "bg-fenix-gold",
-  career: "bg-accent",
-  family: "bg-destructive",
-  news: "bg-secondary",
+  life: "var(--capital-human)",
+  finance: "var(--capital-financial)",
+  career: "var(--capital-business)",
+  family: "var(--capital-social)",
+  news: "var(--capital-legacy)",
 };
 
 export default function Timeline() {
@@ -77,19 +77,23 @@ export default function Timeline() {
               <EmptyState title="Your story is still beginning" description="Your timeline will fill in as you advance time and make life decisions." />
             ) : (
             <div className="relative">
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent to-secondary" />
-              <div className="space-y-8">
+              <div className="absolute bottom-0 left-8 top-0 w-0.5 bg-gradient-to-b from-accent to-secondary" />
+              <div className="space-y-6">
                 {timeline.map((event) => {
                   const Icon = CATEGORY_ICONS[event.category] ?? GraduationCap;
                   return (
                     <div key={event.id} className="relative flex items-start gap-6">
                       <div
-                        className={`${CATEGORY_COLORS[event.category]} w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg z-10 flex-shrink-0`}
+                        className="z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-[var(--home-shadow)]"
+                        style={{
+                          backgroundColor: CATEGORY_COLORS[event.category],
+                          color: "var(--home-fab-ink)",
+                        }}
                       >
-                        <Icon className="w-7 h-7" />
+                        <Icon className="h-7 w-7" aria-hidden />
                       </div>
-                      <div className="flex-1 border-b border-border pb-4">
-                          <div className="flex items-center justify-between mb-2">
+                      <div className="surface-panel flex-1 p-4">
+                          <div className="mb-2 flex items-center justify-between gap-3">
                             <h3 className="font-medium text-foreground">{event.title}</h3>
                             <Badge variant="outline">{event.calendarYear}</Badge>
                           </div>

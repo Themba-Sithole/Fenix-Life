@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Car, DollarSign, Gauge, Zap } from "lucide-react";
@@ -36,7 +36,7 @@ export default function VehicleDealership() {
     }
   }
 
-  const simulationGate = useSimulationGate("Loading garage…");
+  const simulationGate = useSimulationGate("Loading garageâ€¦");
   if (simulationGate) return simulationGate;
   if (!world) return null;
 
@@ -46,24 +46,24 @@ export default function VehicleDealership() {
   const fleetValue = transportationTotalValueCents(world.transportation);
 
   return (
-    <ToolShell institution="Fenix Motor Exchange" subtitle={`${world.player.displayName} · Garage`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Fleet value", value: formatMoney(fleetValue, currency) }, { label: "Owned", value: String(ownedCount) }, { label: "Transport / mo", value: formatMoney(world.transportation.monthlyTransportCostCents, currency) }]}>
+    <ToolShell institution="Fenix Motor Exchange" subtitle={`${world.player.displayName} Â· Garage`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Fleet value", value: formatMoney(fleetValue, currency) }, { label: "Owned", value: String(ownedCount) }, { label: "Transport / mo", value: formatMoney(world.transportation.monthlyTransportCostCents, currency) }]}>
       <div>
         {actionError ? (
           <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{actionError}</p>
         ) : null}
         <section className="mb-6 grid gap-5 border-y border-border py-5 text-sm md:grid-cols-3">
             <div>
-              <div className="text-sm text-gray-300 mb-2">Fleet Value</div>
+              <div className="text-sm text-muted-foreground mb-2">Fleet Value</div>
               <div className="text-3xl">{formatMoney(fleetValue, currency)}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-300 mb-2">Monthly Transport Cost</div>
+              <div className="text-sm text-muted-foreground mb-2">Monthly Transport Cost</div>
               <div className="text-3xl text-fenix-gold">
                 {formatMoney(world.transportation.monthlyTransportCostCents, currency)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-300 mb-2">Vehicles Owned</div>
+              <div className="text-sm text-muted-foreground mb-2">Vehicles Owned</div>
               <div className="text-3xl text-accent">{ownedCount}</div>
             </div>
         </section>
@@ -77,29 +77,29 @@ export default function VehicleDealership() {
                 </div>
 
                 <h3 className="text-xl text-secondary mb-1">{vehicle.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">{vehicle.category}</p>
+                <p className="text-sm text-muted-foreground mb-4">{vehicle.category}</p>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Price</span>
+                    <span className="text-muted-foreground">Price</span>
                     <span>{formatMoney(vehicle.priceCents, currency)}</span>
                   </div>
                   {vehicle.owned ? (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Current Value</span>
+                      <span className="text-muted-foreground">Current Value</span>
                       <span className="text-accent">{formatMoney(vehicle.valueCents, currency)}</span>
                     </div>
                   ) : null}
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Fuel</span>
+                    <span className="text-muted-foreground">Fuel</span>
                     <span>{vehicle.fuelLabel}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 flex items-center gap-1"><Gauge className="w-3 h-3" /> Top Speed</span>
+                    <span className="text-muted-foreground flex items-center gap-1"><Gauge className="w-3 h-3" /> Top Speed</span>
                     <span>{vehicle.topSpeedMph} mph</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 flex items-center gap-1"><Zap className="w-3 h-3" /> Power</span>
+                    <span className="text-muted-foreground flex items-center gap-1"><Zap className="w-3 h-3" /> Power</span>
                     <span>{vehicle.horsepower} hp</span>
                   </div>
                 </div>

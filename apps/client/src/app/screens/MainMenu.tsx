@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+﻿import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Play, Settings, Trophy } from "lucide-react";
@@ -122,7 +122,7 @@ export default function MainMenu() {
           <p className="text-white/75">
             {activeSave
               ? `${activeSave.name}: ${newsItems[0]?.text ?? "Your next chapter is waiting."}`
-              : "No life in progress — start a new story when you are ready."}
+              : "No life in progress â€” start a new story when you are ready."}
           </p>
         </motion.div>
         <p className="mt-6 text-xs text-white/45">

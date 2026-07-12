@@ -13,7 +13,7 @@ export function DecisionPanel({ title, description, children, className }: Decis
   return (
     <section
       className={cn(
-        "rounded-lg border border-border bg-surface-1 p-4 sm:p-5",
+        "rounded-[var(--radius-home)] border border-border bg-surface-1 p-4 shadow-[var(--home-shadow)] sm:p-5",
         className,
       )}
     >

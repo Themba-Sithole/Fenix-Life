@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -91,7 +91,7 @@ export default function ContinueScreen() {
             ) : null}
 
             {isLoading && saves.length === 0 && (
-              <p className="py-8 text-center text-white/65">Loading your lives…</p>
+              <p className="py-8 text-center text-white/65">Loading your livesâ€¦</p>
             )}
 
             {!isLoading && saves.length === 0 && (
@@ -183,7 +183,7 @@ export default function ContinueScreen() {
                         disabled={loadingId !== null}
                         onClick={() => handleContinue(save.id)}
                       >
-                        {loadingId === save.id ? 'Loading…' : 'Continue'}
+                        {loadingId === save.id ? 'Loadingâ€¦' : 'Continue'}
                       </Button>
                     </div>
                   </div>
@@ -200,5 +200,5 @@ export default function ContinueScreen() {
 function getSaveStoryMeta(worldSeed: string | null): string {
   const seed = parseWorldSeed(worldSeed);
   const city = getCitiesForCountry(seed.origin.countryCode).find((item) => item.id === seed.origin.cityId);
-  return city ? `Age 18 · ${city.name} · Net worth awaits` : "Age 18 · New beginnings";
+  return city ? `Age 18 Â· ${city.name} Â· Net worth awaits` : "Age 18 Â· New beginnings";
 }

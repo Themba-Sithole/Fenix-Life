@@ -30,7 +30,7 @@ test.describe('New life onboarding', () => {
 
     await page.getByTestId('home-tour-skip').click();
 
-    await page.getByTestId('home-quick-actions').getByText('Career', { exact: true }).click();
+    await page.getByRole('navigation', { name: 'Life destinations' }).getByRole('link', { name: 'Career' }).click();
     await page.waitForURL('/career');
     await expect(page.getByRole('heading', { name: 'Career' })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId('unemployment-panel')).toBeVisible({ timeout: 30_000 });

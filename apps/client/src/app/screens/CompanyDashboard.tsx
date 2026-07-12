@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -45,7 +45,7 @@ export default function CompanyDashboard() {
     }
   }
 
-  const simulationGate = useSimulationGate("Loading company data…");
+  const simulationGate = useSimulationGate("Loading company dataâ€¦");
   if (simulationGate) return simulationGate;
   if (!world) return null;
 
@@ -55,14 +55,14 @@ export default function CompanyDashboard() {
     const checking = world.banking.accounts.find((a) => a.id === "checking")?.balanceCents ?? 0;
 
     return (
-      <ToolShell institution="Company HQ" subtitle={`${world.player.displayName} · New venture`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Checking", value: formatMoney(checking, currency) }]}>
-        <DecisionPanel title="Found a company" description="Incorporate a new venture at the idea stage — zero employees, zero revenue.">
-            <div className="space-y-5 text-gray-600">
+      <ToolShell institution="Company HQ" subtitle={`${world.player.displayName} Â· New venture`} lastUpdated={formattedDate ?? undefined} metrics={[{ label: "Checking", value: formatMoney(checking, currency) }]}>
+        <DecisionPanel title="Found a company" description="Incorporate a new venture at the idea stage â€” zero employees, zero revenue.">
+            <div className="space-y-5 text-muted-foreground">
               <p>
-                Incorporate a new venture at the idea stage — zero employees, zero revenue. Same rules as AI founders.
+                Incorporate a new venture at the idea stage â€” zero employees, zero revenue. Same rules as AI founders.
               </p>
-              <p className="text-sm text-gray-500">
-                Suggested path: {world.lifePath.replace(/-/g, " ")} — hints only, never a lock.
+              <p className="text-sm text-muted-foreground">
+                Suggested path: {world.lifePath.replace(/-/g, " ")} â€” hints only, never a lock.
               </p>
 
               <div className="space-y-2">
@@ -85,7 +85,7 @@ export default function CompanyDashboard() {
                 </p>
                 <p>
                   Checking balance:{" "}
-                  <span className={checking >= INCORPORATION_FEE_CENTS ? "text-accent" : "text-orange-600"}>
+                  <span className={checking >= INCORPORATION_FEE_CENTS ? "text-accent" : "text-destructive"}>
                     {formatMoney(checking, currency)}
                   </span>
                 </p>
@@ -101,7 +101,7 @@ export default function CompanyDashboard() {
                   disabled={busyAction === "FOUND_COMPANY" || checking < INCORPORATION_FEE_CENTS}
                   className="bg-accent hover:bg-accent/80 text-white"
                 >
-                  {busyAction === "FOUND_COMPANY" ? "Incorporating…" : "Incorporate Company"}
+                  {busyAction === "FOUND_COMPANY" ? "Incorporatingâ€¦" : "Incorporate Company"}
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/banking")}>
                   Review Finances
@@ -145,7 +145,7 @@ export default function CompanyDashboard() {
   return (
     <ToolShell
       institution="Company HQ"
-      subtitle={`${company.name} · ${companyStageLabel(company.stage)}`}
+      subtitle={`${company.name} Â· ${companyStageLabel(company.stage)}`}
       lastUpdated={formattedDate ?? undefined}
       metrics={[
         { label: "Revenue", value: formatMoney(company.monthlyRevenueCents, currency) },

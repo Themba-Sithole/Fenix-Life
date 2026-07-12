@@ -102,14 +102,13 @@ export default function NewsFeed() {
         {news.length === 0 ? (
           <EmptyState title="No reports yet" description="Advance time to generate news about your finances, company, and the economy." />
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="surface-panel overflow-hidden">
           {news.map((item) => (
-            <li key={`${item.time}-${item.headline}`} className="py-5">
-                <div className="flex items-start gap-4">
-                  {item.impact === "positive" ? <TrendingUp className="h-5 w-5 shrink-0 text-secondary" aria-hidden /> : item.impact === "negative" ? <TrendingDown className="h-5 w-5 shrink-0 text-destructive" aria-hidden /> : <AlertCircle className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="text-lg text-secondary">{item.headline}</h3>
+            <li key={`${item.time}-${item.headline}`} className="surface-row !items-start gap-3 py-4">
+                  {item.impact === "positive" ? <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" aria-hidden /> : item.impact === "negative" ? <TrendingDown className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden /> : <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />}
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex items-start justify-between gap-4">
+                      <h3 className="text-[13.5px] font-semibold text-foreground">{item.headline}</h3>
                       <Badge
                         variant="outline"
                         className={
@@ -125,30 +124,29 @@ export default function NewsFeed() {
                     </div>
                     <p className="mb-3 text-sm text-muted-foreground">{item.summary}</p>
                     {item.worldImpact && item.worldImpact !== "none" ? (
-                      <p className="text-xs text-secondary mb-2 font-medium">
+                      <p className="mb-2 text-xs font-medium text-secondary">
                         This changes {impactChangesLabel(item.worldImpact)}
                       </p>
                     ) : null}
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>{item.time}</span>
                       {item.impact === "positive" && (
-                        <span className="flex items-center gap-1 text-accent">
-                          <TrendingUp className="w-3 h-3" /> Positive
+                        <span className="flex items-center gap-1 text-[var(--status-success)]">
+                          <TrendingUp className="h-3 w-3" aria-hidden /> Positive
                         </span>
                       )}
                       {item.impact === "negative" && (
-                        <span className="flex items-center gap-1 text-orange-600">
-                          <TrendingDown className="w-3 h-3" /> Negative
+                        <span className="flex items-center gap-1 text-[var(--status-danger)]">
+                          <TrendingDown className="h-3 w-3" aria-hidden /> Negative
                         </span>
                       )}
                       {item.impact === "neutral" && (
-                        <span className="flex items-center gap-1 text-blue-600">
-                          <AlertCircle className="w-3 h-3" /> Neutral
+                        <span className="flex items-center gap-1 text-[var(--status-info)]">
+                          <AlertCircle className="h-3 w-3" aria-hidden /> Neutral
                         </span>
                       )}
                     </div>
                   </div>
-                </div>
             </li>
           ))}
           </ul>

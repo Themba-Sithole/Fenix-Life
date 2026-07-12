@@ -111,14 +111,14 @@ Domains: `CORE`, `UI`, `ENG`, `CNT`, `OPS`, `PLT`
 | FL-CORE-015 | Family relationships basic | Planned | Social | ENG-001 | M1.4 |
 | FL-CORE-016 | News feed from Media Engine | Planned | Social | ENG-001 | M1.5 |
 | FL-CORE-017 | Timeline / World Memory UI | Planned | Legacy | ENG-001 | M1.8 |
-| FL-CORE-018 | Home Screen simulation binding | Planned | All | ENG-003 | M1.1 |
+| FL-CORE-018 | Home Screen simulation binding | Complete | All | ENG-003 | M1.1 |
 | FL-CORE-019 | Generational handoff | Planned | Legacy | 015, 017 | 1.0 |
 | FL-CORE-020 | Death & heir selection | Planned | Legacy | 019 | 1.0 |
 | FL-UI-001 | Main Menu (functional) | In Progress | — | ENG-003 | EA 0.5 |
-| FL-UI-002 | Home Screen hub | In Progress | All | CORE-018 | EA 0.5 |
+| FL-UI-002 | Home Screen hub | Complete | All | CORE-018 | EA 0.5 |
 | FL-UI-003 | Banking Dashboard wired | In Progress | Financial | CORE-013 | EA 0.5 |
 | FL-UI-004 | Company Dashboard wired | In Progress | Business | CORE-021 | EA 0.5 |
-| FL-UI-005 | Settings persistence | Planned | — | ENG-003 | EA 0.5 |
+| FL-UI-005 | Settings persistence | Complete | — | ENG-003 | EA 0.5 |
 | FL-CNT-001 | 1 starter city (WGS) | Planned | — | 006 | M1.0 |
 | FL-CNT-002 | 20 industry templates | Planned | Business | 035 | EA 0.5 |
 | FL-CNT-003 | 12 occupation templates | Planned | Human | 035 | EA 0.5 |
@@ -221,7 +221,7 @@ Domains: `CORE`, `UI`, `ENG`, `CNT`, `OPS`, `PLT`
 |---|---|---|---|
 | MainMenu | `/` | Save detection, ticker live data, skyline animation | P1 |
 | CharacterCreation | `/character-creation` | Simulation binding, background balance | P1 |
-| HomeScreen | `/home` | Sim binding, nav drawer, capital summary | P1 |
+| HomeScreen | `/home` | v2 hub live — capitals, feed, decision, theme, FAB | Done |
 | BankingDashboard | `/banking` | Real accounts, transfers, loans, credit | P1 |
 | CompanyDashboard | `/company` | Live KPIs, product launch, funding | P1 |
 | EmployeeManagement | `/employees` | Full HR pipeline | P2 |
@@ -234,7 +234,7 @@ Domains: `CORE`, `UI`, `ENG`, `CNT`, `OPS`, `PLT`
 | NewsFeed | `/news` | Media Engine headlines, filters | P2 |
 | CityMap | `/city` | Phaser map, building inspect | P3 |
 | Smartphone | `/phone` | App launcher, badges | P2 |
-| Settings | `/settings` | Persist settings, a11y modes | P1 |
+| Settings | `/settings` | Theme + localStorage prefs; a11y modes remaining | P2 |
 
 See [34_UI_UX_Guidelines.md](./34_UI_UX_Guidelines.md).
 

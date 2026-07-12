@@ -131,19 +131,21 @@ export default function BankingDashboard() {
     >
       <section className="mb-8" aria-label="Accounts">
         <h2 className="font-display text-lg text-foreground mb-3">Accounts</h2>
-        <ul className="divide-y divide-border rounded-lg border border-border bg-surface-1">
+        <ul className="surface-panel divide-y-0 overflow-hidden">
           {banking.accounts.map((account) => {
             const Icon = ACCOUNT_ICONS[account.type];
             return (
-              <li key={account.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Icon className="h-4 w-4 text-secondary shrink-0" aria-hidden />
+              <li key={account.id} className="surface-row justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-surface-2 text-secondary">
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{account.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{account.type}</p>
+                    <p className="truncate text-[13.5px] font-semibold text-foreground">{account.name}</p>
+                    <p className="text-[11.5px] capitalize text-muted-foreground">{account.type}</p>
                   </div>
                 </div>
-                <p className="font-display text-lg tabular-nums text-foreground shrink-0">
+                <p className="shrink-0 font-mono text-sm font-medium tabular-nums text-foreground">
                   {formatMoney(account.balanceCents, currency)}
                 </p>
               </li>

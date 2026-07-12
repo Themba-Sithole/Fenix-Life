@@ -422,7 +422,8 @@ This Project Master Index is the **single registry of all Fenix Life documentati
 | Simulation kernel v0 | ✅ Complete | Time engine, worker bridge, blob persist — Phase C |
 | Admin portal | ✅ Complete | `apps/admin` — login, dashboard, accounts, audit — Phase D |
 | Playable meso loop | ✅ Complete | Banking, company, news, time controls — Phase E–F |
-| Five Capitals dashboard | ✅ Complete | Home strip from live simulation — Phase G |
+| Five Capitals dashboard | ✅ Complete | Home `CapitalStatGrid` + live `computeFiveCapitals` — Home v2 |
+| Home Screen hub (v2) | ✅ Complete | Identity, destinations, life feed, decision panel, FAB, theme |
 | Career / employment v0 | ✅ Complete | Career state, salary sync, education wire — Phase G |
 | Employee roster v0 | ✅ Complete | Deterministic HR roster from company state — Phase H |
 | Main menu live data | ✅ Complete | Save count, recent life, macro ticker — Phase H |
@@ -563,6 +564,7 @@ Any new doc or status change **must** update this file (39) within 48 hours.
 
 | Date | Version | Changes |
 |---|---|---|
+| 2026-07-12 | 1.7 | Home v2 hub: live capitals/feed/decision/FAB, theme toggle, e2e coverage |
 | 2026-07-11 | 1.6 | Gap fixes: simulation gate on all screens, world-seed identity fields, background migration, E2E auth route |
 | 2026-07-11 | 1.5 | Phases AG–AH: loan payoff, job search, district visits, smartphone app routes |
 | 2026-07-10 | 1.4 | Phase D admin portal: staff login, accounts, saves inspect, audit log |

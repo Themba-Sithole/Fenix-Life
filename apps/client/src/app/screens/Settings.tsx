@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
@@ -183,7 +183,7 @@ export default function Settings() {
           </Button>
           <div>
             <h1 className="text-3xl text-secondary">Settings</h1>
-            <p className="text-gray-600">Customize your experience</p>
+            <p className="text-muted-foreground">Customize your experience</p>
           </div>
         </div>
 
@@ -198,7 +198,7 @@ export default function Settings() {
                 <div>
                   <div className="text-secondary">Appearance</div>
                   <div className="text-sm text-muted-foreground">
-                    Light or dark theme — applies immediately
+                    Light or dark theme â€” applies immediately
                   </div>
                 </div>
                 <ThemeToggle />
@@ -207,7 +207,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Quality</div>
-                  <div className="text-sm text-gray-600">Adjust visual quality</div>
+                  <div className="text-sm text-muted-foreground">Adjust visual quality</div>
                 </div>
                 <Select
                   value={settings.graphicsQuality}
@@ -228,7 +228,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Fullscreen</div>
-                  <div className="text-sm text-gray-600">Enable fullscreen mode</div>
+                  <div className="text-sm text-muted-foreground">Enable fullscreen mode</div>
                 </div>
                 <Switch
                   checked={settings.fullscreen}
@@ -239,7 +239,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">V-Sync</div>
-                  <div className="text-sm text-gray-600">Synchronize frame rate</div>
+                  <div className="text-sm text-muted-foreground">Synchronize frame rate</div>
                 </div>
                 <Switch
                   checked={settings.vSync}
@@ -258,7 +258,7 @@ export default function Settings() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-secondary">Master Volume</div>
-                  <div className="text-sm text-gray-600">{settings.masterVolume}%</div>
+                  <div className="text-sm text-muted-foreground">{settings.masterVolume}%</div>
                 </div>
                 <Slider
                   value={[settings.masterVolume]}
@@ -271,7 +271,7 @@ export default function Settings() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-secondary">Music Volume</div>
-                  <div className="text-sm text-gray-600">{settings.musicVolume}%</div>
+                  <div className="text-sm text-muted-foreground">{settings.musicVolume}%</div>
                 </div>
                 <Slider
                   value={[settings.musicVolume]}
@@ -284,7 +284,7 @@ export default function Settings() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-secondary">Effects Volume</div>
-                  <div className="text-sm text-gray-600">{settings.effectsVolume}%</div>
+                  <div className="text-sm text-muted-foreground">{settings.effectsVolume}%</div>
                 </div>
                 <Slider
                   value={[settings.effectsVolume]}
@@ -305,7 +305,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Difficulty</div>
-                  <div className="text-sm text-gray-600">Game difficulty level</div>
+                  <div className="text-sm text-muted-foreground">Game difficulty level</div>
                 </div>
                 <Select
                   value={settings.difficulty}
@@ -326,7 +326,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Autosave</div>
-                  <div className="text-sm text-gray-600">Persist simulation progress to the cloud</div>
+                  <div className="text-sm text-muted-foreground">Persist simulation progress to the cloud</div>
                 </div>
                 <Switch
                   checked={settings.autosave}
@@ -337,7 +337,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Tutorial Hints</div>
-                  <div className="text-sm text-gray-600">Show helpful tips</div>
+                  <div className="text-sm text-muted-foreground">Show helpful tips</div>
                 </div>
                 <Switch
                   checked={settings.tutorialHints}
@@ -356,7 +356,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-secondary">Language</div>
-                  <div className="text-sm text-gray-600">Select language</div>
+                  <div className="text-sm text-muted-foreground">Select language</div>
                 </div>
                 <Select
                   value={settings.language}
@@ -367,10 +367,10 @@ export default function Settings() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="es">EspaÃ±ol</SelectItem>
+                    <SelectItem value="fr">FranÃ§ais</SelectItem>
                     <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="ja">日本語</SelectItem>
+                    <SelectItem value="ja">æ—¥æœ¬èªž</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -381,7 +381,7 @@ export default function Settings() {
                     <Bell className="w-4 h-4" />
                     Notifications
                   </div>
-                  <div className="text-sm text-gray-600">Enable game notifications</div>
+                  <div className="text-sm text-muted-foreground">Enable game notifications</div>
                 </div>
                 <Switch
                   checked={settings.notifications}
@@ -395,13 +395,13 @@ export default function Settings() {
                     <Cloud className="w-4 h-4" />
                     Cloud Saves
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     API: {API_URL}
-                    {apiOnline === null && " — checking…"}
-                    {apiOnline === true && " — connected"}
-                    {apiOnline === false && " — offline (run api locally or deploy)"}
+                    {apiOnline === null && " â€” checkingâ€¦"}
+                    {apiOnline === true && " â€” connected"}
+                    {apiOnline === false && " â€” offline (run api locally or deploy)"}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Preference only — saves always sync when autosave is on.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Preference only â€” saves always sync when autosave is on.</p>
                 </div>
                 <Switch
                   checked={settings.cloudSaves}
@@ -424,7 +424,7 @@ export default function Settings() {
                   <dt className="text-muted-foreground">Schema</dt>
                   <dd>v{activeSave.schemaVersion}</dd>
                 </dl>
-                {saveActionError ? <p className="text-sm text-red-600">{saveActionError}</p> : null}
+                {saveActionError ? <p className="text-sm text-destructive">{saveActionError}</p> : null}
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -432,16 +432,16 @@ export default function Settings() {
                   disabled={isExporting || isDeleting}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  {isExporting ? "Exporting…" : "Export Save JSON"}
+                  {isExporting ? "Exportingâ€¦" : "Export Save JSON"}
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                  className="w-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10"
                   onClick={handleDeleteSave}
                   disabled={isExporting || isDeleting}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  {isDeleting ? "Deleting…" : "Delete Current Life"}
+                  {isDeleting ? "Deletingâ€¦" : "Delete Current Life"}
                 </Button>
               </div>
             </section>
@@ -461,13 +461,13 @@ export default function Settings() {
               </dl>
               <Button
                 variant="outline"
-                className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                className="w-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10"
                 onClick={handleLogout}
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Log Out
               </Button>
-              {accountError ? <p className="text-sm text-red-600">{accountError}</p> : null}
+              {accountError ? <p className="text-sm text-destructive">{accountError}</p> : null}
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display name</Label>
                 <Input
@@ -508,8 +508,8 @@ export default function Settings() {
                   Change Password
                 </Button>
               </div>
-              <p className="text-xs text-gray-500">
-                Privacy preferences are managed under General → Notifications.
+              <p className="text-xs text-muted-foreground">
+                Privacy preferences are managed under General â†’ Notifications.
               </p>
               <div className="space-y-2 pt-2 border-t border-gray-200">
                 <Label htmlFor="deletePassword">Confirm password to delete account</Label>
@@ -521,7 +521,7 @@ export default function Settings() {
                 />
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+                  className="w-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10"
                   onClick={handleDeleteAccount}
                   disabled={!isAuthenticated || isDeletingAccount || !deletePassword}
                 >

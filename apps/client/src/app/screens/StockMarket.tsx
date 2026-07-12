@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -97,7 +97,7 @@ export default function StockMarket() {
     };
   }, [world]);
 
-  const simulationGate = useSimulationGate("Loading portfolio…");
+  const simulationGate = useSimulationGate("Loading portfolioâ€¦");
   if (simulationGate) return simulationGate;
   if (!world || !portfolioView) return null;
 
@@ -118,7 +118,7 @@ export default function StockMarket() {
   return (
     <ToolShell
       institution="Fenix Brokerage"
-      subtitle={`${world.player.displayName} · Tech index ${world.economy.techSectorIndex.toFixed(1)}`}
+      subtitle={`${world.player.displayName} Â· Tech index ${world.economy.techSectorIndex.toFixed(1)}`}
       lastUpdated={formattedDate ?? undefined}
       metrics={[
         { label: "Portfolio", value: formatMoney(portfolioValue, currency) },
@@ -132,7 +132,7 @@ export default function StockMarket() {
         ) : null}
         <section className="mb-6 grid gap-5 border-y border-border py-5 text-sm md:grid-cols-4">
               <div>
-                <div className="text-sm text-gray-300 mb-2">Portfolio Value</div>
+                <div className="text-sm text-muted-foreground mb-2">Portfolio Value</div>
                 <div className="text-4xl mb-2">{formatMoney(portfolioValue, currency)}</div>
                 <div className={`flex items-center gap-2 ${dayChange >= 0 ? "text-accent" : "text-red-300"}`}>
                   {dayChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -144,25 +144,25 @@ export default function StockMarket() {
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-300 mb-2">Total Gain</div>
+                <div className="text-sm text-muted-foreground mb-2">Total Gain</div>
                 <div className={`text-3xl ${totalGain >= 0 ? "text-accent" : "text-red-300"}`}>
                   {totalGain >= 0 ? "+" : ""}
                   {formatMoney(totalGain, currency)}
                 </div>
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-muted-foreground">
                   {gainPercent >= 0 ? "+" : ""}
                   {gainPercent}% all time
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-300 mb-2">Holdings</div>
+                <div className="text-sm text-muted-foreground mb-2">Holdings</div>
                 <div className="text-3xl">{holdingsCount}</div>
-                <div className="text-sm text-gray-400">Stocks</div>
+                <div className="text-sm text-muted-foreground">Stocks</div>
               </div>
               <div>
-                <div className="text-sm text-gray-300 mb-2">Dividends (YTD)</div>
+                <div className="text-sm text-muted-foreground mb-2">Dividends (YTD)</div>
                 <div className="text-3xl text-fenix-gold">{formatMoney(dividendsYtd, currency)}</div>
-                <div className="text-sm text-gray-400">Accrued in simulation</div>
+                <div className="text-sm text-muted-foreground">Accrued in simulation</div>
               </div>
         </section>
 
@@ -189,7 +189,7 @@ export default function StockMarket() {
                         <div className="text-3xl">{stock.logo}</div>
                         <div>
                           <div className="text-secondary">{stock.symbol}</div>
-                          <div className="text-xs text-gray-500">{stock.name}</div>
+                          <div className="text-xs text-muted-foreground">{stock.name}</div>
                         </div>
                       </div>
                       <Badge className="bg-accent/20 text-accent border-accent/30">
@@ -213,7 +213,7 @@ export default function StockMarket() {
           <section className="lg:col-span-3 rounded-lg border border-border bg-surface-1 p-5">
             <h2 className="mb-4 font-semibold text-secondary">Your Holdings</h2>
               {holdings.length === 0 ? (
-                <p className="text-sm text-gray-500 py-8 text-center">
+                <p className="text-sm text-muted-foreground py-8 text-center">
                   No holdings yet. Buy shares from the market to start building your portfolio.
                 </p>
               ) : (
@@ -225,7 +225,7 @@ export default function StockMarket() {
                           <div className="text-4xl">{stock.logo}</div>
                           <div>
                             <div className="text-lg text-secondary">{stock.symbol}</div>
-                            <div className="text-xs text-gray-500">{stock.name}</div>
+                            <div className="text-xs text-muted-foreground">{stock.name}</div>
                           </div>
                         </div>
                         {stock.change >= 0 ? (
@@ -237,23 +237,23 @@ export default function StockMarket() {
 
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Price</span>
+                          <span className="text-sm text-muted-foreground">Price</span>
                           <span className="text-secondary">{formatMoney(stock.price * 100, currency)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Change</span>
+                          <span className="text-sm text-muted-foreground">Change</span>
                           <span className={stock.change >= 0 ? "text-accent" : "text-red-400"}>
                             {stock.change >= 0 ? "+" : ""}
                             {formatMoney(stock.change * 100, currency)} ({stock.changePercent}%)
                           </span>
                         </div>
                         <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                          <span className="text-sm text-gray-600">Your Value</span>
+                          <span className="text-sm text-muted-foreground">Your Value</span>
                           <span className="text-secondary">{formatMoney(stock.value * 100, currency)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Shares</span>
-                          <span className="text-gray-500">{stock.shares}</span>
+                          <span className="text-sm text-muted-foreground">Shares</span>
+                          <span className="text-muted-foreground">{stock.shares}</span>
                         </div>
                       </div>
 
