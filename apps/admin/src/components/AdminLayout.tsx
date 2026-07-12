@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
-import { LayoutDashboard, Users, FileSearch, ScrollText, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, ScrollText, LogOut, Shield, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
@@ -7,6 +7,8 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/accounts', label: 'Accounts', icon: Users },
   { to: '/audit', label: 'Audit Log', icon: ScrollText },
+  { to: '/moderation', label: 'Moderation', icon: Shield },
+  { to: '/feature-flags', label: 'Feature Flags', icon: Flag },
 ];
 
 export function AdminLayout() {

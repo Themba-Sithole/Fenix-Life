@@ -13,6 +13,7 @@ import {
   COUNTRIES,
   CURRENCIES,
   createBankingForBackground,
+  deriveYoungAdultStartDate,
   encodeWorldSeed,
   formatMoney,
   getCitiesForCountry,
@@ -42,6 +43,7 @@ export default function CharacterCreation() {
   const [error, setError] = useState<string | null>(null);
 
   const cities = useMemo(() => getCitiesForCountry(residenceCountry), [residenceCountry]);
+  const youngAdultStartDate = useMemo(() => deriveYoungAdultStartDate(birthday), [birthday]);
 
   useEffect(() => {
     const nextCities = getCitiesForCountry(residenceCountry);
@@ -259,6 +261,9 @@ export default function CharacterCreation() {
                   <div className="space-y-2">
                     <Label htmlFor="birthday">Birthday</Label>
                     <Input id="birthday" type="date" className="border-[#2EC4B6]/30" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+                    <p className="text-xs text-[#2EC4B6]">
+                      Born {birthday} → start {youngAdultStartDate} at age 18
+                    </p>
                   </div>
                 </div>
 

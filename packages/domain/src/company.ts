@@ -10,6 +10,43 @@ export interface CompanyState {
   readonly productCount: number;
   readonly valuationCents: number;
   readonly marketSharePct: number;
+  readonly revenueHistory: readonly CompanyRevenuePoint[];
+}
+
+export interface CompanyRevenuePoint {
+  readonly date: string;
+  readonly revenueCents: number;
+  readonly profitCents: number;
+}
+
+const MAX_COMPANY_HISTORY = 36;
+
+export function appendCompanyRevenueHistory(
+  company: CompanyState,
+  date: string,
+): CompanyState {
+  const profitCents = companyMonthlyProfitCents(company);
+  const point: CompanyRevenuePoint = {
+    date,
+    revenueCents: company.monthlyRevenueCents,
+    profitCents,
+  };
+  const history = company.revenueHistory ?? [];
+  const next =
+    history[0]?.date === date
+      ? [point, ...history.slice(1)]
+      : [point, ...history];
+  return {
+    ...company,
+    revenueHistory: next.slice(0, MAX_COMPANY_HISTORY),
+  };
+}
+
+export function normalizeCompanyState(company: CompanyState): CompanyState {
+  return {
+    ...company,
+    revenueHistory: company.revenueHistory ?? [],
+  };
 }
 
 /** State filing fee to incorporate (EA baseline). */
@@ -34,6 +71,7 @@ export function createFoundedCompany(companyName: string, playerName: string): C
     productCount: 0,
     valuationCents: 0,
     marketSharePct: 0.01,
+    revenueHistory: [],
   };
 }
 
@@ -51,6 +89,7 @@ export function createDefaultCompany(playerName: string, background = 'middle-cl
     productCount: 2,
     valuationCents: 1_200_000_00,
     marketSharePct: 1.4,
+    revenueHistory: [],
   };
 
   switch (background) {

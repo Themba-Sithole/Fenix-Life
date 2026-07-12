@@ -132,27 +132,44 @@ export default function CompanyDashboard() {
   const { company } = world;
   const currency = world.origin.currency;
   const profit = companyMonthlyProfitCents(company);
-  const revenue = company.monthlyRevenueCents / 100;
-  const expenses = company.monthlyExpensesCents / 100;
+  const revenueData = [...(company.revenueHistory ?? [])]
+    .reverse()
+    .map((point) => ({
+      month: point.date,
+      revenue: point.revenueCents / 100,
+      profit: point.profitCents / 100,
+    }));
 
-  const revenueData = [
-    { month: "M-2", revenue: revenue * 0.92, profit: (revenue - expenses) * 0.92 },
-    { month: "M-1", revenue: revenue * 0.96, profit: (revenue - expenses) * 0.96 },
-    { month: "Now", revenue, profit: revenue - expenses },
-  ];
+  const departmentCounts = world.employees.reduce<Record<string, number>>((acc, employee) => {
+    acc[employee.department] = (acc[employee.department] ?? 0) + 1;
+    return acc;
+  }, {});
+  const departmentColors: Record<string, string> = {
+    Engineering: "#2EC4B6",
+    Sales: "#F4B400",
+    Marketing: "#1C2541",
+    Operations: "#0B132B",
+  };
+  const departmentData = Object.entries(departmentCounts).map(([name, value]) => ({
+    name,
+    value,
+    color: departmentColors[name] ?? "#6b7280",
+  }));
 
-  const departmentData = [
-    { name: "Core Team", value: Math.max(1, Math.round(company.employeeCount * 0.45)), color: "#2EC4B6" },
-    { name: "Sales", value: Math.max(1, Math.round(company.employeeCount * 0.25)), color: "#F4B400" },
-    { name: "Ops", value: Math.max(1, Math.round(company.employeeCount * 0.2)), color: "#1C2541" },
-    { name: "Other", value: Math.max(0, company.employeeCount - Math.round(company.employeeCount * 0.9)), color: "#0B132B" },
-  ].filter((item) => item.value > 0);
+  const priorRevenue = revenueData.length >= 2 ? revenueData[revenueData.length - 2]?.revenue : null;
+  const latestRevenue = revenueData.length >= 1 ? revenueData[revenueData.length - 1]?.revenue : null;
+  const revenueTrendLabel =
+    priorRevenue != null && latestRevenue != null
+      ? latestRevenue >= priorRevenue
+        ? `+${(((latestRevenue - priorRevenue) / Math.max(priorRevenue, 1)) * 100).toFixed(0)}% vs prior`
+        : `${(((latestRevenue - priorRevenue) / Math.max(priorRevenue, 1)) * 100).toFixed(0)}% vs prior`
+      : `${company.marketSharePct.toFixed(1)}% share`;
 
   const metrics = [
     {
       label: "Revenue",
       value: formatMoney(company.monthlyRevenueCents, currency),
-      change: profit >= 0 ? "+ growing" : "under pressure",
+      change: revenueTrendLabel,
       trend: profit >= 0 ? "up" : "down",
       icon: DollarSign,
     },
@@ -248,9 +265,14 @@ export default function CompanyDashboard() {
                 <BarChart3 className="w-5 h-5 text-[#2EC4B6]" />
                 Revenue & Profit Trend
               </CardTitle>
-              <p className="text-xs text-gray-500">Estimated trend from current monthly figures</p>
+              <p className="text-xs text-gray-500">Recorded monthly revenue and profit from simulation</p>
             </CardHeader>
             <CardContent>
+              {revenueData.length === 0 ? (
+                <p className="text-sm text-gray-500 py-16 text-center">
+                  No revenue history yet — advance time or launch products to build a trend.
+                </p>
+              ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={revenueData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
@@ -261,15 +283,21 @@ export default function CompanyDashboard() {
                   <Bar dataKey="profit" fill="#F4B400" radius={[8, 8, 0, 0]} name="Profit" />
                 </BarChart>
               </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
           <Card className="border-[#F4B400]/20 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-[#1C2541]">Team Breakdown</CardTitle>
-              <p className="text-xs text-gray-500">Estimated split by headcount</p>
+              <CardTitle className="text-[#1C2541]">Team by Department</CardTitle>
+              <p className="text-xs text-gray-500">From live employee roster</p>
             </CardHeader>
             <CardContent>
+              {departmentData.length === 0 ? (
+                <p className="text-sm text-gray-500 py-16 text-center">
+                  No employees on roster yet — hire to see department mix.
+                </p>
+              ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
@@ -288,6 +316,7 @@ export default function CompanyDashboard() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>

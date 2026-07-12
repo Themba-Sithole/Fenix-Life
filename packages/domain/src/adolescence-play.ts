@@ -365,6 +365,7 @@ function applyTrackEducation(education: EducationState, choiceId: string): Educa
   switch (choiceId) {
     case 'university-track':
       return {
+        ...education,
         programName: 'Undergraduate Degree',
         institution: 'City University',
         gpa: 0,
@@ -374,6 +375,7 @@ function applyTrackEducation(education: EducationState, choiceId: string): Educa
       };
     case 'trade-track':
       return {
+        ...education,
         programName: 'Trade Skills Program',
         institution: 'Community College',
         gpa: 0,

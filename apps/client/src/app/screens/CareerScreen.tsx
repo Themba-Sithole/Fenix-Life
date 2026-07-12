@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -16,6 +16,8 @@ import {
   Brain,
   CheckCircle2,
   XCircle,
+  LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import { useSimulation } from "@/context/SimulationContext";
 import { useSimulationGate } from "@/hooks/useSimulationGate";
@@ -26,11 +28,31 @@ import {
   formatMoney,
   getAvailableJobListings,
   JOB_APPLICATION_FEE_CENTS,
+  JOB_APPLICATION_RESOLVE_DAYS,
   jobListingMatchScore,
+  NETWORK_COOLDOWN_TICKS,
+  PROMOTION_COOLDOWN_TICKS,
+  PROMOTION_MIN_MONTHS,
+  PROMOTION_MIN_PERFORMANCE,
+  RAISE_COOLDOWN_TICKS,
+  RAISE_MIN_MONTHS,
+  RAISE_MIN_PERFORMANCE,
+  UPSKILL_COOLDOWN_TICKS,
   unemploymentPhaseLabel,
   unemploymentRunwayMonths,
   weeksUnemployed,
 } from "@fenix/domain";
+
+type CareerActionKind =
+  | "CAREER_REQUEST_RAISE"
+  | "CAREER_REQUEST_PROMOTION"
+  | "CAREER_UPSKILL"
+  | "CAREER_NETWORK"
+  | "CAREER_QUIT";
+
+function cooldownDaysRemaining(tickCount: number, lastTick: number, cooldown: number): number {
+  return Math.max(0, cooldown - (tickCount - lastTick));
+}
 
 export default function CareerScreen() {
   const navigate = useNavigate();
@@ -40,31 +62,41 @@ export default function CareerScreen() {
   const [busyListingId, setBusyListingId] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
 
-  const isUnemployed = world?.career.status === "unemployed";
-  const applications = world?.career.applications ?? [];
-
-  const unemploymentStats = useMemo(() => {
-    if (!world || !isUnemployed) return null;
-    const weeks = weeksUnemployed(world.career.unemployedSinceDate, world.currentDate);
-    return {
-      weeks,
-      phase: unemploymentPhaseLabel(weeks),
-      runwayMonths: unemploymentRunwayMonths(world.banking),
-      pending: activeJobApplications(applications).length,
-      stress: world.player.traits.stress,
-    };
-  }, [isUnemployed, world, applications]);
-
   const simulationGate = useSimulationGate("Loading career profile…");
   if (simulationGate) return simulationGate;
   if (!world) return null;
+
+  const isUnemployed = world.career.status === "unemployed";
+  const isEmployed = world.career.status === "employed";
+  const applications = world.career.applications ?? [];
+  const pendingApplications = activeJobApplications(applications);
+  const tickCount = world.clock.tickCount;
+  const career = world.career;
+  const currency = world.origin.currency;
+
+  const unemploymentStats = isUnemployed
+    ? {
+        weeks: weeksUnemployed(career.unemployedSinceDate, world.currentDate),
+        phase: unemploymentPhaseLabel(
+          weeksUnemployed(career.unemployedSinceDate, world.currentDate),
+        ),
+        runwayMonths: unemploymentRunwayMonths(world.banking),
+        pending: pendingApplications.length,
+        stress: world.player.traits.stress,
+      }
+    : null;
+
+  const cooldowns = {
+    raise: cooldownDaysRemaining(tickCount, career.lastRaiseTick, RAISE_COOLDOWN_TICKS),
+    promotion: cooldownDaysRemaining(tickCount, career.lastPromotionTick, PROMOTION_COOLDOWN_TICKS),
+    upskill: cooldownDaysRemaining(tickCount, career.lastUpskillTick, UPSKILL_COOLDOWN_TICKS),
+    network: cooldownDaysRemaining(tickCount, career.lastNetworkTick, NETWORK_COOLDOWN_TICKS),
+  };
 
   const listings = getAvailableJobListings({
     career: world.career,
     education: world.education,
   });
-
-  const currency = world.origin.currency;
 
   async function handleApply(listingId: string) {
     setActionError(null);
@@ -72,7 +104,9 @@ export default function CareerScreen() {
     setBusyListingId(listingId);
     try {
       await applyAction({ kind: "CAREER_APPLY_JOB", listingId });
-      setApplyFeedback("Application submitted — check your application history below.");
+      setApplyFeedback(
+        `Application submitted — decisions typically resolve within ${JOB_APPLICATION_RESOLVE_DAYS} days.`,
+      );
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "Application failed.");
     } finally {
@@ -80,9 +114,7 @@ export default function CareerScreen() {
     }
   }
 
-  async function handleCareerAction(
-    kind: "CAREER_REQUEST_RAISE" | "CAREER_UPSKILL" | "CAREER_NETWORK",
-  ) {
+  async function handleCareerAction(kind: CareerActionKind) {
     setActionError(null);
     setBusyAction(kind);
     try {
@@ -127,22 +159,71 @@ export default function CareerScreen() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{employmentStatusLabel(world.career.status)}</Badge>
-              <Badge variant="outline">Performance {world.career.performanceScore}%</Badge>
+              <Badge variant="outline">{employmentStatusLabel(career.status)}</Badge>
+              <Badge variant="outline">Performance {career.performanceScore}%</Badge>
+              <Badge variant="outline">{career.monthsInRole} months in role</Badge>
               {!isUnemployed ? (
                 <Badge variant="outline">
-                  {formatMoney(world.career.monthlySalaryCents, currency)}/mo
+                  {formatMoney(career.monthlySalaryCents, currency)}/mo
                 </Badge>
               ) : null}
             </div>
             <p className="text-sm text-gray-600">
               {isUnemployed
-                ? `${world.career.jobTitle} · ${world.career.employerName}`
-                : `${world.career.jobTitle} at ${world.career.employerName}`}
+                ? `${career.jobTitle} · ${career.employerName}`
+                : `${career.jobTitle} at ${career.employerName}`}
             </p>
-            <p className="text-xs text-gray-500">{world.career.yearsExperience} years experience</p>
+            <p className="text-xs text-gray-500">{career.yearsExperience} years experience</p>
           </CardContent>
         </Card>
+
+        {career.pipActive ? (
+          <Card className="border-red-200 shadow-lg mb-6 bg-red-50/40" data-testid="pip-warning">
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-[#1C2541]">Performance Improvement Plan active</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {career.pipDaysRemaining} days remaining · {career.warnings} warning
+                  {career.warnings === 1 ? "" : "s"} on file. Raises and promotions are blocked until the PIP clears.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : career.warnings > 0 ? (
+          <Card className="border-orange-200 shadow-lg mb-6 bg-orange-50/30">
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-gray-700">
+                {career.warnings} performance warning{career.warnings === 1 ? "" : "s"} — improve delivery before the next review.
+              </p>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {pendingApplications.length > 0 ? (
+          <Card className="border-[#2EC4B6]/20 shadow-lg mb-6" data-testid="pending-applications">
+            <CardHeader>
+              <CardTitle className="text-[#1C2541]">Pending applications</CardTitle>
+              <p className="text-sm text-gray-600">
+                {pendingApplications.length} in pipeline — employers respond after a few days of game time.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {pendingApplications.map((application) => (
+                <div key={application.id} className="rounded-lg border border-gray-200 p-4 bg-white">
+                  <p className="text-[#1C2541] font-medium">{application.listingTitle}</p>
+                  <p className="text-sm text-gray-600">{application.employerName}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Applied {application.appliedDate}
+                    {application.resolveOnDate ? ` · Decision by ${application.resolveOnDate}` : ""}
+                    {" · "}Match {application.matchScore}%
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ) : null}
 
         {isUnemployed && unemploymentStats ? (
           <Card className="border-orange-200 shadow-lg mb-6 bg-orange-50/40" data-testid="unemployment-panel">
@@ -205,6 +286,9 @@ export default function CareerScreen() {
                     <p className="text-sm text-gray-600">{application.employerName}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Applied {application.appliedDate} · Match {application.matchScore}%
+                      {application.resolveOnDate && application.status === "pending"
+                        ? ` · Resolves ~${application.resolveOnDate}`
+                        : ""}
                     </p>
                     {application.rejectionReason ? (
                       <p className="text-xs text-orange-700 mt-1">{application.rejectionReason}</p>
@@ -246,7 +330,8 @@ export default function CareerScreen() {
                 Job listings
               </CardTitle>
               <p className="text-sm text-gray-600">
-                Application fee: {formatMoney(JOB_APPLICATION_FEE_CENTS, currency)} per role
+                Application fee: {formatMoney(JOB_APPLICATION_FEE_CENTS, currency)} per role · resolves in ~
+                {JOB_APPLICATION_RESOLVE_DAYS} days
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -266,7 +351,7 @@ export default function CareerScreen() {
                 </div>
               ) : (
                 listings.map((listing) => {
-                  const match = jobListingMatchScore(listing, world.career.performanceScore);
+                  const match = jobListingMatchScore(listing, career.performanceScore, world.education);
                   return (
                     <div
                       key={listing.id}
@@ -306,31 +391,81 @@ export default function CareerScreen() {
                 Career actions
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              <Button
-                className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
-                disabled={busyAction !== null}
-                onClick={() => handleCareerAction("CAREER_REQUEST_RAISE")}
-              >
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Request Raise
-              </Button>
-              <Button
-                variant="outline"
-                disabled={busyAction !== null}
-                onClick={() => handleCareerAction("CAREER_UPSKILL")}
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                Upskill ($300)
-              </Button>
-              <Button
-                variant="outline"
-                disabled={busyAction !== null}
-                onClick={() => handleCareerAction("CAREER_NETWORK")}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Network ($150)
-              </Button>
+            <CardContent className="space-y-4">
+              {isEmployed ? (
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>
+                    Raise: need {RAISE_MIN_MONTHS}+ months (you have {career.monthsInRole}), performance ≥
+                    {RAISE_MIN_PERFORMANCE}%
+                    {cooldowns.raise > 0 ? ` · cooldown ${cooldowns.raise}d` : " · ready"}
+                  </p>
+                  <p>
+                    Promotion: need {PROMOTION_MIN_MONTHS}+ months, performance ≥{PROMOTION_MIN_PERFORMANCE}%
+                    {cooldowns.promotion > 0 ? ` · cooldown ${cooldowns.promotion}d` : " · ready"}
+                  </p>
+                </div>
+              ) : null}
+              <div className="flex flex-wrap gap-3">
+                {isEmployed ? (
+                  <>
+                    <Button
+                      className="bg-[#2EC4B6] hover:bg-[#1C9B8F] text-white"
+                      disabled={
+                        busyAction !== null ||
+                        career.pipActive ||
+                        cooldowns.raise > 0 ||
+                        career.monthsInRole < RAISE_MIN_MONTHS ||
+                        career.performanceScore < RAISE_MIN_PERFORMANCE
+                      }
+                      onClick={() => handleCareerAction("CAREER_REQUEST_RAISE")}
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Request Raise
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={
+                        busyAction !== null ||
+                        career.pipActive ||
+                        cooldowns.promotion > 0 ||
+                        career.monthsInRole < PROMOTION_MIN_MONTHS ||
+                        career.performanceScore < PROMOTION_MIN_PERFORMANCE
+                      }
+                      onClick={() => handleCareerAction("CAREER_REQUEST_PROMOTION")}
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Request Promotion
+                    </Button>
+                  </>
+                ) : null}
+                <Button
+                  variant="outline"
+                  disabled={busyAction !== null || cooldowns.upskill > 0}
+                  onClick={() => handleCareerAction("CAREER_UPSKILL")}
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Upskill ($300){cooldowns.upskill > 0 ? ` · ${cooldowns.upskill}d` : ""}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={busyAction !== null || cooldowns.network > 0}
+                  onClick={() => handleCareerAction("CAREER_NETWORK")}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Network ($150){cooldowns.network > 0 ? ` · ${cooldowns.network}d` : ""}
+                </Button>
+                {isEmployed ? (
+                  <Button
+                    variant="outline"
+                    className="text-orange-700 border-orange-200 hover:bg-orange-50"
+                    disabled={busyAction !== null}
+                    onClick={() => handleCareerAction("CAREER_QUIT")}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Resign
+                  </Button>
+                ) : null}
+              </div>
             </CardContent>
           </Card>
         )}

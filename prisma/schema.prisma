@@ -94,3 +94,34 @@ model FeatureFlag {
 
   @@map("feature_flags")
 }
+
+enum ModerationItemStatus {
+  PENDING
+  RESOLVED
+  ESCALATED
+}
+
+enum ModerationItemType {
+  DISPLAY_NAME
+  COMPANY_NAME
+  CHAT_MESSAGE
+  SAVE_CONTENT
+}
+
+model ModerationItem {
+  id                String               @id @default(cuid())
+  type              ModerationItemType
+  status            ModerationItemStatus @default(PENDING)
+  reportedContent   String               @map("reported_content")
+  reportedByUserId  String?              @map("reported_by_user_id")
+  targetUserId      String               @map("target_user_id")
+  reason            String
+  resolvedAt        DateTime?            @map("resolved_at")
+  resolvedByAdminId String?              @map("resolved_by_admin_id")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("moderation_items")
+}

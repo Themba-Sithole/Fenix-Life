@@ -14,6 +14,9 @@ import type { EducationState } from './education.js';
 import type { EmployeeRecord } from './employees.js';
 import type { CharacterOrigin } from './locations.js';
 import type { OnboardingState } from './onboarding.js';
+import type { DeathPendingState } from './succession.js';
+import type { CivicState } from './civic.js';
+import type { DistrictVisitHistory } from './city-districts.js';
 import { createFreshStartWorld } from './fresh-start.js';
 
 /** Game clock speed multiplier (Doc 17). */
@@ -46,6 +49,12 @@ export interface WorldInstance {
   lifePath: LifePath;
   lifeStage: LifeStage;
   onboarding: OnboardingState;
+  /** Set when mortality triggers; cleared after heir selection. */
+  deathPending: DeathPendingState | null;
+  /** Tax, insurance, pending illness choices. */
+  civic: CivicState;
+  /** Per-district visit cooldowns / opportunity history. */
+  districtVisits: DistrictVisitHistory;
 }
 
 /** @deprecated Use createFreshStartWorld for new saves. Kept as alias for compatibility. */

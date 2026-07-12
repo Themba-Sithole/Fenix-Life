@@ -40,7 +40,7 @@ describe('save migration', () => {
 
     const migrated = ensureWorldV2(legacyWorld as never, 'Legacy Citizen');
 
-    expect(migrated.schemaVersion).toBeGreaterThanOrEqual(11);
+    expect(migrated.schemaVersion).toBeGreaterThanOrEqual(12);
     expect(migrated.portfolio).toBeDefined();
     expect(migrated.housing).toBeDefined();
     expect(migrated.transportation).toBeDefined();

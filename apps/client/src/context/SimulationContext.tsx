@@ -23,14 +23,16 @@ import {
   createSaveBlobV1,
   formatGameDate,
   parseSaveBlobV1,
-  runCatchUpTicks,
-  estimateCatchUpDays,
+  buildWhileYouWereAwaySummary,
   serializeSaveBlobV1,
+  type WhileAwaySummary,
 } from '@fenix/simulation-engine';
 import { ApiError, downloadSaveBlob, uploadSaveBlob } from '@/lib/api';
+import { clearOfflineSave, readOfflineSave, writeOfflineSave } from '@/lib/offline-save';
 import { isAutosaveEnabled } from '@/lib/player-settings';
 import { useSave } from '@/context/SaveContext';
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from '@/simulation-bridge/types';
+import type { SaveBlobV1 } from '@fenix/simulation-engine';
 
 const BASE_TICK_MS = 4000;
 
@@ -47,6 +49,7 @@ interface SimulationContextValue {
   tickCount: number;
   isLoading: boolean;
   isSaving: boolean;
+  isPlayingOffline: boolean;
   loadError: string | null;
   advanceDay: () => Promise<void>;
   setPaused: (paused: boolean) => Promise<void>;
@@ -62,6 +65,9 @@ interface SimulationContextValue {
   completeChildhoodOnboarding: (simulateFirstYear: boolean) => Promise<void>;
   dismissLifePathHints: () => Promise<void>;
   dismissHomeTour: () => Promise<void>;
+  applyCatchUp: (days: number) => Promise<WhileAwaySummary | null>;
+  /** Retry uploading offline blob; clears offline banner only after API success. */
+  syncNow: () => Promise<boolean>;
 }
 
 const SimulationContext = createContext<SimulationContextValue | null>(null);
@@ -101,6 +107,26 @@ function tickIntervalMs(timeScale: TimeScale): number | null {
   }
 }
 
+function readOfflineBlob(saveId: string): SaveBlobV1 | null {
+  const raw = readOfflineSave(saveId);
+  if (!raw) return null;
+  try {
+    return parseSaveBlobV1(raw);
+  } catch {
+    clearOfflineSave(saveId);
+    return null;
+  }
+}
+
+function migrateLoadedWorld(
+  blob: SaveBlobV1,
+  saveName: string,
+  worldSeed: string | null,
+): WorldInstance {
+  const seed = parseWorldSeed(worldSeed);
+  return ensureWorldV2(blob.world, saveName, seed.background, seed.lifePath);
+}
+
 export function SimulationProvider({ children }: { children: ReactNode }) {
   const { activeSave } = useSave();
   const workerRef = useRef<Worker | null>(null);
@@ -111,15 +137,22 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
   const [world, setWorld] = useState<WorldInstance | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPlayingOffline, setIsPlayingOffline] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const persistWorld = useCallback(async (nextWorld: WorldInstance) => {
     if (!activeSave) return;
+    const blob = serializeSaveBlobV1(createSaveBlobV1(nextWorld));
     setIsSaving(true);
     try {
-      const blob = serializeSaveBlobV1(createSaveBlobV1(nextWorld));
       await uploadSaveBlob(activeSave.id, blob);
       lastSavedTickRef.current = nextWorld.clock.tickCount;
+      clearOfflineSave(activeSave.id);
+      setIsPlayingOffline(false);
+    } catch (error) {
+      writeOfflineSave(activeSave.id, blob);
+      setIsPlayingOffline(true);
+      console.error('Save upload failed; stored offline copy', error);
     } finally {
       setIsSaving(false);
     }
@@ -213,21 +246,32 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     setLoadError(null);
+    setIsPlayingOffline(false);
     try {
       let initialWorld: WorldInstance;
+      const offlineBlob = readOfflineBlob(activeSave.id);
 
       try {
         const rawBlob = await downloadSaveBlob(activeSave.id);
         const parsed = parseSaveBlobV1(rawBlob);
-        const seed = parseWorldSeed(activeSave.worldSeed);
-        let migrated = ensureWorldV2(parsed.world, activeSave.name, seed.background, seed.lifePath);
-        const catchUpDays = estimateCatchUpDays(parsed.savedAt);
-        if (catchUpDays > 0) {
-          migrated = runCatchUpTicks(migrated, catchUpDays);
+        const useOffline =
+          offlineBlob != null &&
+          new Date(offlineBlob.savedAt).getTime() > new Date(parsed.savedAt).getTime();
+
+        if (useOffline && offlineBlob) {
+          initialWorld = migrateLoadedWorld(offlineBlob, activeSave.name, activeSave.worldSeed);
+          setIsPlayingOffline(true);
+        } else {
+          initialWorld = migrateLoadedWorld(parsed, activeSave.name, activeSave.worldSeed);
+          if (offlineBlob != null) {
+            clearOfflineSave(activeSave.id);
+          }
         }
-        initialWorld = migrated;
       } catch (error) {
-        if (error instanceof ApiError && error.status === 404) {
+        if (offlineBlob) {
+          initialWorld = migrateLoadedWorld(offlineBlob, activeSave.name, activeSave.worldSeed);
+          setIsPlayingOffline(true);
+        } else if (error instanceof ApiError && error.status === 404) {
           const seed = parseWorldSeed(activeSave.worldSeed);
           const birthday = seed.birthday ?? '1982-06-15';
           initialWorld = createFreshStartWorld({
@@ -385,9 +429,61 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     await applyAction({ kind: 'DISMISS_HOME_TOUR' });
   }, [applyAction]);
 
+  const applyCatchUp = useCallback(
+    async (days: number): Promise<WhileAwaySummary | null> => {
+      const current = worldRef.current;
+      if (!current || days <= 0) {
+        return null;
+      }
+
+      const priorEvents = current.events;
+      const { world: nextWorld, summary } = buildWhileYouWereAwaySummary(
+        current,
+        priorEvents,
+        days,
+      );
+      await initWorker(nextWorld);
+      await persistWorld(nextWorld);
+      return summary;
+    },
+    [initWorker, persistWorld],
+  );
+
   const reloadSimulation = useCallback(async () => {
     await loadSimulation();
   }, [loadSimulation]);
+
+  const syncNow = useCallback(async (): Promise<boolean> => {
+    if (!activeSave || !worldRef.current) {
+      return false;
+    }
+    const blob = serializeSaveBlobV1(createSaveBlobV1(worldRef.current));
+    setIsSaving(true);
+    try {
+      await uploadSaveBlob(activeSave.id, blob);
+      lastSavedTickRef.current = worldRef.current.clock.tickCount;
+      clearOfflineSave(activeSave.id);
+      setIsPlayingOffline(false);
+      return true;
+    } catch (error) {
+      writeOfflineSave(activeSave.id, blob);
+      setIsPlayingOffline(true);
+      console.error('Sync now failed', error);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [activeSave]);
+
+  useEffect(() => {
+    function onOnline() {
+      if (isPlayingOffline) {
+        syncNow().catch(console.error);
+      }
+    }
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [isPlayingOffline, syncNow]);
 
   const value = useMemo<SimulationContextValue>(
     () => ({
@@ -399,6 +495,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       tickCount: world?.clock.tickCount ?? 0,
       isLoading,
       isSaving,
+      isPlayingOffline,
       loadError,
       advanceDay,
       setPaused,
@@ -414,8 +511,10 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       completeChildhoodOnboarding,
       dismissLifePathHints,
       dismissHomeTour,
+      applyCatchUp,
+      syncNow,
     }),
-    [world, isLoading, isSaving, loadError, advanceDay, setPaused, setTimeScale, persistWorld, reloadSimulation, transferFunds, applyAction, completeChildhoodOnboarding, dismissLifePathHints, dismissHomeTour],
+    [world, isLoading, isSaving, isPlayingOffline, loadError, advanceDay, setPaused, setTimeScale, persistWorld, reloadSimulation, transferFunds, applyAction, completeChildhoodOnboarding, dismissLifePathHints, dismissHomeTour, applyCatchUp, syncNow],
   );
 
   return (

@@ -26,17 +26,6 @@ const ACCOUNT_COLORS: Record<BankAccountType, string> = {
   investment: "text-[#2EC4B6]",
 };
 
-function buildBalanceHistory(netWorthCents: number, tickCount: number) {
-  const labels = ["M-5", "M-4", "M-3", "M-2", "M-1", "Now"];
-  const drift = Math.min(tickCount * 50_00, netWorthCents * 0.15);
-  const start = Math.max(0, netWorthCents - drift);
-
-  return labels.map((month, index) => ({
-    month,
-    balance: Math.round(start + ((netWorthCents - start) * (index + 1)) / labels.length),
-  }));
-}
-
 export default function BankingDashboard() {
   const navigate = useNavigate();
   const { world, transferFunds, applyAction } = useSimulation();
@@ -58,15 +47,20 @@ export default function BankingDashboard() {
   const { banking } = world;
   const currency = world.origin.currency;
   const netWorth = totalNetWorthCents(banking);
-  const balanceHistory = buildBalanceHistory(netWorth, world.clock.tickCount);
-  const monthlyIncome = banking.monthlySalaryCents / 100;
-  const monthlyExpenses = banking.monthlyExpensesCents / 100;
+  const balanceHistory = [...(banking.netWorthHistory ?? [])]
+    .reverse()
+    .map((point) => ({
+      month: point.date,
+      balance: point.netWorthCents,
+    }));
 
-  const cashFlowData = [
-    { month: "M-2", income: monthlyIncome * 0.95, expenses: monthlyExpenses * 0.95 },
-    { month: "M-1", income: monthlyIncome * 0.98, expenses: monthlyExpenses * 0.98 },
-    { month: "Now", income: monthlyIncome, expenses: monthlyExpenses },
-  ];
+  const cashFlowData = [...(banking.cashFlowHistory ?? [])]
+    .reverse()
+    .map((point) => ({
+      month: point.date,
+      income: point.incomeCents / 100,
+      expenses: point.expensesCents / 100,
+    }));
 
   const transactions = banking.transactions.map((tx) => ({
     date: tx.date,
@@ -181,9 +175,14 @@ export default function BankingDashboard() {
           <Card className="lg:col-span-2 border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Balance History</CardTitle>
-              <p className="text-xs text-gray-500">Estimated from current net worth (not stored history)</p>
+              <p className="text-xs text-gray-500">Recorded net worth from simulation ticks</p>
             </CardHeader>
             <CardContent>
+              {balanceHistory.length === 0 ? (
+                <p className="text-sm text-gray-500 py-16 text-center">
+                  No history yet — advance time to record net worth snapshots.
+                </p>
+              ) : (
               <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={balanceHistory}>
                   <defs>
@@ -199,6 +198,7 @@ export default function BankingDashboard() {
                   <Area type="monotone" dataKey="balance" stroke="#2EC4B6" fillOpacity={1} fill="url(#colorBalance)" strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
@@ -242,9 +242,19 @@ export default function BankingDashboard() {
           <Card className="lg:col-span-2 border-[#2EC4B6]/20 shadow-lg">
             <CardHeader>
               <CardTitle className="text-[#1C2541]">Income vs Expenses</CardTitle>
-              <p className="text-xs text-gray-500">Current monthly salary and expenses</p>
+              <p className="text-xs text-gray-500">
+                Recorded monthly cash flow from settlements
+                {cashFlowData.length === 0
+                  ? ` · current run-rate ${formatMoney(banking.monthlySalaryCents, currency)} in / ${formatMoney(banking.monthlyExpensesCents, currency)} out`
+                  : ''}
+              </p>
             </CardHeader>
             <CardContent>
+              {cashFlowData.length === 0 ? (
+                <p className="text-sm text-gray-500 py-16 text-center">
+                  No cash-flow history yet — advance to a month settlement to record income and expenses.
+                </p>
+              ) : (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={cashFlowData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
@@ -255,6 +265,7 @@ export default function BankingDashboard() {
                   <Bar dataKey="expenses" fill="#F4B400" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 

@@ -17,6 +17,17 @@ export interface BankTransaction {
   accountId: string;
 }
 
+export interface NetWorthHistoryPoint {
+  readonly date: string;
+  readonly netWorthCents: number;
+}
+
+export interface CashFlowHistoryPoint {
+  readonly date: string;
+  readonly incomeCents: number;
+  readonly expensesCents: number;
+}
+
 export interface BankingState {
   accounts: BankAccount[];
   transactions: BankTransaction[];
@@ -26,6 +37,9 @@ export interface BankingState {
   activeLoan: LoanRecord | null;
   /** Undrawn family credit line — wealthy background only (GDD §8.2). */
   familyCreditLineLimitCents?: number | null;
+  netWorthHistory: NetWorthHistoryPoint[];
+  /** Real monthly income/expense snapshots on settlement — never invent chart series. */
+  cashFlowHistory: CashFlowHistoryPoint[];
 }
 
 const BACKGROUND_STARTING_CASH_CENTS: Record<string, number> = {
@@ -105,6 +119,8 @@ export function createBankingForBackground(background = 'middle-class'): Banking
     creditScore,
     activeLoan: null,
     familyCreditLineLimitCents: null,
+    netWorthHistory: [],
+    cashFlowHistory: [],
   };
 }
 
@@ -114,6 +130,65 @@ export function createDefaultBanking(): BankingState {
 
 export function totalNetWorthCents(banking: BankingState): number {
   return banking.accounts.reduce((sum, account) => sum + account.balanceCents, 0);
+}
+
+const MAX_NET_WORTH_HISTORY = 36;
+const MAX_CASH_FLOW_HISTORY = 36;
+
+export function appendNetWorthHistory(
+  banking: BankingState,
+  date: string,
+): BankingState {
+  const netWorthCents = totalNetWorthCents(banking);
+  const last = banking.netWorthHistory[0];
+  if (last && last.date === date) {
+    return {
+      ...banking,
+      netWorthHistory: [{ date, netWorthCents }, ...banking.netWorthHistory.slice(1)].slice(
+        0,
+        MAX_NET_WORTH_HISTORY,
+      ),
+    };
+  }
+  return {
+    ...banking,
+    netWorthHistory: [{ date, netWorthCents }, ...(banking.netWorthHistory ?? [])].slice(
+      0,
+      MAX_NET_WORTH_HISTORY,
+    ),
+  };
+}
+
+export function appendCashFlowHistory(
+  banking: BankingState,
+  date: string,
+  incomeCents: number,
+  expensesCents: number,
+): BankingState {
+  const point: CashFlowHistoryPoint = { date, incomeCents, expensesCents };
+  const history = banking.cashFlowHistory ?? [];
+  const next =
+    history[0]?.date === date ? [point, ...history.slice(1)] : [point, ...history];
+  return {
+    ...banking,
+    cashFlowHistory: next.slice(0, MAX_CASH_FLOW_HISTORY),
+  };
+}
+
+export function normalizeBankingState(banking: BankingState): BankingState {
+  return {
+    ...banking,
+    netWorthHistory: banking.netWorthHistory ?? [],
+    cashFlowHistory: banking.cashFlowHistory ?? [],
+    activeLoan: banking.activeLoan
+      ? {
+          ...banking.activeLoan,
+          missedPayments: banking.activeLoan.missedPayments ?? 0,
+          status: banking.activeLoan.status ?? 'current',
+          collectionsFeeCents: banking.activeLoan.collectionsFeeCents ?? 0,
+        }
+      : null,
+  };
 }
 
 export function formatUsd(cents: number): string {

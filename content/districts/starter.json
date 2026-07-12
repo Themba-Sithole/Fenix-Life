@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "districts": [
+    {
+      "id": "downtown",
+      "name": "Downtown",
+      "rentBandLowCents": 180000,
+      "rentBandHighCents": 420000,
+      "crimeRisk": 0.08,
+      "stressRisk": 0.1,
+      "visitCostCents": 1500,
+      "jobPoolIds": ["job-junior-analyst", "job-product-specialist", "job-customer-success"],
+      "opportunityDeck": ["job_lead", "side_hustle", "flavor", "mugging"]
+    },
+    {
+      "id": "university",
+      "name": "University",
+      "rentBandLowCents": 90000,
+      "rentBandHighCents": 200000,
+      "crimeRisk": 0.03,
+      "stressRisk": 0.05,
+      "visitCostCents": 0,
+      "jobPoolIds": ["job-graduate-trainee", "job-retail-associate"],
+      "opportunityDeck": ["job_lead", "romance", "flavor"]
+    },
+    {
+      "id": "industrial",
+      "name": "Industrial Yard",
+      "rentBandLowCents": 60000,
+      "rentBandHighCents": 140000,
+      "crimeRisk": 0.18,
+      "stressRisk": 0.14,
+      "visitCostCents": 0,
+      "jobPoolIds": ["job-warehouse", "job-trade-tech"],
+      "opportunityDeck": ["side_hustle", "mugging", "job_lead", "flavor"]
+    }
+  ]
+}

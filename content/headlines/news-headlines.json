@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "headlines": [
     {
       "id": "news-tech-rally",
@@ -25,6 +25,131 @@
       "id": "news-founder",
       "template": "Founder-led ventures in {city} attract early-stage capital",
       "tags": ["business", "career"]
+    },
+    {
+      "id": "news-inflation-rise",
+      "template": "Inflation climbs to {inflation}% — households in {city} brace for higher living costs",
+      "tags": ["economy", "finance"]
+    },
+    {
+      "id": "news-inflation-ease",
+      "template": "Central bank signals rate pause as {city} inflation eases toward {inflation}%",
+      "tags": ["economy", "finance"]
+    },
+    {
+      "id": "news-layoffs",
+      "template": "{industry} sector sheds jobs as companies restructure for lean growth",
+      "tags": ["career", "economy"]
+    },
+    {
+      "id": "news-startup-boom",
+      "template": "Startup registrations in {city} surge — entrepreneurship at decade high",
+      "tags": ["business", "career"]
+    },
+    {
+      "id": "news-real-estate",
+      "template": "Property prices in {city} up 4.2% year-on-year despite rate pressure",
+      "tags": ["housing", "finance"]
+    },
+    {
+      "id": "news-stock-surge",
+      "template": "Equity markets surge: tech index touches {index} on strong earnings season",
+      "tags": ["finance", "economy"]
+    },
+    {
+      "id": "news-stock-slide",
+      "template": "Markets retreat to {index} as profit-taking and global uncertainty weigh on sentiment",
+      "tags": ["finance", "economy"]
+    },
+    {
+      "id": "news-remote-work",
+      "template": "Remote work reshapes commercial demand in {city} as office vacancies rise",
+      "tags": ["career", "housing"]
+    },
+    {
+      "id": "news-health-spending",
+      "template": "Healthcare spending per capita rises in {city} — insurers revise premium outlook",
+      "tags": ["health", "finance"]
+    },
+    {
+      "id": "news-gig-economy",
+      "template": "Gig and contract work surges as {industry} platforms expand in {city}",
+      "tags": ["career", "business"]
+    },
+    {
+      "id": "news-bank-rates",
+      "template": "Central bank holds rates steady — analysts expect two cuts by year end",
+      "tags": ["finance", "economy"]
+    },
+    {
+      "id": "news-energy-costs",
+      "template": "Energy prices push utility bills higher — households urged to cut consumption",
+      "tags": ["finance", "housing"]
+    },
+    {
+      "id": "news-edu-demand",
+      "template": "Graduate enrolments in {city} rise 12% as workers chase credentials in competitive market",
+      "tags": ["education", "career"]
+    },
+    {
+      "id": "news-transport",
+      "template": "Public transport investment announced for {city} — commute costs set to fall",
+      "tags": ["housing", "finance"]
+    },
+    {
+      "id": "news-vc-drought",
+      "template": "Venture funding slowdown hits {city} — founders warned to extend runway",
+      "tags": ["business", "finance"]
+    },
+    {
+      "id": "news-wealth-gap",
+      "template": "Wealth inequality widens in {city} as asset prices outpace wage growth",
+      "tags": ["economy", "finance"]
+    },
+    {
+      "id": "news-trade",
+      "template": "{industry} exports from {city} region hit record high on currency tailwind",
+      "tags": ["economy", "business"]
+    },
+    {
+      "id": "news-automation",
+      "template": "Automation anxiety grows as AI tools reduce entry-level roles in {industry}",
+      "tags": ["career", "tech"]
+    },
+    {
+      "id": "news-family-policy",
+      "template": "{city} council introduces family support grants — applications open next quarter",
+      "tags": ["life", "finance"]
+    },
+    {
+      "id": "news-savings-push",
+      "template": "Financial advisers urge households to build six-month emergency buffer amid uncertainty",
+      "tags": ["finance"]
+    },
+    {
+      "id": "news-rents",
+      "template": "Average rents in {city} climb 8% — tenants feel squeeze as supply stays tight",
+      "tags": ["housing", "economy"]
+    },
+    {
+      "id": "news-credit",
+      "template": "Consumer credit growth slows — banks tighten lending criteria for new applicants",
+      "tags": ["finance"]
+    },
+    {
+      "id": "news-pension",
+      "template": "Pension reform debate heats up — analysts warn younger workers to save early",
+      "tags": ["finance", "life"]
+    },
+    {
+      "id": "news-wellbeing",
+      "template": "Workplace wellbeing initiatives gain traction in {city} as burnout costs rise",
+      "tags": ["life", "career"]
+    },
+    {
+      "id": "news-tourism",
+      "template": "Tourism in {city} rebounds — hospitality sector reports strongest quarter in three years",
+      "tags": ["business", "economy"]
     }
   ]
 }

@@ -11,9 +11,12 @@ import {
 } from "lucide-react";
 import { formatSaveDate, useSave } from "@/context/SaveContext";
 import { useSimulation } from "@/context/SimulationContext";
-import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, cyclePhaseLabel, getLifePathHintActions, lifePathHintTitle, type TimeScale } from "@fenix/domain";
+import { estimateCatchUpDays } from '@fenix/simulation-engine';
+import { isCatchUpApplied } from '@/lib/catch-up-session';
+import { formatMoney, formatOriginLocation, getCountryName, totalNetWorthCents, companyStageLabel, companyMonthlyProfitCents, employmentStatusLabel, cyclePhaseLabel, getLifePathHintActions, lifePathHintTitle, deriveBlockingGates, hasHardBlockingGate, type TimeScale } from "@fenix/domain";
 import { FiveCapitalsStrip } from "../components/FiveCapitalsStrip";
 import { HomeNavSheet } from "../components/HomeNavSheet";
+import { LifeGateBanner } from "../components/LifeGateBanner";
 import { Pause, Play, SkipForward } from "lucide-react";
 
 const TIME_SCALES: TimeScale[] = [1, 2, 5];
@@ -48,13 +51,26 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!simLoading && world) {
+      if (world.deathPending) {
+        navigate('/death', { replace: true });
+        return;
+      }
+      const hardGates = deriveBlockingGates(world).filter((gate) => gate.severity === 'hard');
+      if (hardGates.some((gate) => gate.kind === 'loan_default' || gate.kind === 'tuition_overdue' || gate.kind === 'tax_filing_overdue')) {
+        // Stay on home with banner — BitLife popup style; do not free-play past crisis
+      }
       if (!world.onboarding.adolescencePlayCompleted) {
         navigate('/childhood-play', { replace: true });
       } else if (!world.onboarding.childhoodSummarySeen) {
         navigate('/childhood-summary', { replace: true });
+      } else if (activeSave?.lastPlayedAt && !isCatchUpApplied(activeSave.id)) {
+        const catchUpDays = estimateCatchUpDays(activeSave.lastPlayedAt);
+        if (catchUpDays > 0) {
+          navigate('/while-away', { replace: true });
+        }
       }
     }
-  }, [simLoading, world, navigate]);
+  }, [simLoading, world, navigate, activeSave?.lastPlayedAt]);
 
   if (!isLoading && !activeSave) {
     return null;
@@ -169,6 +185,7 @@ export default function HomeScreen() {
               <p className="text-sm text-gray-300">
                 {locationLabel} · Day {tickCount + 1} · {isPaused ? 'Paused' : `${timeScale}x`}
                 {isSaving ? ' · Saving…' : ''}
+                {hasHardBlockingGate(world) ? ' · Crisis locked' : ''}
               </p>
             </div>
           </div>
@@ -256,6 +273,7 @@ export default function HomeScreen() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        <LifeGateBanner world={world} />
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-6">
             <Card className="border-[#2EC4B6]/20 shadow-lg">

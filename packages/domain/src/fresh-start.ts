@@ -15,13 +15,15 @@ import {
   type LifePath,
 } from './life-path.js';
 import { createDefaultOnboarding } from './onboarding.js';
+import { createDefaultCivic } from './civic.js';
+import { createEmptyDistrictVisits } from './city-districts.js';
 import type { SaveId } from './save-id.js';
 import type { TimeScale, WorldInstance } from './world-instance.js';
 
 export type { LifePath, LifeStage } from './life-path.js';
 export { isLifePath, lifePathLabel } from './life-path.js';
 
-export const FRESH_START_SCHEMA_VERSION = 11;
+export const FRESH_START_SCHEMA_VERSION = 13;
 
 const BACKGROUND_TRAIT_MODIFIERS: Record<string, Partial<CitizenTraits>> = {
   wealthy: { openness: 5, stress: 8 },
@@ -164,5 +166,8 @@ export function createFreshStartWorld(params: {
     lifePath,
     lifeStage: lifeStageForAge(player.ageYears),
     onboarding: createDefaultOnboarding(false),
+    deathPending: null,
+    civic: createDefaultCivic(),
+    districtVisits: createEmptyDistrictVisits(),
   };
 }

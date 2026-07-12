@@ -6,14 +6,31 @@ import { TrendingUp, Building2, User, Play, Settings, Trophy, Users, Award } fro
 import React, { useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useSave } from "@/context/SaveContext";
-import { buildMarketTickerItems } from "@fenix/domain";
+import { buildMarketTickerItems, createDefaultEconomy, ensureWorldV2 } from "@fenix/domain";
+import { readOfflineSave } from "@/lib/offline-save";
+import { parseSaveBlobV1 } from "@fenix/simulation-engine";
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { saves, activeSave } = useSave();
 
-  const newsItems = useMemo(() => buildMarketTickerItems(), []);
+  const newsItems = useMemo(() => {
+    if (!activeSave) {
+      return buildMarketTickerItems();
+    }
+    try {
+      const raw = readOfflineSave(activeSave.id);
+      if (!raw) {
+        return buildMarketTickerItems();
+      }
+      const blob = parseSaveBlobV1(raw);
+      const world = ensureWorldV2(blob.world, activeSave.name);
+      return buildMarketTickerItems(world.economy, world.events.slice(0, 4));
+    } catch {
+      return buildMarketTickerItems(createDefaultEconomy());
+    }
+  }, [activeSave]);
 
   function requireAuth(path: string) {
     if (!isAuthenticated) {

@@ -1,19 +1,21 @@
 import { createCitizenId } from './citizen-id.js';
-import { createBankingForBackground } from './banking.js';
-import { createDefaultCitizen } from './citizen.js';
-import { createDefaultCareer, careerJobSearchDefaults } from './career.js';
-import { createDefaultCompany } from './company.js';
-import { createDefaultEconomy, deriveCyclePhase } from './economy.js';
+import { createBankingForBackground, normalizeBankingState } from './banking.js';
+import { ageYearsFromBirthday, createDefaultCitizen } from './citizen.js';
+import { createDefaultCareer, normalizeCareerState } from './career.js';
+import { createDefaultCompany, normalizeCompanyState } from './company.js';
+import { createDefaultEconomy, normalizeEconomyState } from './economy.js';
 import { createDefaultOrigin } from './locations.js';
 import { createDefaultPortfolio } from './portfolio.js';
 import { createDefaultHousing } from './housing.js';
 import { createDefaultTransportation } from './transportation.js';
 import { createDefaultFamily } from './family.js';
-import { createDefaultEducation } from './education.js';
+import { createDefaultEducation, normalizeEducationState } from './education.js';
 import { ensureCompanyEmployees } from './employees.js';
 import { formatOriginLocation } from './location-helpers.js';
 import { FRESH_START_SCHEMA_VERSION } from './fresh-start.js';
 import { createDefaultOnboarding } from './onboarding.js';
+import { normalizeCivicState } from './civic.js';
+import { normalizeDistrictVisits } from './city-districts.js';
 import { isLifePath, lifeStageForAge, type LifePath } from './life-path.js';
 import type { WorldInstance } from './world-instance.js';
 
@@ -26,15 +28,11 @@ export function ensureWorldV2(
   background = 'middle-class',
   lifePath: LifePath = 'undecided',
 ): WorldInstance {
-  const player =
+  let player =
     world.player ??
     createDefaultCitizen(createCitizenId(String(world.saveId)), playerName);
 
-  const economy = world.economy ?? createDefaultEconomy();
-  const normalizedEconomy = {
-    ...economy,
-    cyclePhase: economy.cyclePhase ?? deriveCyclePhase(economy.techSectorIndex),
-  };
+  const economy = normalizeEconomyState(world.economy ?? createDefaultEconomy());
   const events = world.events ?? [];
   const legacyOrigin = world.origin as Partial<{
     nationalityCode: string;
@@ -50,9 +48,17 @@ export function ensureWorldV2(
     currency: legacyOrigin?.currency,
   });
 
+  const currentDate = world.currentDate ?? '2000-01-01';
+  if (player.birthday) {
+    player = {
+      ...player,
+      ageYears: ageYearsFromBirthday(player.birthday, currentDate),
+    };
+  }
+
   const resolvedLifePath =
     world.lifePath && isLifePath(world.lifePath) ? world.lifePath : lifePath;
-  const resolvedLifeStage = world.lifeStage ?? lifeStageForAge(player.ageYears);
+  const resolvedLifeStage = lifeStageForAge(player.ageYears);
   const isLegacySave = (world.schemaVersion ?? 1) < FRESH_START_SCHEMA_VERSION;
   const onboardingDefaults = createDefaultOnboarding(isLegacySave);
   const onboarding = world.onboarding
@@ -66,17 +72,14 @@ export function ensureWorldV2(
       }
     : onboardingDefaults;
 
-  const company =
+  const companyRaw =
     world.company === undefined
       ? createDefaultCompany(player.displayName, background)
       : world.company;
+  const company = companyRaw === null ? null : normalizeCompanyState(companyRaw);
 
-  const currentDate = world.currentDate ?? '2000-01-01';
   const careerBase = world.career ?? createDefaultCareer(player.displayName, background, company?.name);
-  const career = {
-    ...careerBase,
-    ...careerJobSearchDefaults(careerBase, currentDate),
-  };
+  const career = normalizeCareerState(careerBase, currentDate);
   const portfolio =
     world.portfolio ??
     createDefaultPortfolio({ companyStage: company?.stage ?? 'startup' });
@@ -87,14 +90,17 @@ export function ensureWorldV2(
   const transportation = world.transportation ?? createDefaultTransportation(background);
   const family = world.family ?? createDefaultFamily(player.displayName, background);
   const defaultBanking = createBankingForBackground(background);
-  const banking = {
+  const banking = normalizeBankingState({
     ...(world.banking ?? defaultBanking),
     monthlySalaryCents: (world.career ?? career).monthlySalaryCents,
     creditScore: world.banking?.creditScore ?? defaultBanking.creditScore,
     activeLoan: world.banking?.activeLoan ?? null,
     familyCreditLineLimitCents: world.banking?.familyCreditLineLimitCents ?? null,
-  };
-  const education = world.education ?? createDefaultEducation(background);
+    netWorthHistory: world.banking?.netWorthHistory ?? [],
+    cashFlowHistory: world.banking?.cashFlowHistory ?? [],
+  });
+  const educationRaw = world.education ?? createDefaultEducation(background);
+  const education = normalizeEducationState(educationRaw);
   const employees =
     company === null
       ? world.employees ?? []
@@ -105,7 +111,7 @@ export function ensureWorldV2(
     schemaVersion: Math.max(world.schemaVersion ?? 1, FRESH_START_SCHEMA_VERSION),
     player,
     banking,
-    economy: normalizedEconomy,
+    economy,
     company,
     career,
     portfolio,
@@ -119,5 +125,8 @@ export function ensureWorldV2(
     lifePath: resolvedLifePath,
     lifeStage: resolvedLifeStage,
     onboarding,
+    deathPending: world.deathPending ?? null,
+    civic: normalizeCivicState(world.civic),
+    districtVisits: normalizeDistrictVisits(world.districtVisits),
   };
 }

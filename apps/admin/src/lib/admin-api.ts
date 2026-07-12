@@ -172,3 +172,69 @@ export async function fetchAuditLog(params: { q?: string; action?: string; limit
     `/admin/audit-log${qs ? `?${qs}` : ''}`,
   );
 }
+
+export type ModerationItemStatus = 'pending' | 'resolved' | 'escalated';
+export type ModerationItemType = 'display_name' | 'company_name' | 'chat_message' | 'save_content';
+
+export interface ModerationItem {
+  id: string;
+  type: ModerationItemType;
+  status: ModerationItemStatus;
+  reportedContent: string;
+  reportedByUserId: string | null;
+  targetUserId: string;
+  reason: string;
+  createdAt: string;
+  resolvedAt: string | null;
+  resolvedByAdminId: string | null;
+}
+
+export async function fetchModerationQueue(status?: ModerationItemStatus): Promise<ModerationItem[]> {
+  const qs = status ? `?status=${status}` : '';
+  const data = await adminFetch<{ queue: ModerationItem[]; count: number }>(
+    `/admin/moderation/queue${qs}`,
+  );
+  return data.queue;
+}
+
+export async function resolveModerationItem(itemId: string): Promise<ModerationItem> {
+  const data = await adminFetch<{ item: ModerationItem }>(
+    `/admin/moderation/queue/${itemId}/resolve`,
+    { method: 'POST' },
+  );
+  return data.item;
+}
+
+export async function escalateModerationItem(itemId: string): Promise<ModerationItem> {
+  const data = await adminFetch<{ item: ModerationItem }>(
+    `/admin/moderation/queue/${itemId}/escalate`,
+    { method: 'POST' },
+  );
+  return data.item;
+}
+
+export interface FeatureFlag {
+  key: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  enabledForPercent: number;
+  updatedAt: string;
+  updatedBy: string | null;
+}
+
+export async function fetchFeatureFlags(): Promise<FeatureFlag[]> {
+  const data = await adminFetch<{ flags: FeatureFlag[]; count: number }>('/admin/feature-flags');
+  return data.flags;
+}
+
+export async function updateFeatureFlag(
+  key: string,
+  patch: Partial<Pick<FeatureFlag, 'enabled' | 'enabledForPercent'>>,
+): Promise<FeatureFlag> {
+  const data = await adminFetch<{ flag: FeatureFlag }>(`/admin/feature-flags/${key}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+  return data.flag;
+}

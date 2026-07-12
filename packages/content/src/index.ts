@@ -42,9 +42,16 @@ export function pickNewsHeadline(
     index?: number;
     inflation?: number;
     industry?: string;
+    tags?: string[];
   } = {},
 ): string {
-  const headline = NEWS_HEADLINES[seededIndex(seed, NEWS_HEADLINES.length)];
+  const pool =
+    context.tags && context.tags.length > 0
+      ? NEWS_HEADLINES.filter((h) => h.tags.some((t) => context.tags!.includes(t)))
+      : NEWS_HEADLINES;
+
+  const candidates = pool.length > 0 ? pool : NEWS_HEADLINES;
+  const headline = candidates[seededIndex(seed, candidates.length)];
   if (!headline) {
     return 'Markets open with steady volume across major sectors';
   }
@@ -56,6 +63,16 @@ export function pickNewsHeadline(
     .replace('{industry}', context.industry ?? 'Growth');
 }
 
+/** Pick a headline specifically for finance/economy category. */
+export function pickFinanceHeadline(seed: string, context: Parameters<typeof pickNewsHeadline>[1] = {}): string {
+  return pickNewsHeadline(seed, { ...context, tags: ['finance', 'economy'] });
+}
+
+/** Pick a headline specifically for career category. */
+export function pickCareerHeadline(seed: string, context: Parameters<typeof pickNewsHeadline>[1] = {}): string {
+  return pickNewsHeadline(seed, { ...context, tags: ['career', 'business'] });
+}
+
 export function getOccupationById(id: string): ContentOccupation | undefined {
   return STARTER_OCCUPATIONS.find((occupation) => occupation.id === id);
 }
@@ -63,3 +80,21 @@ export function getOccupationById(id: string): ContentOccupation | undefined {
 export function getIndustryById(id: string): ContentIndustry | undefined {
   return STARTER_INDUSTRIES.find((industry) => industry.id === id);
 }
+
+export {
+  EXTENDED_OCCUPATIONS,
+  EXTENDED_INDUSTRIES,
+  mergeOccupations,
+  getOccupationsBySector,
+  occupationsToJobListings,
+  type ContentIndustryExtended,
+  type ContentJobListing,
+} from './occupations.js';
+
+import { mergeOccupations, occupationsToJobListings } from './occupations.js';
+
+/** Full occupation catalogue (starter + extended). */
+export const ALL_OCCUPATIONS = mergeOccupations(STARTER_OCCUPATIONS);
+
+/** Job listings generated from content occupations for domain merge. */
+export const CONTENT_JOB_LISTINGS = occupationsToJobListings(ALL_OCCUPATIONS);

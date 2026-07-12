@@ -123,22 +123,33 @@ describe('player actions', () => {
       saveId: createSaveId('action-test-raise'),
       playerName: 'Tester',
     });
-    const world = {
-      ...base,
-      career: {
-        ...base.career,
-        status: 'employed' as const,
-        jobTitle: 'Product Specialist',
-        employerName: 'Horizon Digital',
-        monthlySalaryCents: 6_500_00,
-        performanceScore: 74,
-      },
-      banking: { ...base.banking, monthlySalaryCents: 6_500_00 },
-    };
-    const before = world.career.monthlySalaryCents;
-    const next = applyPlayerAction(world, { kind: 'CAREER_REQUEST_RAISE' });
-    expect(next.career.monthlySalaryCents).toBeGreaterThan(before);
-    expect(next.banking.monthlySalaryCents).toBe(next.career.monthlySalaryCents);
+    let raised = false;
+    let nextSalary = 6_500_00;
+    for (let tick = 40; tick < 200 && !raised; tick += 1) {
+      const world = {
+        ...base,
+        career: {
+          ...base.career,
+          status: 'employed' as const,
+          jobTitle: 'Product Specialist',
+          employerName: 'Horizon Digital',
+          monthlySalaryCents: 6_500_00,
+          performanceScore: 95,
+          monthsInRole: 8,
+          lastRaiseTick: -9999,
+        },
+        clock: { ...base.clock, tickCount: tick },
+        banking: { ...base.banking, monthlySalaryCents: 6_500_00 },
+      };
+      const next = applyPlayerAction(world, { kind: 'CAREER_REQUEST_RAISE' });
+      if (next.career.monthlySalaryCents > 6_500_00) {
+        raised = true;
+        nextSalary = next.career.monthlySalaryCents;
+        expect(next.banking.monthlySalaryCents).toBe(next.career.monthlySalaryCents);
+      }
+    }
+    expect(raised).toBe(true);
+    expect(nextSalary).toBeGreaterThan(6_500_00);
   });
 
   it('sells an owned property for partial value', () => {
@@ -222,8 +233,9 @@ describe('player actions', () => {
       kind: 'CAREER_APPLY_JOB',
       listingId: listings[0]!.id,
     });
-    expect(next.career.status).toBe('employed');
-    expect(next.career.monthlySalaryCents).toBeGreaterThan(0);
+    expect(next.career.status).toBe('unemployed');
+    expect(next.career.applications).toHaveLength(1);
+    expect(next.career.applications[0]?.status).toBe('pending');
   });
 
   it('creates a citizen with age derived from birthday', () => {

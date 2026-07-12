@@ -17,7 +17,7 @@ describe('createFreshStartWorld', () => {
       lifePath: 'undecided',
     });
 
-    expect(world.schemaVersion).toBe(11);
+    expect(world.schemaVersion).toBe(13);
     expect(world.currentDate).toBe('2000-06-15');
     expect(world.player.ageYears).toBe(18);
     expect(world.company).toBeNull();

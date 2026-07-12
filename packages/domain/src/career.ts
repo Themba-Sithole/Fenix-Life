@@ -12,7 +12,24 @@ export interface CareerState {
   readonly yearsExperience: number;
   readonly unemployedSinceDate: string | null;
   readonly applications: readonly JobApplicationRecord[];
+  readonly monthsInRole: number;
+  readonly lastRaiseTick: number;
+  readonly lastPromotionTick: number;
+  readonly lastUpskillTick: number;
+  readonly lastNetworkTick: number;
+  readonly pipActive: boolean;
+  readonly pipDaysRemaining: number;
+  readonly warnings: number;
 }
+
+export const RAISE_COOLDOWN_TICKS = 180;
+export const PROMOTION_COOLDOWN_TICKS = 365;
+export const UPSKILL_COOLDOWN_TICKS = 30;
+export const NETWORK_COOLDOWN_TICKS = 14;
+export const RAISE_MIN_PERFORMANCE = 78;
+export const RAISE_MIN_MONTHS = 6;
+export const PROMOTION_MIN_PERFORMANCE = 88;
+export const PROMOTION_MIN_MONTHS = 12;
 
 export function employmentStatusLabel(status: EmploymentStatus): string {
   switch (status) {
@@ -31,9 +48,46 @@ export function employmentStatusLabel(status: EmploymentStatus): string {
   }
 }
 
+const CAREER_LOOP_DEFAULTS = {
+  monthsInRole: 0,
+  lastRaiseTick: -9999,
+  lastPromotionTick: -9999,
+  lastUpskillTick: -9999,
+  lastNetworkTick: -9999,
+  pipActive: false,
+  pipDaysRemaining: 0,
+  warnings: 0,
+};
+
+export function careerLoopDefaults(
+  career: Partial<CareerState>,
+): Pick<
+  CareerState,
+  | 'monthsInRole'
+  | 'lastRaiseTick'
+  | 'lastPromotionTick'
+  | 'lastUpskillTick'
+  | 'lastNetworkTick'
+  | 'pipActive'
+  | 'pipDaysRemaining'
+  | 'warnings'
+> {
+  return {
+    monthsInRole: career.monthsInRole ?? CAREER_LOOP_DEFAULTS.monthsInRole,
+    lastRaiseTick: career.lastRaiseTick ?? CAREER_LOOP_DEFAULTS.lastRaiseTick,
+    lastPromotionTick: career.lastPromotionTick ?? CAREER_LOOP_DEFAULTS.lastPromotionTick,
+    lastUpskillTick: career.lastUpskillTick ?? CAREER_LOOP_DEFAULTS.lastUpskillTick,
+    lastNetworkTick: career.lastNetworkTick ?? CAREER_LOOP_DEFAULTS.lastNetworkTick,
+    pipActive: career.pipActive ?? CAREER_LOOP_DEFAULTS.pipActive,
+    pipDaysRemaining: career.pipDaysRemaining ?? CAREER_LOOP_DEFAULTS.pipDaysRemaining,
+    warnings: career.warnings ?? CAREER_LOOP_DEFAULTS.warnings,
+  };
+}
+
 /** Defaults for job-search fields on legacy career blobs. */
 export function careerJobSearchDefaults(
-  career: Omit<CareerState, 'unemployedSinceDate' | 'applications'> & Partial<Pick<CareerState, 'unemployedSinceDate' | 'applications'>>,
+  career: Omit<CareerState, 'unemployedSinceDate' | 'applications'> &
+    Partial<Pick<CareerState, 'unemployedSinceDate' | 'applications'>>,
   currentDate: string,
 ): Pick<CareerState, 'unemployedSinceDate' | 'applications'> {
   return {
@@ -44,15 +98,28 @@ export function careerJobSearchDefaults(
   };
 }
 
+export function normalizeCareerState(
+  career: Partial<CareerState> &
+    Pick<CareerState, 'status' | 'jobTitle' | 'employerName' | 'monthlySalaryCents' | 'performanceScore' | 'yearsExperience'>,
+  currentDate: string,
+): CareerState {
+  return {
+    ...career,
+    ...careerJobSearchDefaults(career as CareerState, currentDate),
+    ...careerLoopDefaults(career),
+  };
+}
+
 /** Young-adult entry — unemployed or student track (GDD §4.4, §6.3). */
 export function createFreshStartCareer(
   background = 'middle-class',
   lifePath: LifePath = 'undecided',
   currentDate = '2000-01-01',
 ): CareerState {
-  const jobSearch = {
+  const base = {
     unemployedSinceDate: currentDate,
     applications: [] as JobApplicationRecord[],
+    ...CAREER_LOOP_DEFAULTS,
   };
 
   if (lifePath === 'corporate-ladder') {
@@ -63,7 +130,7 @@ export function createFreshStartCareer(
       monthlySalaryCents: 0,
       performanceScore: 60,
       yearsExperience: 0,
-      ...jobSearch,
+      ...base,
     };
   }
 
@@ -77,7 +144,7 @@ export function createFreshStartCareer(
         monthlySalaryCents: 0,
         performanceScore: 55,
         yearsExperience: 0,
-        ...jobSearch,
+        ...base,
       };
     default:
       return {
@@ -87,7 +154,7 @@ export function createFreshStartCareer(
         monthlySalaryCents: 0,
         performanceScore: 58,
         yearsExperience: 0,
-        ...jobSearch,
+        ...base,
       };
   }
 }
@@ -98,7 +165,12 @@ export function createDefaultCareer(
   companyName?: string,
 ): CareerState {
   const firstName = playerName.trim().split(/\s+/)[0] || 'Citizen';
-  const employedDefaults = { unemployedSinceDate: null, applications: [] as JobApplicationRecord[] };
+  const employedDefaults = {
+    unemployedSinceDate: null as string | null,
+    applications: [] as JobApplicationRecord[],
+    ...CAREER_LOOP_DEFAULTS,
+    monthsInRole: 24,
+  };
 
   switch (background) {
     case 'wealthy':
@@ -132,6 +204,7 @@ export function createDefaultCareer(
         yearsExperience: 1,
         unemployedSinceDate: '1998-01-01',
         applications: [],
+        ...CAREER_LOOP_DEFAULTS,
       };
     case 'immigrant':
       return {

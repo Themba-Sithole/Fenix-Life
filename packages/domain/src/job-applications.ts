@@ -13,9 +13,12 @@ export interface JobApplicationRecord {
   readonly status: JobApplicationStatus;
   readonly matchScore: number;
   readonly rejectionReason?: string;
+  readonly resolveOnDate?: string;
 }
 
 export const MAX_JOB_APPLICATIONS = 12;
+/** Number of game days before a pending job application resolves (accepted or rejected). */
+export const JOB_APPLICATION_RESOLVE_DAYS = 5;
 
 export function createJobApplication(input: {
   listing: JobListing;
@@ -24,6 +27,7 @@ export function createJobApplication(input: {
   status: JobApplicationStatus;
   rejectionReason?: string;
   idSuffix: number;
+  resolveOnDate?: string;
 }): JobApplicationRecord {
   return {
     id: `app-${input.listing.id}-${input.idSuffix}`,
@@ -34,6 +38,7 @@ export function createJobApplication(input: {
     status: input.status,
     matchScore: input.matchScore,
     rejectionReason: input.rejectionReason,
+    resolveOnDate: input.resolveOnDate,
   };
 }
 

@@ -1,12 +1,48 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router';
 import { AuthProvider } from '@/context/AuthContext';
 import { SaveProvider } from '@/context/SaveContext';
-import { SimulationProvider } from '@/context/SimulationContext';
+import { SimulationProvider, useSimulation } from '@/context/SimulationContext';
 import { HomeTourOverlay } from '../components/HomeTourOverlay';
+
+function OfflineSaveBanner() {
+  const { isPlayingOffline, isSaving, syncNow } = useSimulation();
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  if (!isPlayingOffline) return null;
+
+  async function handleSync() {
+    setSyncError(null);
+    const ok = await syncNow();
+    if (!ok) {
+      setSyncError('Sync failed — still offline.');
+    }
+  }
+
+  return (
+    <div className="sticky top-0 z-50 bg-amber-500 text-[#1C2541] text-center text-sm py-2 px-4 shadow-md flex flex-wrap items-center justify-center gap-3">
+      <span>
+        Playing offline — progress is saved locally
+        {syncError ? ` · ${syncError}` : ''}
+      </span>
+      <button
+        type="button"
+        className="underline font-medium disabled:opacity-60"
+        disabled={isSaving}
+        onClick={() => {
+          handleSync().catch(console.error);
+        }}
+      >
+        {isSaving ? 'Syncing…' : 'Sync now'}
+      </button>
+    </div>
+  );
+}
 
 function AppShell() {
   return (
     <>
+      <OfflineSaveBanner />
       <Outlet />
       <HomeTourOverlay />
     </>

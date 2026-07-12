@@ -23,6 +23,8 @@ import Family from "./screens/Family";
 import Timeline from "./screens/Timeline";
 import NewsFeed from "./screens/NewsFeed";
 import Settings from "./screens/Settings";
+import WhileAwayScreen from "./screens/WhileAwayScreen";
+import DeathScreen from "./screens/DeathScreen";
 
 function protect(Component: ComponentType) {
   return function ProtectedScreen() {
@@ -125,6 +127,14 @@ export const router = createBrowserRouter([
   {
     path: "/settings",
     Component: protect(Settings),
+  },
+  {
+    path: "/while-away",
+    Component: protect(WhileAwayScreen),
+  },
+  {
+    path: "/death",
+    Component: protect(DeathScreen),
   },
     ],
   },

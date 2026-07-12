@@ -6,6 +6,8 @@ import LoginScreen from '@/screens/LoginScreen';
 import DashboardScreen from '@/screens/DashboardScreen';
 import AccountsScreen, { SaveInspectScreen } from '@/screens/AccountsScreen';
 import AuditLogScreen from '@/screens/AuditLogScreen';
+import ModerationScreen from '@/screens/ModerationScreen';
+import FeatureFlagsScreen from '@/screens/FeatureFlagsScreen';
 
 function protect(Component: ComponentType) {
   return function ProtectedScreen() {
@@ -29,6 +31,8 @@ export const router = createBrowserRouter([
       { path: 'accounts/:accountId', Component: AccountsScreen },
       { path: 'saves/:saveId', Component: SaveInspectScreen },
       { path: 'audit', Component: AuditLogScreen },
+      { path: 'moderation', Component: ModerationScreen },
+      { path: 'feature-flags', Component: FeatureFlagsScreen },
     ],
   },
 ]);

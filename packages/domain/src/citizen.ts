@@ -35,7 +35,15 @@ export function ageYearsFromBirthday(birthday: string, asOfDate: string): number
     age -= 1;
   }
 
-  return Math.max(18, Math.min(80, age));
+  return Math.max(0, Math.min(120, age));
+}
+
+/** True when currentDate falls on the citizen's birthday (MM-DD). */
+export function isBirthdayOnDate(birthday: string | undefined, currentDate: string): boolean {
+  if (!birthday || birthday.length < 10 || currentDate.length < 10) {
+    return false;
+  }
+  return birthday.slice(5, 10) === currentDate.slice(5, 10);
 }
 
 export function createDefaultCitizen(

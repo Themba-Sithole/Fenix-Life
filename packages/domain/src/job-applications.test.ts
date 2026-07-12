@@ -32,10 +32,8 @@ describe('job applications', () => {
     });
 
     expect(next.career.applications.length).toBe(1);
-    expect(['accepted', 'rejected']).toContain(next.career.applications[0]?.status);
-    if (next.career.applications[0]?.status === 'accepted') {
-      expect(next.career.status).toBe('employed');
-      expect(next.career.unemployedSinceDate).toBeNull();
-    }
+    expect(next.career.applications[0]?.status).toBe('pending');
+    expect(next.career.applications[0]?.resolveOnDate).toBeDefined();
+    expect(next.career.status).toBe('unemployed');
   });
 });

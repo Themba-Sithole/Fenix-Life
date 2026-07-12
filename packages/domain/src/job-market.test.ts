@@ -56,8 +56,9 @@ describe('job market', () => {
 
   it('computes match score from performance headroom', () => {
     const listing = JOB_LISTINGS.find((item) => item.id === 'job-junior-analyst')!;
-    const score = jobListingMatchScore(listing, listing.minPerformanceScore);
-    expect(score).toBe(50);
-    expect(jobListingMatchScore(listing, listing.minPerformanceScore + 10)).toBeGreaterThan(score);
+    const education = createFreshStartEducation();
+    const score = jobListingMatchScore(listing, listing.minPerformanceScore, education);
+    expect(score).toBe(48);
+    expect(jobListingMatchScore(listing, listing.minPerformanceScore + 10, education)).toBeGreaterThan(score);
   });
 });

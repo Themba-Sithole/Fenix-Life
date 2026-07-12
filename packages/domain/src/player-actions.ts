@@ -4,15 +4,34 @@ import { createFoundedCompany, INCORPORATION_FEE_CENTS, suggestedCompanyName, ty
 import type { CareerState } from './career.js';
 import { applyAdolescenceChoice, skipAdolescencePlay } from './adolescence-play.js';
 import {
-  appendJobApplication,
-  createJobApplication,
-} from './job-applications.js';
-import {
   getAvailableJobListings,
   getJobListingById,
   JOB_APPLICATION_FEE_CENTS,
   jobListingMatchScore,
 } from './job-market.js';
+import {
+  appendJobApplication,
+  createJobApplication,
+  JOB_APPLICATION_RESOLVE_DAYS,
+} from './job-applications.js';
+import {
+  enrollEducation,
+  setEducationEffort,
+  studySession,
+  dropOutEducation,
+  payTuition,
+} from './education-actions.js';
+import {
+  RAISE_COOLDOWN_TICKS,
+  RAISE_MIN_MONTHS,
+  RAISE_MIN_PERFORMANCE,
+  PROMOTION_COOLDOWN_TICKS,
+  PROMOTION_MIN_MONTHS,
+  PROMOTION_MIN_PERFORMANCE,
+  UPSKILL_COOLDOWN_TICKS,
+  NETWORK_COOLDOWN_TICKS,
+} from './career.js';
+import { applyDistrictVisit } from './city-districts.js';
 import { completeChildhoodOnboarding, dismissLifePathHints, dismissHomeTour } from './onboarding.js';
 import type { PortfolioState } from './portfolio.js';
 import type { WorldInstance } from './world-instance.js';
@@ -23,7 +42,16 @@ import {
 } from './employees.js';
 import type { FamilyMemberRecord } from './family.js';
 import { appendPortfolioHistory, portfolioValueCents } from './portfolio.js';
-import { createLoan, applyLoanProceeds, payOffActiveLoan } from './loans.js';
+import {
+  createLoan,
+  applyLoanProceeds,
+  payOffActiveLoan,
+  restructureActiveLoan,
+  settleActiveLoan,
+} from './loans.js';
+import { createDefaultCivic, type CivicState } from './civic.js';
+import { applyDeathAndSelectHeir } from './succession.js';
+import { addDaysToDate } from './date-utils.js';
 
 function creditChecking(
   banking: BankingState,
@@ -69,17 +97,32 @@ export type PlayerAction =
   | { kind: 'FAMILY_SEND_GIFT'; memberId: string }
   | { kind: 'FAMILY_SCHEDULE_VISIT'; memberId: string }
   | { kind: 'CAREER_REQUEST_RAISE' }
+  | { kind: 'CAREER_REQUEST_PROMOTION' }
   | { kind: 'CAREER_UPSKILL' }
   | { kind: 'CAREER_NETWORK' }
+  | { kind: 'CAREER_QUIT' }
   | { kind: 'PAY_LOAN' }
+  | { kind: 'RESTRUCTURE_LOAN' }
+  | { kind: 'SETTLE_LOAN' }
   | { kind: 'CAREER_APPLY_JOB'; listingId: string }
+  | { kind: 'EDUCATION_ENROLL'; programId: string }
+  | { kind: 'EDUCATION_SET_EFFORT'; effortLevel: 'slacking' | 'normal' | 'grind' }
+  | { kind: 'EDUCATION_STUDY_SESSION' }
+  | { kind: 'EDUCATION_DROP_OUT' }
+  | { kind: 'EDUCATION_PAY_TUITION'; amountCents: number }
   | { kind: 'APPLY_ADOLESCENCE_CHOICE'; stepId: string; choiceId: string }
   | { kind: 'SKIP_ADOLESCENCE_PLAY' }
   | { kind: 'DISMISS_HOME_TOUR' }
   | { kind: 'VISIT_DISTRICT'; districtId: string }
   | { kind: 'FOUND_COMPANY'; name: string }
   | { kind: 'COMPLETE_CHILDHOOD_ONBOARDING'; simulateFirstYear?: boolean }
-  | { kind: 'DISMISS_LIFE_PATH_HINTS' };
+  | { kind: 'DISMISS_LIFE_PATH_HINTS' }
+  | { kind: 'ACCEPT_HEIR'; heirMemberId: string; keepCompany?: boolean }
+  | { kind: 'FILE_TAXES' }
+  | { kind: 'PAY_TAX_BALANCE' }
+  | { kind: 'TREAT_ILLNESS' }
+  | { kind: 'IGNORE_ILLNESS' }
+  | { kind: 'ENROLL_INSURANCE' };
 
 export function applyPlayerAction(world: WorldInstance, action: PlayerAction): WorldInstance {
   switch (action.kind) {
@@ -115,14 +158,32 @@ export function applyPlayerAction(world: WorldInstance, action: PlayerAction): W
       return scheduleFamilyVisit(world, action.memberId);
     case 'CAREER_REQUEST_RAISE':
       return requestCareerRaise(world);
+    case 'CAREER_REQUEST_PROMOTION':
+      return requestCareerPromotion(world);
     case 'CAREER_UPSKILL':
       return upskillCareer(world);
     case 'CAREER_NETWORK':
       return networkCareer(world);
+    case 'CAREER_QUIT':
+      return quitCareer(world);
     case 'PAY_LOAN':
       return payLoan(world);
+    case 'RESTRUCTURE_LOAN':
+      return restructureLoan(world);
+    case 'SETTLE_LOAN':
+      return settleLoan(world);
     case 'CAREER_APPLY_JOB':
       return applyForJob(world, action.listingId);
+    case 'EDUCATION_ENROLL':
+      return enrollEducation(world, action.programId);
+    case 'EDUCATION_SET_EFFORT':
+      return setEducationEffort(world, action.effortLevel);
+    case 'EDUCATION_STUDY_SESSION':
+      return studySession(world);
+    case 'EDUCATION_DROP_OUT':
+      return dropOutEducation(world);
+    case 'EDUCATION_PAY_TUITION':
+      return payTuition(world, action.amountCents);
     case 'APPLY_ADOLESCENCE_CHOICE':
       return applyAdolescenceChoice(world, action.stepId, action.choiceId);
     case 'SKIP_ADOLESCENCE_PLAY':
@@ -139,11 +200,31 @@ export function applyPlayerAction(world: WorldInstance, action: PlayerAction): W
       });
     case 'DISMISS_LIFE_PATH_HINTS':
       return dismissLifePathHints(world);
+    case 'ACCEPT_HEIR':
+      return applyDeathAndSelectHeir(world, action.heirMemberId, action.keepCompany ?? false);
+    case 'FILE_TAXES':
+      return fileTaxes(world);
+    case 'PAY_TAX_BALANCE':
+      return payTaxBalance(world);
+    case 'TREAT_ILLNESS':
+      return treatIllness(world);
+    case 'IGNORE_ILLNESS':
+      return ignoreIllness(world);
+    case 'ENROLL_INSURANCE':
+      return enrollInsurance(world);
     default: {
       const _exhaustive: never = action;
       return _exhaustive;
     }
   }
+}
+
+function seededUnit(seed: number): number {
+  return ((seed * 2_654_435_761) >>> 0) / 4_294_967_296;
+}
+
+function civicOf(world: WorldInstance): CivicState {
+  return world.civic ?? createDefaultCivic();
 }
 
 function findEmployee(world: WorldInstance, employeeId: string): EmployeeRecord {
@@ -432,6 +513,35 @@ function foundCompany(world: WorldInstance, name: string): WorldInstance {
 function hireEmployee(world: WorldInstance): WorldInstance {
   const company = requireCompany(world);
   const hireCostCents = 5_000_00;
+  const hiringBonus = world.economy.hiringDifficultyBonus ?? 0;
+  const cyclePenalty =
+    world.economy.cyclePhase === 'contraction' || world.economy.cyclePhase === 'trough' ? 0.2 : 0;
+  const failChance = Math.min(0.55, hiringBonus + cyclePenalty);
+  const roll = seededUnit(world.clock.tickCount * 53 + company.employeeCount * 7);
+  if (roll < failChance) {
+    const banking = debitFromBestAccount(
+      world.banking,
+      Math.round(hireCostCents * 0.25),
+      world.currentDate,
+      `Failed hire attempt — ${company.name}`,
+    );
+    return {
+      ...world,
+      banking,
+      events: [
+        {
+          id: `evt-hire-fail-${world.clock.tickCount}`,
+          tickCount: world.clock.tickCount,
+          date: world.currentDate,
+          category: 'career' as const,
+          headline: `Hiring failed — labor market too tight (${world.economy.cyclePhase})`,
+          tone: 'warning' as const,
+        },
+        ...world.events,
+      ].slice(0, 50),
+    };
+  }
+
   const banking = debitFromBestAccount(
     world.banking,
     hireCostCents,
@@ -466,6 +576,27 @@ function launchProduct(world: WorldInstance): WorldInstance {
     `Product launch — ${company.name}`,
   );
 
+  const failRoll = seededUnit(world.clock.tickCount * 71 + company.productCount * 11);
+  const failChance =
+    world.economy.cyclePhase === 'contraction' || world.economy.cyclePhase === 'trough' ? 0.45 : 0.22;
+  if (failRoll < failChance) {
+    return {
+      ...world,
+      banking,
+      events: [
+        {
+          id: `evt-launch-fail-${world.clock.tickCount}`,
+          tickCount: world.clock.tickCount,
+          date: world.currentDate,
+          category: 'career' as const,
+          headline: `Product launch flopped at ${company.name} — sunk cost, no revenue lift`,
+          tone: 'warning' as const,
+        },
+        ...world.events,
+      ].slice(0, 50),
+    };
+  }
+
   const nextCompany: CompanyState = {
     ...company,
     productCount: company.productCount + 1,
@@ -474,7 +605,22 @@ function launchProduct(world: WorldInstance): WorldInstance {
     marketSharePct: Math.min(25, company.marketSharePct + 0.2),
   };
 
-  return { ...world, banking, company: nextCompany };
+  return {
+    ...world,
+    banking,
+    company: nextCompany,
+    events: [
+      {
+        id: `evt-launch-ok-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'career' as const,
+        headline: `${company.name} launched a product successfully`,
+        tone: 'success' as const,
+      },
+      ...world.events,
+    ].slice(0, 50),
+  };
 }
 
 function promoteEmployee(world: WorldInstance, employeeId: string): WorldInstance {
@@ -662,21 +808,138 @@ function requestCareerRaise(world: WorldInstance): WorldInstance {
   if (world.career.status === 'unemployed') {
     throw new Error('Cannot request a raise while unemployed');
   }
-  if (world.career.performanceScore < 65) {
-    throw new Error('Performance must be at least 65% to request a raise');
+  if (world.career.pipActive) {
+    throw new Error('Cannot request a raise while on a PIP');
+  }
+  if (world.career.performanceScore < RAISE_MIN_PERFORMANCE) {
+    throw new Error(`Performance must be at least ${RAISE_MIN_PERFORMANCE}% to request a raise`);
+  }
+  if (world.career.monthsInRole < RAISE_MIN_MONTHS) {
+    throw new Error(`Need ${RAISE_MIN_MONTHS} months in role before requesting a raise`);
+  }
+  if (world.clock.tickCount - world.career.lastRaiseTick < RAISE_COOLDOWN_TICKS) {
+    throw new Error('Raise cooldown active — wait before asking again');
   }
 
-  const salaryDelta = Math.round(world.career.monthlySalaryCents * 0.06);
+  const roll = Math.floor(seededUnit(world.clock.tickCount * 97 + world.career.performanceScore * 13) * 100);
+  const successChance = Math.min(55, 20 + (world.career.performanceScore - RAISE_MIN_PERFORMANCE));
+  if (roll >= successChance) {
+    return {
+      ...world,
+      career: {
+        ...world.career,
+        lastRaiseTick: world.clock.tickCount,
+        warnings: world.career.warnings + (roll > 90 ? 1 : 0),
+        performanceScore: clampEmployeeStat(world.career.performanceScore - 2),
+      },
+      player: {
+        ...world.player,
+        traits: {
+          ...world.player.traits,
+          stress: clampEmployeeStat(world.player.traits.stress + 6),
+        },
+      },
+      events: [
+        {
+          id: `evt-raise-deny-${world.clock.tickCount}`,
+          tickCount: world.clock.tickCount,
+          date: world.currentDate,
+          category: 'career' as const,
+          headline: `Raise denied at ${world.career.employerName}`,
+          tone: 'warning' as const,
+        },
+        ...world.events,
+      ].slice(0, 50),
+    };
+  }
+
+  const salaryDelta = Math.round(world.career.monthlySalaryCents * 0.04);
   const career: CareerState = {
     ...world.career,
     monthlySalaryCents: world.career.monthlySalaryCents + salaryDelta,
-    performanceScore: clampEmployeeStat(world.career.performanceScore + 2),
+    lastRaiseTick: world.clock.tickCount,
+    performanceScore: clampEmployeeStat(world.career.performanceScore + 1),
   };
 
   return syncCareerSalary(world, career);
 }
 
+function requestCareerPromotion(world: WorldInstance): WorldInstance {
+  if (world.career.status !== 'employed') {
+    throw new Error('Only employed roles can request promotion');
+  }
+  if (world.career.pipActive) {
+    throw new Error('Cannot request promotion while on a PIP');
+  }
+  if (world.career.performanceScore < PROMOTION_MIN_PERFORMANCE) {
+    throw new Error(`Performance must be at least ${PROMOTION_MIN_PERFORMANCE}%`);
+  }
+  if (world.career.monthsInRole < PROMOTION_MIN_MONTHS) {
+    throw new Error(`Need ${PROMOTION_MIN_MONTHS} months in role for promotion`);
+  }
+  if (world.clock.tickCount - world.career.lastPromotionTick < PROMOTION_COOLDOWN_TICKS) {
+    throw new Error('Promotion cooldown active — typically a full year between promotions');
+  }
+
+  const roll = Math.floor(seededUnit(world.clock.tickCount * 131 + world.career.monthsInRole * 17) * 100);
+  if (roll >= 28) {
+    return {
+      ...world,
+      career: {
+        ...world.career,
+        lastPromotionTick: world.clock.tickCount,
+        performanceScore: clampEmployeeStat(world.career.performanceScore - 3),
+      },
+      player: {
+        ...world.player,
+        traits: {
+          ...world.player.traits,
+          stress: clampEmployeeStat(world.player.traits.stress + 8),
+        },
+      },
+      events: [
+        {
+          id: `evt-promo-deny-${world.clock.tickCount}`,
+          tickCount: world.clock.tickCount,
+          date: world.currentDate,
+          category: 'career' as const,
+          headline: `Promotion denied — keep delivering for another review cycle`,
+          tone: 'warning' as const,
+        },
+        ...world.events,
+      ].slice(0, 50),
+    };
+  }
+
+  const career: CareerState = {
+    ...world.career,
+    jobTitle: `Senior ${world.career.jobTitle.replace(/^Senior\s+/i, '')}`,
+    monthlySalaryCents: Math.round(world.career.monthlySalaryCents * 1.12),
+    monthsInRole: 0,
+    lastPromotionTick: world.clock.tickCount,
+    performanceScore: clampEmployeeStat(world.career.performanceScore - 5),
+  };
+
+  return {
+    ...syncCareerSalary(world, career),
+    events: [
+      {
+        id: `evt-promo-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'career' as const,
+        headline: `Promoted to ${career.jobTitle}`,
+        tone: 'success' as const,
+      },
+      ...world.events,
+    ].slice(0, 50),
+  };
+}
+
 function upskillCareer(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount - world.career.lastUpskillTick < UPSKILL_COOLDOWN_TICKS) {
+    throw new Error('Upskill cooldown — wait before another course');
+  }
   const costCents = 300_00;
   const banking = debitFromBestAccount(
     world.banking,
@@ -685,15 +948,20 @@ function upskillCareer(world: WorldInstance): WorldInstance {
     'Professional upskilling',
   );
 
+  const gain = world.career.performanceScore >= 85 ? 2 : 4;
   const career: CareerState = {
     ...world.career,
-    performanceScore: clampEmployeeStat(world.career.performanceScore + 5),
+    performanceScore: clampEmployeeStat(world.career.performanceScore + gain),
+    lastUpskillTick: world.clock.tickCount,
   };
 
   return syncCareerSalary({ ...world, banking }, career);
 }
 
 function networkCareer(world: WorldInstance): WorldInstance {
+  if (world.clock.tickCount - world.career.lastNetworkTick < NETWORK_COOLDOWN_TICKS) {
+    throw new Error('Networking cooldown — relationships take time');
+  }
   const costCents = 150_00;
   const banking = debitFromBestAccount(
     world.banking,
@@ -702,9 +970,11 @@ function networkCareer(world: WorldInstance): WorldInstance {
     'Professional networking',
   );
 
+  const gain = world.career.performanceScore >= 80 ? 1 : 3;
   const career: CareerState = {
     ...world.career,
-    performanceScore: clampEmployeeStat(world.career.performanceScore + 3),
+    performanceScore: clampEmployeeStat(world.career.performanceScore + gain),
+    lastNetworkTick: world.clock.tickCount,
   };
 
   return {
@@ -714,8 +984,46 @@ function networkCareer(world: WorldInstance): WorldInstance {
       traits: {
         ...world.player.traits,
         openness: clampEmployeeStat(world.player.traits.openness + 2),
+        energy: clampEmployeeStat(world.player.traits.energy - 4),
       },
     },
+  };
+}
+
+function quitCareer(world: WorldInstance): WorldInstance {
+  if (world.career.status === 'unemployed') {
+    throw new Error('Already unemployed');
+  }
+  if (world.career.status === 'founder') {
+    throw new Error('Founders resign via company shutdown — not implemented as a quick quit');
+  }
+
+  return {
+    ...world,
+    career: {
+      ...world.career,
+      status: 'unemployed',
+      jobTitle: 'Seeking work',
+      employerName: '—',
+      monthlySalaryCents: 0,
+      unemployedSinceDate: world.currentDate,
+      monthsInRole: 0,
+      pipActive: false,
+      pipDaysRemaining: 0,
+      performanceScore: clampEmployeeStat(world.career.performanceScore - 5),
+    },
+    banking: { ...world.banking, monthlySalaryCents: 0 },
+    events: [
+      {
+        id: `evt-quit-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'career' as const,
+        headline: `Resigned from ${world.career.employerName}`,
+        tone: 'info' as const,
+      },
+      ...world.events,
+    ].slice(0, 50),
   };
 }
 
@@ -723,6 +1031,42 @@ function payLoan(world: WorldInstance): WorldInstance {
   return {
     ...world,
     banking: payOffActiveLoan(world.banking, world.currentDate, debitFromBestAccount),
+  };
+}
+
+function restructureLoan(world: WorldInstance): WorldInstance {
+  return {
+    ...world,
+    banking: restructureActiveLoan(world.banking, world.currentDate),
+    events: [
+      {
+        id: `evt-loan-restructure-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'finance' as const,
+        headline: 'Loan restructured — payments resume under a higher APR',
+        tone: 'info' as const,
+      },
+      ...world.events,
+    ].slice(0, 50),
+  };
+}
+
+function settleLoan(world: WorldInstance): WorldInstance {
+  return {
+    ...world,
+    banking: settleActiveLoan(world.banking, world.currentDate, debitFromBestAccount),
+    events: [
+      {
+        id: `evt-loan-settle-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'finance' as const,
+        headline: 'Loan settled with collectors — credit scar remains',
+        tone: 'warning' as const,
+      },
+      ...world.events,
+    ].slice(0, 50),
   };
 }
 
@@ -754,83 +1098,31 @@ function applyForJob(world: WorldInstance, listingId: string): WorldInstance {
     ),
   };
 
-  const matchScore = jobListingMatchScore(listing, world.career.performanceScore);
-  const success =
-    matchScore >= 55 ||
-    (world.clock.tickCount + listingId.length) % 3 !== 0;
-
-  const applications = world.career.applications ?? [];
-
-  if (!success) {
-    const rejectedApplication = createJobApplication({
-      listing,
-      appliedDate: world.currentDate,
-      matchScore,
-      status: 'rejected',
-      rejectionReason:
-        matchScore < 55
-          ? 'Match score below the hiring threshold'
-          : 'Employer chose stronger candidates this cycle',
-      idSuffix: world.clock.tickCount,
-    });
-
-    return {
-      ...nextWorld,
-      career: {
-        ...world.career,
-        applications: appendJobApplication(applications, rejectedApplication),
-      },
-      player: {
-        ...nextWorld.player,
-        traits: {
-          ...nextWorld.player.traits,
-          stress: clampEmployeeStat(nextWorld.player.traits.stress + 3),
-        },
-      },
-      events: [
-        {
-          id: `evt-job-reject-${world.clock.tickCount}`,
-          tickCount: world.clock.tickCount,
-          date: world.currentDate,
-          category: 'career' as const,
-          headline: `Application declined — ${listing.title} at ${listing.employerName}`,
-          tone: 'warning' as const,
-        },
-        ...nextWorld.events,
-      ].slice(0, 50),
-    };
-  }
-
-  const acceptedApplication = createJobApplication({
+  const matchScore = jobListingMatchScore(listing, world.career.performanceScore, world.education);
+  const resolveOnDate = addDaysToDate(world.currentDate, JOB_APPLICATION_RESOLVE_DAYS);
+  const pendingApplication = createJobApplication({
     listing,
     appliedDate: world.currentDate,
     matchScore,
-    status: 'accepted',
+    status: 'pending',
     idSuffix: world.clock.tickCount,
+    resolveOnDate,
   });
 
-  const career: CareerState = {
-    ...world.career,
-    status: 'employed',
-    jobTitle: listing.title,
-    employerName: listing.employerName,
-    monthlySalaryCents: listing.monthlySalaryCents,
-    performanceScore: clampEmployeeStat(world.career.performanceScore + 5),
-    yearsExperience: world.career.yearsExperience,
-    unemployedSinceDate: null,
-    applications: appendJobApplication(applications, acceptedApplication),
-  };
-
   return {
-    ...syncCareerSalary(nextWorld, career),
+    ...nextWorld,
+    career: {
+      ...world.career,
+      applications: appendJobApplication(world.career.applications ?? [], pendingApplication),
+    },
     events: [
       {
-        id: `evt-job-offer-${world.clock.tickCount}`,
+        id: `evt-job-apply-${world.clock.tickCount}`,
         tickCount: world.clock.tickCount,
         date: world.currentDate,
         category: 'career' as const,
-        headline: `Hired as ${listing.title} at ${listing.employerName}`,
-        tone: 'success' as const,
+        headline: `Applied to ${listing.title} at ${listing.employerName} — decision in ~${JOB_APPLICATION_RESOLVE_DAYS} days`,
+        tone: 'info' as const,
       },
       ...nextWorld.events,
     ].slice(0, 50),
@@ -838,54 +1130,164 @@ function applyForJob(world: WorldInstance, listingId: string): WorldInstance {
 }
 
 function visitDistrict(world: WorldInstance, districtId: string): WorldInstance {
-  const validDistricts = new Set([
-    'downtown',
-    'university',
-    'hospital',
-    'mall',
-    'airport',
-    'cafe',
-    'tech',
-    'residential',
-  ]);
+  return applyDistrictVisit(world, districtId).world;
+}
 
-  if (!validDistricts.has(districtId)) {
-    throw new Error('Unknown district');
-  }
-
-  const traitDelta: Partial<Record<string, { happiness?: number; energy?: number; health?: number; openness?: number }>> = {
-    downtown: { happiness: 2, energy: -2 },
-    university: { openness: 3, energy: -1 },
-    hospital: { health: 3, energy: -2 },
-    mall: { happiness: 4, energy: -3 },
-    airport: { happiness: 2, openness: 2, energy: -4 },
-    cafe: { happiness: 3, openness: 2, energy: -1 },
-    tech: { openness: 2, energy: -2 },
-    residential: { happiness: 2, health: 1 },
+function fileTaxes(world: WorldInstance): WorldInstance {
+  const civic = civicOf(world);
+  const balance = civic.taxBalanceCents;
+  let nextWorld = {
+    ...world,
+    civic: {
+      ...civic,
+      taxFilingOverdue: false,
+      lastTaxYearFiled: world.clock.tickCount,
+      taxBalanceCents: 0,
+    },
   };
 
-  const delta = traitDelta[districtId] ?? { happiness: 1 };
-  const traits = world.player.traits;
+  if (balance > 0) {
+    nextWorld = {
+      ...nextWorld,
+      banking: creditChecking(nextWorld.banking, balance, nextWorld.currentDate, 'Tax refund'),
+    };
+  } else if (balance < 0) {
+    nextWorld = {
+      ...nextWorld,
+      banking: debitFromBestAccount(
+        nextWorld.banking,
+        Math.abs(balance),
+        nextWorld.currentDate,
+        'Tax balance due',
+      ),
+    };
+  }
 
   return {
+    ...nextWorld,
+    events: [
+      {
+        id: `evt-tax-file-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'finance' as const,
+        headline:
+          balance > 0
+            ? `Tax return filed — refund ${(balance / 100).toLocaleString()}`
+            : balance < 0
+              ? `Tax return filed — paid ${(Math.abs(balance) / 100).toLocaleString()}`
+              : 'Tax return filed — even balance',
+        tone: balance < 0 ? ('warning' as const) : ('success' as const),
+      },
+      ...nextWorld.events,
+    ].slice(0, 50),
+  };
+}
+
+function payTaxBalance(world: WorldInstance): WorldInstance {
+  const civic = civicOf(world);
+  if (civic.taxBalanceCents >= 0) {
+    throw new Error('No tax balance due');
+  }
+  return fileTaxes(world);
+}
+
+function treatIllness(world: WorldInstance): WorldInstance {
+  const civic = civicOf(world);
+  const illness = civic.pendingIllness;
+  if (!illness) {
+    throw new Error('No pending illness');
+  }
+
+  const insured = civic.hasInsurance;
+  const cost = insured ? Math.round(illness.treatCostCents * 0.35) : illness.treatCostCents;
+  let nextWorld = {
     ...world,
+    banking: debitFromBestAccount(world.banking, cost, world.currentDate, 'Medical treatment'),
+    civic: { ...civic, pendingIllness: null },
     player: {
       ...world.player,
       traits: {
-        ...traits,
-        happiness: clampEmployeeStat(traits.happiness + (delta.happiness ?? 0)),
-        energy: clampEmployeeStat(traits.energy + (delta.energy ?? 0)),
-        health: clampEmployeeStat(traits.health + (delta.health ?? 0)),
-        openness: clampEmployeeStat(traits.openness + (delta.openness ?? 0)),
+        ...world.player.traits,
+        health: clampEmployeeStat(world.player.traits.health + Math.round(illness.healthPenalty * 0.6)),
+        stress: clampEmployeeStat(world.player.traits.stress - 4),
+      },
+    },
+  };
+
+  return {
+    ...nextWorld,
+    events: [
+      {
+        id: `evt-treat-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'life' as const,
+        headline: `Treated illness${insured ? ' (insured)' : ''} — recovering`,
+        tone: 'success' as const,
+      },
+      ...nextWorld.events,
+    ].slice(0, 50),
+  };
+}
+
+function ignoreIllness(world: WorldInstance): WorldInstance {
+  const civic = civicOf(world);
+  const illness = civic.pendingIllness;
+  if (!illness) {
+    throw new Error('No pending illness');
+  }
+
+  return {
+    ...world,
+    civic: { ...civic, pendingIllness: null },
+    player: {
+      ...world.player,
+      traits: {
+        ...world.player.traits,
+        health: clampEmployeeStat(world.player.traits.health - illness.ignorePenalty),
+        stress: clampEmployeeStat(world.player.traits.stress + 8),
+        energy: clampEmployeeStat(world.player.traits.energy - 10),
       },
     },
     events: [
       {
-        id: `evt-visit-${districtId}-${world.clock.tickCount}`,
+        id: `evt-ignore-illness-${world.clock.tickCount}`,
         tickCount: world.clock.tickCount,
         date: world.currentDate,
         category: 'life' as const,
-        headline: `Visited ${districtId.replace(/^\w/, (char) => char.toUpperCase())} district`,
+        headline: 'Ignored illness — condition worsened',
+        tone: 'warning' as const,
+      },
+      ...world.events,
+    ].slice(0, 50),
+  };
+}
+
+function enrollInsurance(world: WorldInstance): WorldInstance {
+  const civic = civicOf(world);
+  if (civic.hasInsurance) {
+    throw new Error('Already enrolled in health insurance');
+  }
+  const premium = 350_00;
+  return {
+    ...world,
+    civic: {
+      ...civic,
+      hasInsurance: true,
+      insurancePremiumCents: premium,
+    },
+    banking: {
+      ...world.banking,
+      monthlyExpensesCents: world.banking.monthlyExpensesCents + premium,
+    },
+    events: [
+      {
+        id: `evt-insure-${world.clock.tickCount}`,
+        tickCount: world.clock.tickCount,
+        date: world.currentDate,
+        category: 'life' as const,
+        headline: 'Enrolled in health insurance — lower treatment costs, monthly premium',
         tone: 'info' as const,
       },
       ...world.events,
