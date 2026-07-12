@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fenix Life — Home v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --radius:16px;
+    --display:'Fraunces', Georgia, serif;
+    --body:'IBM Plex Sans', -apple-system, sans-serif;
+    --mono:'IBM Plex Mono', monospace;
+  }
+  /* ---- DARK (default): softened navy, not pure black, low glare ---- */
+  html[data-theme="dark"]{
+    --bg:#121A33;
+    --bg-grad: radial-gradient(1000px 460px at 10% -10%, rgba(46,196,182,0.09), transparent 60%),
+               radial-gradient(800px 460px at 100% 0%, rgba(244,180,0,0.05), transparent 55%);
+    --surface:#1A2444;
+    --surface-2:#212C50;
+    --border: rgba(255,255,255,0.07);
+    --ink:#E7EBF6;
+    --ink-dim:#93A0C2;
+    --emerald:#33C9B8;
+    --gold:#F0B429;
+    --violet:#9B8CF2;
+    --sky:#5AB0EA;
+    --danger:#E5786F;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  /* ---- LIGHT: paper, soft ink (not pure black), same brand accents deepened for AA contrast ---- */
+  html[data-theme="light"]{
+    --bg:#F3F5FA;
+    --bg-grad: radial-gradient(1000px 460px at 10% -10%, rgba(46,196,182,0.07), transparent 60%),
+               radial-gradient(800px 460px at 100% 0%, rgba(244,180,0,0.06), transparent 55%);
+    --surface:#FFFFFF;
+    --surface-2:#F7F8FC;
+    --border: rgba(20,30,60,0.08);
+    --ink:#202A45;
+    --ink-dim:#66708F;
+    --emerald:#159A8C;
+    --gold:#B5790A;
+    --violet:#6E5FD8;
+    --sky:#2C77B8;
+    --danger:#C24C43;
+    --shadow: 0 8px 24px rgba(30,40,70,0.10);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg-grad), var(--bg);
+    color:var(--ink);
+    font-family:var(--body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  :focus-visible{ outline:2px solid var(--emerald); outline-offset:2px; }
+  button{ font-family:var(--body); }
+
+  .app{ max-width:1180px; margin:0 auto; padding:18px 16px 110px; }
+
+  /* Top bar: identity + balance + theme toggle */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius);
+    background:var(--surface); box-shadow:var(--shadow); margin-bottom:14px;
+  }
+  .who{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .avatar{
+    width:40px;height:40px;border-radius:50%; flex:0 0 auto;
+    background:linear-gradient(135deg,var(--emerald),#127e73);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--display); font-weight:600; color:#0B132B; font-size:16px;
+  }
+  .who-name{ font-family:var(--display); font-weight:600; font-size:15.5px; }
+  .who-meta{ font-size:11.5px; color:var(--ink-dim); }
+  .right-cluster{ display:flex; align-items:center; gap:12px; }
+  .balance{ text-align:right; }
+  .balance b{ font-family:var(--mono); font-size:15px; display:block; }
+  .balance span{ font-size:10.5px; color:var(--ink-dim); }
+  .theme-toggle{
+    width:38px;height:38px;border-radius:10px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--ink); cursor:pointer; font-size:15px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Stat bars — BitLife-style, softened colors */
+  .stats{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px;
+  }
+  .stat-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:12px 14px; box-shadow:var(--shadow);
+  }
+  .stat-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px;}
+  .stat-label{ font-size:11.5px; color:var(--ink-dim); display:flex; align-items:center; gap:5px;}
+  .stat-value{ font-family:var(--mono); font-size:12.5px; font-weight:600; }
+  .bar-track{ height:8px; border-radius:20px; background:var(--surface-2); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:20px; }
+  .fill-human{ background:var(--violet); }
+  .fill-social{ background:var(--sky); }
+  .fill-financial{ background:var(--emerald); }
+  .fill-business{ background:var(--gold); }
+  .fill-legacy{ background:var(--danger); }
+
+  /* Layout: mobile-first list rows, desktop two-column */
+  .layout{ display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:900px){
+    .layout{ grid-template-columns: 1.15fr 0.85fr; }
+  }
+
+  .section-title{
+    font-family:var(--display); font-weight:600; font-size:14.5px;
+    margin:4px 2px 10px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .section-title span{ font-family:var(--body); font-weight:400; font-size:11px; color:var(--ink-dim); }
+
+  /* Quick destinations — BitLife/Genworld list-row pattern */
+  .rows{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px;
+  }
+  .row{
+    display:flex; align-items:center; gap:12px; padding:13px 14px;
+    border-bottom:1px solid var(--border); cursor:pointer;
+  }
+  .row:last-child{ border-bottom:none; }
+  .row:hover{ background:var(--surface-2); }
+  .row-ico{
+    width:38px;height:38px;border-radius:11px; flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center; font-size:17px;
+    background:var(--surface-2);
+  }
+  .row-mid{ flex:1; min-width:0; }
+  .row-title{ font-weight:600; font-size:13.5px; }
+  .row-sub{ font-size:11.5px; color:var(--ink-dim); margin-top:1px; }
+  .row-meta{ font-family:var(--mono); font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
+  .chev{ color:var(--ink-dim); font-size:14px; }
+
+  /* Life feed cards (narrative layer, kept from v1 but tightened) */
+  .feed{ display:flex; flex-direction:column; gap:10px; }
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:13px 14px; display:flex; gap:11px; align-items:flex-start; box-shadow:var(--shadow);
+  }
+  .card.crisis{ border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+  .card-icon{
+    width:34px;height:34px;border-radius:10px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center; font-size:15px;
+    background:var(--surface-2);
+  }
+  .card-body{ flex:1; min-width:0; }
+  .card-top{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .card-headline{ font-size:13.5px; font-weight:600; }
+  .card-when{ font-family:var(--mono); font-size:10px; color:var(--ink-dim); white-space:nowrap;}
+  .card-detail{ font-size:12px; color:var(--ink-dim); margin-top:3px; line-height:1.45; }
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:9px; }
+  .tag{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:0.03em;
+    padding:3px 8px; border-radius:20px; border:1px solid var(--border); color:var(--ink-dim);
+  }
+  .act{
+    font-size:11.5px; font-weight:600; color:#0B132B;
+    background:var(--gold); border:none; padding:6px 12px; border-radius:8px; cursor:pointer;
+  }
+  .act.ghost{ background:transparent; color:var(--ink); border:1px solid var(--border); }
+
+  /* Side panel */
+  .side-panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:15px; margin-bottom:14px;
+  }
+  .decision-q{ font-family:var(--display); font-size:15px; font-weight:600; margin-bottom:4px; }
+  .decision-sub{ font-size:11.5px; color:var(--ink-dim); margin-bottom:12px; line-height:1.5; }
+  .metric-row{ display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px dashed var(--border); }
+  .metric-row b{ font-family:var(--mono); font-weight:500; }
+  .decision-actions{ display:flex; gap:8px; margin-top:12px; }
+  .decision-actions .act{ flex:1; }
+
+  /* Bottom dock + floating Advance-Day button, BitLife/Genworld style */
+  .dock-wrap{ position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center; padding-bottom:14px; z-index:20; pointer-events:none; }
+  .dock{
+    pointer-events:auto;
+    display:flex; align-items:flex-end; gap:2px; padding:8px 10px 8px;
+    background:var(--surface); border:1px solid var(--border); border-radius:22px;
+    box-shadow:var(--shadow);
+  }
+  .dock-item{
+    width:56px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:7px 4px; border-radius:12px; cursor:pointer; color:var(--ink-dim);
+  }
+  .dock-item.active{ color:var(--gold); }
+  .dock-item .ico{ font-size:16px; }
+  .dock-item .lbl{ font-size:9px; font-family:var(--mono); }
+  .fab{
+    pointer-events:auto;
+    width:64px;height:64px;border-radius:50%; margin:-26px 6px 0;
+    background:linear-gradient(135deg, var(--gold), #d99a00);
+    border:4px solid var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 8px 20px rgba(240,180,41,0.35);
+    color:#22160a; font-weight:700; font-size:10.5px; cursor:pointer;
+  }
+  .fab .plus{ font-size:16px; line-height:1; }
+
+  @media (max-width:640px){
+    .stats{ grid-template-columns:repeat(3,1fr); }
+    .stat-card:nth-child(4), .stat-card:nth-child(5){ display:none; }
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .card, .row{ transition: background 0.15s ease; }
+    .bar-fill{ transition: width 0.6s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar">TS</div>
+      <div>
+        <div class="who-name">Themba Sithole</div>
+        <div class="who-meta">Age 34 · Founder, HoopZone · Cape Town</div>
+      </div>
+    </div>
+    <div class="right-cluster">
+      <div class="balance"><b>R 58,140</b><span>Bank balance</span></div>
+      <button class="theme-toggle" id="themeToggle" title="Toggle light / dark">🌙</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">😊 Human</span><span class="stat-value">82</span></div>
+      <div class="bar-track"><div class="bar-fill fill-human" style="width:82%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">🤝 Social</span><span class="stat-value">67</span></div>
+      <div class="bar-track"><div class="bar-fill fill-social" style="width:67%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">💰 Financial</span><span class="stat-value">74</span></div>
+      <div class="bar-track"><div class="bar-fill fill-financial" style="width:74%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">🏢 Business</span><span class="stat-value">58</span></div>
+      <div class="bar-track"><div class="bar-fill fill-business" style="width:58%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><span class="stat-label">👑 Legacy</span><span class="stat-value">54</span></div>
+      <div class="bar-track"><div class="bar-fill fill-legacy" style="width:54%"></div></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="section-title">Go to <span>quick destinations</span></div>
+      <div class="rows">
+        <div class="row">
+          <div class="row-ico">🏦</div>
+          <div class="row-mid"><div class="row-title">Banking</div><div class="row-sub">Accounts, transfers, loans</div></div>
+          <div class="row-meta">742 score</div>
+          <div class="chev">›</div>
+        </div>
+        <div class="row">
+          <div class="row-ico">🏢</div>
+          <div class="row-mid"><div class="row-title">HoopZone Co.</div><div class="row-sub">Runway, hiring, product</div></div>
+          <div class="row-meta">Series A</div>
+          <div class="chev">›</div>
+        </div>
+        <div class="row">
+          <div class="row-ico">📈</div>
+          <div class="row-mid"><div class="row-title">Stock Market</div><div class="row-sub">Portfolio & trading</div></div>
+          <div class="row-meta">+3.1%</div>
+          <div class="chev">›</div>
+        </div>
+        <div class="row">
+          <div class="row-ico">👪</div>
+          <div class="row-mid"><div class="row-title">Family</div><div class="row-sub">Naomi · household</div></div>
+          <div class="row-meta">Happy</div>
+          <div class="chev">›</div>
+        </div>
+        <div class="row">
+          <div class="row-ico">🏙️</div>
+          <div class="row-mid"><div class="row-title">City</div><div class="row-sub">Cape Town districts</div></div>
+          <div class="row-meta">4 new</div>
+          <div class="chev">›</div>
+        </div>
+      </div>
+
+      <div class="section-title">Your Life <span>14 Mar 2041 — today</span></div>
+      <div class="feed">
+        <div class="card crisis">
+          <div class="card-icon">⚠️</div>
+          <div class="card-body">
+            <div class="card-top"><div class="card-headline">Loan repayment overdue — Nedbank flags your account</div><div class="card-when">TODAY</div></div>
+            <div class="card-detail">Instalment of R6,200 missed its window. Credit score drifts down if unresolved.</div>
+            <div class="card-foot"><span class="tag">FINANCIAL</span><button class="act">Pay now</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📈</div>
+          <div class="card-body">
+            <div class="card-top"><div class="card-headline">HoopZone angel shares revalued after Series A</div><div class="card-when">TODAY</div></div>
+            <div class="card-detail">Paper value up 34% this quarter.</div>
+            <div class="card-foot"><span class="tag">BUSINESS</span><button class="act ghost">View portfolio</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">👨‍👩‍👧</div>
+          <div class="card-body">
+            <div class="card-top"><div class="card-headline">Naomi wants a weekend in Franschhoek</div><div class="card-when">YESTERDAY</div></div>
+            <div class="card-detail">Costs ~R3,400, lifts household happiness. She's waiting on your answer.</div>
+            <div class="card-foot"><span class="tag">HUMAN</span><button class="act">Say yes</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">Today's Decision</div>
+      <div class="side-panel">
+        <div class="decision-q">Settle the Nedbank instalment?</div>
+        <div class="decision-sub">Paying now protects your credit score. Waiting frees up cash but risks a penalty.</div>
+        <div class="metric-row"><span>Credit if paid</span><b style="color:var(--emerald)">742 →</b></div>
+        <div class="metric-row"><span>Credit if delayed</span><b style="color:var(--danger)">712 →</b></div>
+        <div class="metric-row"><span>Available balance</span><b>R 58,140</b></div>
+        <div class="decision-actions">
+          <button class="act ghost">Delay 7 days</button>
+          <button class="act">Pay R6,200</button>
+        </div>
+      </div>
+
+      <div class="section-title">Upcoming</div>
+      <div class="side-panel">
+        <div class="metric-row"><span>Next paycheck</span><b>18 Mar · R42,000</b></div>
+        <div class="metric-row"><span>Board sync</span><b>21 Mar</b></div>
+        <div class="metric-row"><span>Vehicle service</span><b>2 Apr</b></div>
+        <div class="metric-row" style="border-bottom:none;"><span>Naomi's birthday</span><b>9 Apr</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dock-wrap">
+  <div class="dock">
+    <div class="dock-item active"><div class="ico">🏠</div><div class="lbl">HOME</div></div>
+    <div class="dock-item"><div class="ico">💼</div><div class="lbl">CAREER</div></div>
+    <div class="fab"><div class="plus">+</div><div>DAY</div></div>
+    <div class="dock-item"><div class="ico">📱</div><div class="lbl">PHONE</div></div>
+    <div class="dock-item"><div class="ico">⚙️</div><div class="lbl">MORE</div></div>
+  </div>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  btn.addEventListener('click', () => {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    btn.textContent = isDark ? '☀️' : '🌙';
+  });
+</script>
+</body>
+</html>

@@ -11,25 +11,26 @@
   --fenix-light-gray: #f5f7fa;
   --fenix-white: #ffffff;
 
-  --background: var(--fenix-light-gray);
-  --foreground: var(--fenix-navy);
-  --card: var(--fenix-white);
-  --card-foreground: var(--fenix-navy);
-  --popover: var(--fenix-white);
-  --popover-foreground: var(--fenix-navy);
+  /* Light (paper): soft ink, not pure black — AA-friendly accents */
+  --background: #f3f5fa;
+  --foreground: #202a45;
+  --card: #ffffff;
+  --card-foreground: #202a45;
+  --popover: #ffffff;
+  --popover-foreground: #202a45;
   --primary: var(--fenix-blue);
   --primary-foreground: var(--fenix-white);
-  --secondary: var(--fenix-emerald);
+  --secondary: #159a8c;
   --secondary-foreground: var(--fenix-white);
   --muted: #ececf0;
-  --muted-foreground: #5c6370;
-  --accent: var(--fenix-gold);
-  --accent-foreground: var(--fenix-navy);
-  --destructive: #d4183d;
+  --muted-foreground: #66708f;
+  --accent: #b5790a;
+  --accent-foreground: #202a45;
+  --destructive: #c24c43;
   --destructive-foreground: var(--fenix-white);
-  --border: color-mix(in srgb, var(--fenix-navy) 12%, transparent);
+  --border: color-mix(in srgb, #141e3c 8%, transparent);
   --input: transparent;
-  --input-background: #f3f3f5;
+  --input-background: #f7f8fc;
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -40,28 +41,47 @@
   --chart-4: #7eb8da;
   --chart-5: #e8a87c;
   --radius: 0.5rem;
+  --radius-home: 1rem;
+
+  /* Five Capitals (light — deepened for contrast on paper) */
+  --capital-human: #6e5fd8;
+  --capital-social: #2c77b8;
+  --capital-financial: #159a8c;
+  --capital-business: #b5790a;
+  --capital-legacy: #c24c43;
+
+  /* Home surface extras */
+  --home-shadow: 0 8px 24px color-mix(in srgb, #1e2846 10%, transparent);
+  --home-avatar-from: var(--fenix-emerald);
+  --home-avatar-to: #127e73;
+  --home-fab-from: var(--fenix-gold);
+  --home-fab-to: #d99a00;
+  --home-fab-ink: #22160a;
+  --home-bg-grad:
+    radial-gradient(1000px 460px at 10% -10%, color-mix(in srgb, var(--fenix-emerald) 7%, transparent), transparent 60%),
+    radial-gradient(800px 460px at 100% 0%, color-mix(in srgb, var(--fenix-gold) 6%, transparent), transparent 55%);
 
   /* Status */
-  --status-success: var(--fenix-emerald);
-  --status-success-fg: var(--fenix-navy);
-  --status-warn: var(--fenix-gold);
-  --status-warn-fg: var(--fenix-navy);
+  --status-success: var(--secondary);
+  --status-success-fg: var(--foreground);
+  --status-warn: var(--accent);
+  --status-warn-fg: var(--foreground);
   --status-danger: var(--destructive);
   --status-danger-fg: var(--fenix-white);
-  --status-info: var(--fenix-blue);
+  --status-info: var(--capital-social);
   --status-info-fg: var(--fenix-white);
 
   /* Surfaces (elevation 0–2 only) */
   --surface-0: var(--background);
-  --surface-1: var(--fenix-white);
-  --surface-2: color-mix(in srgb, var(--fenix-white) 92%, var(--fenix-blue));
-  --surface-life: var(--fenix-light-gray);
-  --surface-life-ink: var(--fenix-navy);
-  --surface-tool: var(--fenix-white);
-  --surface-tool-ink: var(--fenix-navy);
+  --surface-1: #ffffff;
+  --surface-2: #f7f8fc;
+  --surface-life: var(--background);
+  --surface-life-ink: var(--foreground);
+  --surface-tool: #ffffff;
+  --surface-tool-ink: var(--foreground);
   --surface-brand: var(--fenix-navy);
   --surface-brand-ink: var(--fenix-white);
-  --surface-crisis: color-mix(in srgb, var(--fenix-gold) 18%, var(--fenix-white));
+  --surface-crisis: color-mix(in srgb, var(--fenix-gold) 18%, #ffffff);
 
   /* Spacing scale */
   --space-1: 0.25rem;
@@ -98,49 +118,78 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Dark (default app): muted navy — not pure black, low glare */
 .dark {
-  --background: var(--fenix-navy);
-  --foreground: var(--fenix-white);
-  --card: var(--fenix-blue);
-  --card-foreground: var(--fenix-white);
-  --popover: var(--fenix-blue);
-  --popover-foreground: var(--fenix-white);
-  --primary: var(--fenix-emerald);
+  --background: #121a33;
+  --foreground: #e7ebf6;
+  --card: #1a2444;
+  --card-foreground: #e7ebf6;
+  --popover: #1a2444;
+  --popover-foreground: #e7ebf6;
+  --primary: #33c9b8;
   --primary-foreground: var(--fenix-navy);
-  --secondary: color-mix(in srgb, var(--fenix-emerald) 35%, var(--fenix-blue));
-  --secondary-foreground: var(--fenix-white);
-  --muted: color-mix(in srgb, var(--fenix-blue) 80%, black);
-  --muted-foreground: color-mix(in srgb, var(--fenix-white) 65%, transparent);
-  --accent: var(--fenix-gold);
+  --secondary: #33c9b8;
+  --secondary-foreground: var(--fenix-navy);
+  --muted: #212c50;
+  --muted-foreground: #93a0c2;
+  --accent: #f0b429;
   --accent-foreground: var(--fenix-navy);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: var(--fenix-white);
-  --border: color-mix(in srgb, var(--fenix-white) 12%, transparent);
-  --input: color-mix(in srgb, var(--fenix-white) 8%, transparent);
-  --ring: var(--fenix-emerald);
-  --surface-0: var(--fenix-navy);
-  --surface-1: var(--fenix-blue);
-  --surface-2: color-mix(in srgb, var(--fenix-blue) 85%, var(--fenix-emerald));
-  --surface-life: var(--fenix-navy);
-  --surface-life-ink: var(--fenix-white);
-  --surface-tool: var(--fenix-blue);
-  --surface-tool-ink: var(--fenix-white);
-  --surface-brand: var(--fenix-navy);
-  --surface-brand-ink: var(--fenix-white);
-  --surface-crisis: color-mix(in srgb, var(--fenix-gold) 22%, var(--fenix-navy));
-  --chart-1: var(--fenix-emerald);
-  --chart-2: var(--fenix-gold);
-  --chart-3: #7eb8da;
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --destructive: #e5786f;
+  --destructive-foreground: var(--fenix-navy);
+  --border: color-mix(in srgb, #ffffff 7%, transparent);
+  --input: color-mix(in srgb, #ffffff 8%, transparent);
+  --input-background: #212c50;
+  --ring: #33c9b8;
+  --chart-1: #33c9b8;
+  --chart-2: #f0b429;
+  --chart-3: #5ab0ea;
+  --chart-4: #9b8cf2;
+  --chart-5: #e5786f;
+
+  --capital-human: #9b8cf2;
+  --capital-social: #5ab0ea;
+  --capital-financial: #33c9b8;
+  --capital-business: #f0b429;
+  --capital-legacy: #e5786f;
+
+  --home-shadow: 0 10px 30px color-mix(in srgb, #000000 35%, transparent);
+  --home-avatar-from: #33c9b8;
+  --home-avatar-to: #127e73;
+  --home-fab-from: #f0b429;
+  --home-fab-to: #d99a00;
+  --home-fab-ink: #22160a;
+  --home-bg-grad:
+    radial-gradient(1000px 460px at 10% -10%, color-mix(in srgb, var(--fenix-emerald) 9%, transparent), transparent 60%),
+    radial-gradient(800px 460px at 100% 0%, color-mix(in srgb, var(--fenix-gold) 5%, transparent), transparent 55%);
+
+  --status-success: #33c9b8;
+  --status-success-fg: var(--fenix-navy);
+  --status-warn: #f0b429;
+  --status-warn-fg: var(--fenix-navy);
+  --status-danger: #e5786f;
+  --status-danger-fg: var(--fenix-navy);
+  --status-info: #5ab0ea;
+  --status-info-fg: var(--fenix-navy);
+
+  --surface-0: #121a33;
+  --surface-1: #1a2444;
+  --surface-2: #212c50;
+  --surface-life: #121a33;
+  --surface-life-ink: #e7ebf6;
+  --surface-tool: #1a2444;
+  --surface-tool-ink: #e7ebf6;
+  --surface-brand: #121a33;
+  --surface-brand-ink: #e7ebf6;
+  --surface-crisis: color-mix(in srgb, #f0b429 22%, #121a33);
+
+  --sidebar: #1a2444;
+  --sidebar-foreground: #e7ebf6;
+  --sidebar-primary: #33c9b8;
+  --sidebar-primary-foreground: var(--fenix-navy);
+  --sidebar-accent: #212c50;
+  --sidebar-accent-foreground: #e7ebf6;
+  --sidebar-border: color-mix(in srgb, #ffffff 7%, transparent);
+  --sidebar-ring: #33c9b8;
 }
 
 @theme inline {
@@ -179,6 +228,11 @@
   --color-fenix-emerald: var(--fenix-emerald);
   --color-fenix-gold: var(--fenix-gold);
   --color-fenix-light-gray: var(--fenix-light-gray);
+  --color-capital-human: var(--capital-human);
+  --color-capital-social: var(--capital-social);
+  --color-capital-financial: var(--capital-financial);
+  --color-capital-business: var(--capital-business);
+  --color-capital-legacy: var(--capital-legacy);
   --color-status-success: var(--status-success);
   --color-status-warn: var(--status-warn);
   --color-status-danger: var(--status-danger);
@@ -194,6 +248,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-home: var(--radius-home);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -281,10 +336,7 @@
 
   .bg-life-atmosphere {
     background-color: var(--surface-life);
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--fenix-emerald) 12%, transparent), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 100%, color-mix(in srgb, var(--fenix-gold) 8%, transparent), transparent),
-      linear-gradient(180deg, color-mix(in srgb, var(--fenix-white) 40%, var(--fenix-light-gray)), var(--fenix-light-gray));
+    background-image: var(--home-bg-grad);
   }
 
   .bg-tool-atmosphere {

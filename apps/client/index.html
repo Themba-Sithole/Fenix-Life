@@ -1,9 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fenix Life</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("fenix-theme");
+          var theme = stored === "light" || stored === "dark" ? stored : "dark";
+          document.documentElement.classList.toggle("dark", theme === "dark");
+        } catch (_) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
     <meta
       name="description"
       content="Fenix Life — a premium life simulation. Build your empire. Live your legacy."

@@ -13,6 +13,8 @@ interface LifeShellProps {
   readonly statusLine?: string;
   readonly onTogglePause?: () => void;
   readonly showDock?: boolean;
+  /** When false, skips the sticky identity strip (e.g. Home uses TopIdentityBar). */
+  readonly showIdentity?: boolean;
   readonly className?: string;
   readonly contentClassName?: string;
 }
@@ -27,10 +29,12 @@ export function LifeShell({
   statusLine,
   onTogglePause,
   showDock = true,
+  showIdentity: showIdentityProp,
   className,
   contentClassName,
 }: LifeShellProps) {
-  const showIdentity = Boolean(playerName || dateLabel || statusLine);
+  const showIdentity =
+    showIdentityProp ?? Boolean(playerName || dateLabel || statusLine);
 
   return (
     <div className={cn("min-h-screen bg-life-atmosphere texture-grain text-foreground", className)}>
