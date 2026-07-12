@@ -93,7 +93,7 @@ adminModerationRouter.get('/queue', requireAdmin('MODERATOR'), async (req, res) 
 
 adminModerationRouter.post('/queue/:itemId/resolve', requireAdmin('MODERATOR'), async (req, res) => {
   const adminReq = req as AdminRequest;
-  const { itemId } = req.params;
+  const itemId = String(req.params.itemId);
   if (!adminReq.adminUser) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
@@ -122,7 +122,7 @@ adminModerationRouter.post('/queue/:itemId/resolve', requireAdmin('MODERATOR'), 
 
 adminModerationRouter.post('/queue/:itemId/escalate', requireAdmin('MODERATOR'), async (req, res) => {
   const adminReq = req as AdminRequest;
-  const { itemId } = req.params;
+  const itemId = String(req.params.itemId);
   if (!adminReq.adminUser) {
     res.status(401).json({ error: 'Unauthorized' });
     return;

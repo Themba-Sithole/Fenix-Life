@@ -69,7 +69,7 @@ adminFeatureFlagsRouter.get('/', requireAdmin('LIVEOPS'), async (_req, res) => {
 
 adminFeatureFlagsRouter.patch('/:key', requireAdmin('LIVEOPS'), async (req, res) => {
   const adminReq = req as AdminRequest;
-  const { key } = req.params;
+  const key = String(req.params.key);
   const { enabled } = req.body as { enabled?: boolean };
 
   if (!adminReq.adminUser) {
